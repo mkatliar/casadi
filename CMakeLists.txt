@@ -163,7 +163,7 @@ endif()
 ############################################################
 
 if(WITH_SELFCONTAINED)
-set(CMAKE_INSTALL_RPATH "$ORIGIN;@loader_path;@executable_path")
+set(CMAKE_INSTALL_RPATH "$ORIGIN;@loader_path;@executable_path;.")
 else()
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
