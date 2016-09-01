@@ -87,6 +87,9 @@ namespace casadi {
     }
 
     // Set corresponding monitors
+    for (auto&& it : all_functions_) {
+      it.second.monitored = false;
+    }
     for (const string& fname : monitor) {
       auto it = all_functions_.find(fname);
       if (it==all_functions_.end()) {

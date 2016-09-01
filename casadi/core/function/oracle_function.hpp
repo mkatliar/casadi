@@ -61,7 +61,7 @@ namespace casadi {
     struct RegFun {
       Function f;
       bool jit;
-      bool monitored = false;
+      bool monitored;
     };
 
     // All NLP functions
