@@ -272,6 +272,29 @@ matrix:
         - popd
         - matlabtunnel
         - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
+        - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
     - compiler: gcc
       os: linux
       dist: trusty
