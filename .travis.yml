@@ -1,7 +1,7 @@
 # Inspiration: https://github.com/edx/configuration/blob/master/.travis.yml
 env: 
   global: 
-    - IPOPT_DEFAULT_LINEAR_SOLVER=ma57
+    #- IPOPT_DEFAULT_LINEAR_SOLVER=ma57
     - MOSEKLM_LICENSE_FILE=/home/travis/build/testbot/restricted/mosek.lic
     - secure: KvMG4VORV7Ja09shvmsMpiaRMoWqupR76dKxOd7W28I//F4YDIn5ZZefM4aoXsmRgs4G9YqloU8JjVpHutZARmKn2drUwHVMA+96iKb9eDODwZaKXgFYsrQIX5c/OgO8ZpsXynD2daqH3bMK8Mjz1+4fjbFToPFXHggxqQuHm1U=
     - CMAKE_INCLUDE_PATH=/home/travis/build/testbot/restricted/cplex/cplex/include:/home/travis/build/testbot/restricted/cplex/concert/include
@@ -271,7 +271,7 @@ matrix:
         - sudo make -j2 install
         - popd
         - matlabtunnel
-        - rm docs/examples/matlab/lotka_volterra_minlp.m
+        - rm docs/examples/matlab/lotka_volterra_minlp.m docs/examples/matlab/direct_collocation.m
         - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
         - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
         - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
