@@ -271,7 +271,7 @@ matrix:
         - sudo make -j2 install
         - popd
         - matlabtunnel
-        - rm test/matlab/lotka_volterra_minlp.m
+        - rm docs/examples/matlab/lotka_volterra_minlp.m
         - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
         - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
         - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
