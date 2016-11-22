@@ -26,8 +26,8 @@ import casadi.*
 disp 'Testing sensitivity analysis in CasADi'
 
 % All ODE and DAE integrators to be tested
-DAE_integrators = {'idas','collocation'};
-ODE_integrators = {'cvodes','rk', DAE_integrators{:}};
+DAE_integrators = {'collocation'};
+ODE_integrators = {'rk', DAE_integrators{:}};
 
 for ode=0:1
   if ode
