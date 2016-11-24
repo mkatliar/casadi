@@ -50,7 +50,7 @@ matrix:
         - sudo make -j2 install
         - popd
         - matlabtunnel
-        - rm docs/examples/matlab/lotka_volterra_minlp.m docs/examples/matlab/direct_collocation.m test/matlab/asorted_tests.m
+        - rm docs/examples/matlab/lotka_volterra_minlp.m docs/examples/matlab/direct_collocation.m test/matlab/asorted_tests.m test/matlab/direct_multiple_shooting.m test/matlab/direct_single_shooting.m
         - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
         - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
         - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
