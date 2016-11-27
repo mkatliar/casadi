@@ -51,7 +51,7 @@ script:
   - sudo make -j2 install
   - popd
   - matlabtunnel
-  - rm docs/examples/matlab/lotka_volterra_minlp.m docs/examples/matlab/direct_collocation.m test/matlab/asorted_tests.m docs/examples/matlab/direct_multiple_shooting.m docs/examples/matlab/direct_single_shooting.m docs/examples/matlab/sysid.m
+  - rm docs/examples/matlab/lotka_volterra_minlp.m test/matlab/asorted_tests.m docs/examples/matlab/direct_multiple_shooting.m docs/examples/matlab/direct_single_shooting.m docs/examples/matlab/sysid.m
   - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
   - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
   - pushd test && PATH=/home/travis/build/matlab/bin/:$PATH make matlab && popd
