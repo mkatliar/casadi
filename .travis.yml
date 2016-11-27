@@ -14,21 +14,19 @@ env:
     - MATLAB_ROOT=/home/travis/build/matlab
     - MATLABRELEASE=R2014a
     - SLURP_OS=trusty
-  
+  - FOO=A
+  - FOO=B
+  - FOO=C
+  - FOO=D
+  - FOO=E
+  - FOO=F
+  - FOO=G
+  - FOO=H  
+
 before_script:
   - set -e
   - set -o pipefail  # otherwise, piping with grep discards exit statuses
 
-env:
- - FOO=A
- - FOO=B
- - FOO=C
- - FOO=D
- - FOO=E
- - FOO=F
- - FOO=G
- - FOO=H
- 
 compiler: gcc
 dist: trusty
 language: generic
