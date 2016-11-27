@@ -22,7 +22,13 @@ before_script:
 env:
  - FOO=A
  - FOO=B
-
+ - FOO=C
+ - FOO=D
+ - FOO=E
+ - FOO=F
+ - FOO=G
+ - FOO=H
+ 
 compiler: gcc
 dist: trusty
 language: generic
