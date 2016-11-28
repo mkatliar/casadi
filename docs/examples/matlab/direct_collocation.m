@@ -168,15 +168,4 @@ sol = solver('x0', w0, 'lbx', lbw, 'ubx', ubw,...
             'lbg', lbg, 'ubg', ubg);
 w_opt = full(sol.x);
 
-% Plot the solution
-x1_opt = w_opt(1:3+2*d:end);
-x2_opt = w_opt(2:3+2*d:end);
-u_opt = w_opt(3:3+2*d:end);
-tgrid = linspace(0, T, N+1);
-clf;
-hold on
-plot(tgrid, x1_opt, '--')
-plot(tgrid, x2_opt, '-')
-stairs(tgrid, [u_opt; nan], '-.')
-xlabel('t')
-legend('x1','x2','u')
+disp('all fine')
