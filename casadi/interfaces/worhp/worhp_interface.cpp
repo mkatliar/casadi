@@ -147,7 +147,13 @@ namespace casadi {
     // Initialize parameters to default values
     int status;
     InitParams(&status, &m->worhp_p);
+    userOut() << "test" << ":" << status << std::endl;
 
+    int val;
+    WorhpGetIntParam(&m->worhp_p, "NLPprint", &val);
+    userOut() << "test" << val << ":"  << std::endl;
+
+    casadi_assert(m->worhp_p.initialised);
     // Pass boolean parameters
     for (auto&& op : bool_opts_) {
       WorhpSetBoolParam(&m->worhp_p, op.first.c_str(), op.second);
