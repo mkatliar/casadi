@@ -167,6 +167,7 @@ matrix:
         - popd
         - python -c "from casadi.tools import *;loadAllCompiledPlugins()"
         - pushd test && make unittests_py examples_code_py && popd
+        - pushd docs/examples/cplusplus && g++ -std=c++11 -fPIC -g -lcasadi rocket_ipopt.cpp -o rocket && ./rocket && popd
     - compiler: gcc
       os: linux
       dist: trusty
