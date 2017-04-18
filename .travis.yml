@@ -162,12 +162,12 @@ matrix:
         - mkdir build
         - pushd build
         - cmake  -DOLD_LLVM=ON -DWITH_CLANG=ON -DWITH_DEPRECATED_FEATURES=OFF -DWITH_ECOS=ON -DWITH_MOSEK=ON -DWITH_PYTHON=ON -DWITH_WORHP=ON -DWITH_SLICOT=OFF -DWITH_PYTHON=ON -DWITH_JSON=ON ..
-        - make
+        - make VERBOSE=1
         - sudo make install
         - popd
         - python -c "from casadi.tools import *;loadAllCompiledPlugins()"
+        - pushd docs/examples/cplusplus && c++ -std=c++11 -fPIC -g -lcasadi rocket_ipopt.cpp -o rocket && ./rocket && popd
         - pushd test && make unittests_py examples_code_py && popd
-        - pushd docs/examples/cplusplus && g++ -std=c++11 -fPIC -g -lcasadi rocket_ipopt.cpp -o rocket && ./rocket && popd
     - compiler: gcc
       os: linux
       dist: trusty
