@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef CASADI_EXPORT_H
-#define CASADI_EXPORT_H
+#ifndef CASADI_CORE_CASADI_EXPORT_H_
+#define CASADI_CORE_CASADI_EXPORT_H_
 
 #ifdef CASADI_STATIC_DEFINE
 #define CASADI_EXPORT
@@ -49,11 +49,11 @@
 
 #ifndef CASADI_NO_EXPORT
 #ifdef _WIN32
-#define CASADI_NO_EXPORT 
+#define CASADI_NO_EXPORT
 #else
 #define CASADI_NO_EXPORT __attribute__((visibility("hidden")))
 #endif
 #endif // CASADI_NO_EXPORT
 #endif // CASADI_STATIC_DEFINE
 
-#endif
+#endif  // CASADI_CORE_CASADI_EXPORT_H_
