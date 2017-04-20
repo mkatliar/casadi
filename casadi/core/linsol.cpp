@@ -173,6 +173,11 @@ namespace casadi {
     return (*this)->linsol_cholesky((*this)->memory(0), tr);
   }
 
+  void Linsol::lu(DM& SWIG_OUTPUT(L), DM& SWIG_OUTPUT(U),
+                  DM& SWIG_OUTPUT(P1), DM& SWIG_OUTPUT(P2), bool tr) const {
+    return (*this)->linsol_lu((*this)->memory(0), L, U, P1, P2, tr);
+  }
+
   bool has_linsol(const string& name) {
     return Linsol::has_plugin(name);
   }

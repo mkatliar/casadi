@@ -152,6 +152,27 @@ namespace casadi {
     casadi_assert(m->N!=0);
   }
 
+  DM as_DM(const cs* M) {
+    std::vector<int> colind = std::vector<int>(M->p, M->p+M->n+1);
+    std::vector<int> row = std::vector<int>(M->i, M->i+M->nzmax);
+    Sparsity sp(M->m, M->n, colind, row);
+    return DM(sp, std::vector<double>(M->x, M->x+M->nzmax), false);
+  }
+
+  void CsparseInterface::linsol_lu(void* mem, DM& L, DM& U, DM& P1, DM& P2, bool tr) const {
+    auto m = static_cast<CsparseMemory*>(mem);
+
+    int n = m->A.n;
+    L = as_DM(m->N->L);
+    U = as_DM(m->N->U);
+    Sparsity P = Sparsity::diag(n);
+    if (m->N->pinv) P = P.pmult(std::vector<int>(m->N->pinv, m->N->pinv+n), true, false);
+    P1 = DM(P, 1);
+    P = Sparsity::diag(n);
+    if (m->S->q) P = P.pmult(std::vector<int>(m->S->q, m->S->q+n), true, false);
+    P2 = DM(P, 1);
+  }
+
   void CsparseInterface::solve(void* mem, double* x, int nrhs, bool tr) const {
     auto m = static_cast<CsparseMemory*>(mem);
     casadi_assert(m->N!=0);

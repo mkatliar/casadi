@@ -110,6 +110,9 @@ namespace casadi {
     /// Get Cholesky factor
     virtual DM linsol_cholesky(void* mem, bool tr) const;
 
+    /// Obtain a numeric LU factorization
+    virtual void linsol_lu(void* mem, DM& L, DM& U, DM& P1, DM& P2, bool tr) const;
+
     /// Number of negative eigenvalues
     virtual int neig(void* mem) const;
 

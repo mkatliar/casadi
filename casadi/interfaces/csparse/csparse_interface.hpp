@@ -97,6 +97,9 @@ namespace casadi {
     // Solve the linear system
     virtual void solve(void* mem, double* x, int nrhs, bool tr) const;
 
+    // Obtain factorization
+    virtual void linsol_lu(void* mem, DM& L, DM& U, DM& P1, DM& P2, bool tr) const;
+
     /// A documentation string
     static const std::string meta_doc;
 

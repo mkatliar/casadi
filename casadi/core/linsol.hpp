@@ -111,6 +111,12 @@ namespace casadi {
      */
     DM cholesky(bool tr=false) const;
 
+    /** \brief Obtain a numeric LU factorization
+        Only for csparse solver
+     */
+    void lu(DM& SWIG_OUTPUT(L), DM& SWIG_OUTPUT(U),
+            DM& SWIG_OUTPUT(P1), DM& SWIG_OUTPUT(P2), bool tr=false) const;
+
     /** \brief Number of negative eigenvalues
       * Not available for all solvers
       */

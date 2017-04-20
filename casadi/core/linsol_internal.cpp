@@ -96,6 +96,10 @@ namespace casadi {
     casadi_error("'linsol_cholesky' not defined for " + type_name());
   }
 
+  void LinsolInternal::linsol_lu(void* mem, DM& L, DM& U, DM& P1, DM& P2, bool tr) const {
+    casadi_error("'linsol_lu' not defined for " + type_name());
+  }
+
   int LinsolInternal::neig(void* mem) const {
     casadi_error("'neig' not defined for " + type_name());
   }
