@@ -29,7 +29,8 @@
 #include <iostream>
 #include <fstream>
 
-#include "casadi_common.hpp"
+#include <casadi/core/casadi_export.h>
+#include "casadi/core/casadi_common.hpp"
 
 namespace casadi {
 
@@ -61,6 +62,10 @@ namespace casadi {
 
       static bool hierarchical_sparsity;
 
+      static casadi_int max_num_dir;
+
+      static casadi_int start_index;
+
 #endif //SWIG
       // Setter and getter for simplification_on_the_fly
       static void setSimplificationOnTheFly(bool flag) { simplification_on_the_fly = flag; }
@@ -72,6 +77,9 @@ namespace casadi {
 
       static void setCasadiPath(const std::string & path) { casadipath = path; }
       static std::string getCasadiPath() { return casadipath; }
+
+      static void setMaxNumDir(casadi_int ndir) { max_num_dir=ndir; }
+      static casadi_int getMaxNumDir() { return max_num_dir; }
 
   };
 

@@ -29,56 +29,49 @@ Demonstration on how the algorithm of an SX function can be accessed and its ope
 from casadi import *
 import numpy
 
+# Create a function
 a = SX.sym('a')
 b = SX.sym('b',2)
-
-# Input expressions
-input_ex = [a,b]
+f = Function("f", [a,b], [2*a + b], ['a', 'b'], ['r'])
 
 # Input values of the same dimensions as the above
-input_val = [numpy.array([2.0]),numpy.array([3.0,4.0])]
-
-# Output expressions
-output_ex = [2*a + b]
+input_val = [numpy.array([2.0]),\
+             numpy.array([3.0,4.0])]
 
 # Output values to be calculated of the same dimensions as the above
 output_val = [numpy.zeros(2)]
 
-# Create a function
-f = Function("f", input_ex,output_ex)
-
 # Work vector
-work = numpy.zeros(f.getWorkSize())
+work = numpy.zeros(f.sz_w())
 
 # Loop over the algorithm
-for i in range(f.getAlgorithmSize()):
-  
+for k in range(f.n_instructions()):
+
   # Get the atomic operation
-  op = f.getAtomicOperation(i)
-  
+  op = f.instruction_id(k)
+  o = f.instruction_output(k)
+  i = f.instruction_input(k)
+
   if(op==OP_CONST):
-    work[f.getAtomicOutput(i)] = f.getAtomicInputReal(i)
-    print('work[', f.getAtomicOutput(i), '] = ', f.getAtomicInputReal(i))
+    work[o[0]] = f.instruction_constant(k)
+    print('work[', o[0], '] = ', f.instruction_constant(k))
   else:
-    i1 = f.getAtomicOutput(i)
-    i2,i3 = f.getAtomicInput(i)
     if op==OP_INPUT:
-      work[i1] = input_val[i2][i3]
-      print('work[', i1, '] = input[', i2, '][', i3,  ']', '                ---> ' , work[i1])
+      work[o[0]] = input_val[i[0]][i[1]]
+      print('work[', o[0], '] = input[', i[0], '][', i[1],  ']', '            ---> ' , work[o[0]])
     elif op==OP_OUTPUT:
-      output_val[i1][i3] = work[i2]
-      print('output[', i1, '][', i3, '] = work[', i2, ']','             ---> ', output_val[i1][i3])
+      output_val[o[0]][o[1]] = work[i[0]]
+      print('output[', o[0], '][', o[1], '] = work[', i[0], ']','             ---> ', output_val[o[0]][o[1]])
     elif op==OP_ADD:
-      work[i1] = work[i2] + work[i3]
-      print('work[', i1, '] = work[', i2, '] + work[', i3, ']','        ---> ', work[i1])
+      work[o[0]] = work[i[0]] + work[i[1]]
+      print('work[', o[0], '] = work[', i[0], '] + work[', i[1], ']','        ---> ', work[o[0]])
     elif op==OP_MUL:
-      work[i1] = work[i2] * work[i3]
-      print('work[', i1, '] = work[', i2, '] * work[', i3, ']','        ---> ', work[i1])
+      work[o[0]] = work[i[0]] * work[i[1]]
+      print('work[', o[0], '] = work[', i[0], '] * work[', i[1], ']','        ---> ', work[o[0]])
     else:
       print('Unknown operation: ', op)
 
 print('------')
-print("Evaluated function: ")
-print(output_ex, ' = ', output_val)
-print('where ', input_ex, ' = ', input_val)
-      
+print('Evaluated ' + str(f))
+print('Expected: ', f.call(input_val))
+print('Got:      ', output_val)

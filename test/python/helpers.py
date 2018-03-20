@@ -30,6 +30,8 @@ import sys
 from math import isnan, isinf
 import itertools
 import time
+from contextlib import contextmanager
+from casadi.tools import capture_stdout
 
 import argparse
 import struct
@@ -104,24 +106,6 @@ class Stderr():
     def __exit__(self, type, value, traceback):
         sys.stderr = self.stream.stream
 
-import contextlib
-@contextlib.contextmanager
-def capture():
-    import sys
-    try:
-      from cStringIO import StringIO
-    except:
-      from io import StringIO
-    oldout,olderr = sys.stdout, sys.stderr
-    try:
-        out=[StringIO(), StringIO()]
-        sys.stdout,sys.stderr = out
-        yield out
-    finally:
-        sys.stdout,sys.stderr = oldout, olderr
-        out[0] = out[0].getvalue()
-        out[1] = out[1].getvalue()
-
 class FunctionPool:
   def __init__(self):
     self.numpyoperators=[]
@@ -145,8 +129,19 @@ def toMX_fun(fun):
   ins = fun.mx_in()
   return Function("f",ins,fun(ins))
 
+
+
 class casadiTestCase(unittest.TestCase):
 
+  @contextmanager
+  def assertInException(self,s):
+    e = None
+    try:
+      yield
+    except Exception as err:
+      e = str(err)
+    self.assertFalse(e is None)
+    self.assertTrue(s in e,msg=e + "<->" + s)
 
   def tearDown(self):
     t = time.time() - self.startTime
@@ -347,6 +342,8 @@ class casadiTestCase(unittest.TestCase):
         continue
       self.numpyEvaluationCheck(pool.casadioperators[i],pool.numpyoperators[i],x,x0,"%s:%s" % (name,pool.names[i]),"\n I tried to apply %s (%s) from test case '%s' to numerical value %s. But the result returned: " % (str(pool.casadioperators[i]),pool.names[i],name, str(x0)),fmod=fmod,setx0=setx0)
 
+  def checkfunction_light(self,trial,solution,inputs=None,**kwargs):
+    self.checkfunction(trial,solution,inputs,fwd=False,adj=False,jacobian=False,gradient=False,hessian=False,sens_der=False,evals=False,**kwargs)
   def checkfunction(self,trial,solution,inputs=None,fwd=True,adj=True,jacobian=True,gradient=True,hessian=True,sens_der=True,evals=True,digits=9,digits_sens=None,failmessage="",allow_empty=True,verbose=True,indirect=False,sparsity_mod=True,allow_nondiff=False):
 
     if isinstance(inputs,dict):
@@ -388,40 +385,27 @@ class casadiTestCase(unittest.TestCase):
       for i in range(trial.n_in()):
         if (allow_empty and (trial.sparsity_in(i).is_empty() or solution.sparsity_in(i).is_empty() )): continue
         for j in range(trial.n_out()):
-          trialjac = trial.jacobian(i,j)
+          trialjac = trial.jacobian_old(i,j)
           self.assertEqual(trialjac.n_in(),trial.n_in())
           self.assertEqual(trialjac.n_out(),trial.n_out()+1)
-          solutionjac = solution.jacobian(i,j)
+          solutionjac = solution.jacobian_old(i,j)
           self.assertEqual(solutionjac.n_in(),solution.n_in())
           self.assertEqual(solutionjac.n_out(),solution.n_out()+1)
 
-          self.checkfunction(trialjac,solutionjac,inputs=inputs,fwd=fwd if sens_der else False,adj=adj if sens_der else False,jacobian=False,gradient=False,hessian=False,evals=False,digits=digits_sens,failmessage="(%s).jacobian(%d,%d)" % (failmessage,i,j),allow_empty=allow_empty,verbose=verbose,allow_nondiff=allow_nondiff)
-
-    if gradient:
-      for i in range(trial.n_in()):
-        if (allow_empty and (trial.sparsity_in(i).is_empty() or solution.sparsity_in(i).is_empty() )): continue
-        for j in range(trial.n_out()):
-          if trial.sparsity_out(j).is_scalar() and solution.sparsity_out(j).is_scalar():
-            trialgrad = trial.gradient(i,j)
-            self.assertEqual(trialgrad.n_in(),trial.n_in())
-            self.assertEqual(trialgrad.n_out(),trial.n_out()+1)
-            solutiongrad = solution.gradient(i,j)
-            self.assertEqual(solutiongrad.n_in(),solution.n_in())
-            self.assertEqual(solutiongrad.n_out(),solution.n_out()+1)
-            self.checkfunction(trialgrad,solutiongrad,inputs=inputs,fwd=fwd  if sens_der else False,adj=adj if sens_der else False,jacobian=False,gradient=False,hessian=False,evals=False,digits=digits_sens,failmessage="(%s).gradient(%d,%d)" % (failmessage,i,j),allow_empty=allow_empty,verbose=verbose,allow_nondiff=allow_nondiff)
+          self.checkfunction(trialjac,solutionjac,inputs=inputs,fwd=fwd if sens_der else False,adj=adj if sens_der else False,jacobian=False,gradient=False,hessian=False,evals=False,digits=digits_sens,failmessage="(%s).jacobian_old(%d,%d)" % (failmessage,i,j),allow_empty=allow_empty,verbose=verbose,allow_nondiff=allow_nondiff)
 
     if hessian:
       for i in range(trial.n_in()):
         if (allow_empty and (trial.sparsity_in(i).is_empty() or solution.sparsity_in(i).is_empty() )): continue
         for j in range(trial.n_out()):
           if trial.sparsity_out(j).is_scalar() and solution.sparsity_out(j).is_scalar():
-            trialhess = trial.hessian(i,j)
+            trialhess = trial.hessian_old(i,j)
             self.assertEqual(trialhess.n_in(),trial.n_in())
             self.assertEqual(trialhess.n_out(),trial.n_out()+2)
-            solutionhess = solution.hessian(i,j)
+            solutionhess = solution.hessian_old(i,j)
             self.assertEqual(solutionhess.n_in(),solution.n_in())
             self.assertEqual(solutionhess.n_out(),solution.n_out()+2)
-            self.checkfunction(trialhess,solutionhess,inputs=inputs,fwd=fwd  if sens_der else False,adj=adj  if sens_der else False,jacobian=False,gradient=False,hessian=False,evals=False,digits=digits_sens,failmessage="(%s).hessian(%d,%d)" % (failmessage,i,j),allow_empty=allow_empty,verbose=verbose,allow_nondiff=allow_nondiff)
+            self.checkfunction(trialhess,solutionhess,inputs=inputs,fwd=fwd  if sens_der else False,adj=adj  if sens_der else False,jacobian=False,gradient=False,hessian=False,evals=False,digits=digits_sens,failmessage="(%s).hessian_old(%d,%d)" % (failmessage,i,j),allow_empty=allow_empty,verbose=verbose,allow_nondiff=allow_nondiff)
 
     if evals is True:
       evals = 2
@@ -432,17 +416,17 @@ class casadiTestCase(unittest.TestCase):
         ret = DM(x)
         if ret.numel()>0:
           ret[0,0] = DM(1,1)
-          return ret
+          return ret.sparsity()
         else:
-          return ret
+          return ret.sparsity()
 
       def remove_last(x):
         ret = DM(x)
         if ret.nnz()>0:
           ret[ret.sparsity().row()[-1],ret.sparsity().get_col()[-1]] = DM(1,1)
-          return ret
+          return ret.sparsity()
         else:
-          return x
+          return ret.sparsity()
 
       #spmods = [lambda x: x , remove_first, remove_last]
       spmods = [lambda x: x]
@@ -452,8 +436,6 @@ class casadiTestCase(unittest.TestCase):
 
       storage2 = {}
       storage = {}
-
-      ndir = 2
 
       def vec(l):
         ret = []
@@ -467,14 +449,15 @@ class casadiTestCase(unittest.TestCase):
 
         # dense
         for spmod,spmod2 in itertools.product(spmods,repeat=2):
-          fseeds = [[sym("f",spmod(f.sparsity_in(i))) for i in range(f.n_in())]  for d in range(ndir)]
-          aseeds = [[sym("a",spmod2(f.sparsity_out(i)))  for i in range(f.n_out())] for d in range(ndir)]
+          fseeds = [sym("f",spmod(f.sparsity_in(i))) for i in range(f.n_in())]
+          aseeds = [sym("a",spmod2(f.sparsity_out(i)))  for i in range(f.n_out())]
           inputss = [sym("i",f.sparsity_in(i)) for i in range(f.n_in())]
-          res = f.call(inputss)
-          fwdsens = f.forward(inputss, res, fseeds)
-          adjsens = f.reverse(inputss, res, aseeds)
+          res = f.call(inputss,True)
+          #print res, "sp", [i.sparsity().dim(True) for i in fseeds]
+          [fwdsens] = forward(res, inputss, [fseeds])
+          [adjsens] = reverse(res, inputss, [aseeds])
 
-          vf = Function("vf", inputss+vec([fseeds[i]+aseeds[i] for i in range(ndir)]),list(res) + vec([list(fwdsens[i])+list(adjsens[i]) for i in range(ndir)]))
+          vf = Function("vf", inputss+vec([fseeds+aseeds]),list(res) + vec([list(fwdsens)+list(adjsens)]))
 
           vf_in = list(inputs)
           # Complete random seeding
@@ -495,15 +478,15 @@ class casadiTestCase(unittest.TestCase):
 
             # Second order sensitivities
             for spmod_2,spmod2_2 in itertools.product(spmods,repeat=2):
-              fseeds2 = [[sym("f",vf_reference.sparsity_in(i)) for i in range(vf.n_in())] for d in range(ndir)]
-              aseeds2 = [[sym("a",vf_reference.sparsity_out(i))  for i in range(vf.n_out()) ] for d in range(ndir)]
+              fseeds2 = [sym("f",vf_reference.sparsity_in(i)) for i in range(vf.n_in())]
+              aseeds2 = [sym("a",vf_reference.sparsity_out(i))  for i in range(vf.n_out()) ]
               inputss2 = [sym("i",vf_reference.sparsity_in(i)) for i in range(vf.n_in())]
 
               res2 = vf.call(inputss2)
-              fwdsens2 = vf.forward(inputss2, res2, fseeds2)
-              adjsens2 = vf.reverse(inputss2, res2, aseeds2)
+              [fwdsens2] = forward(res2, inputss2, [fseeds2])
+              [adjsens2] = reverse(res2, inputss2, [aseeds2])
 
-              vf2 = Function("vf2", inputss2+vec([fseeds2[i]+aseeds2[i] for i in range(ndir)]),list(res2) + vec([list(fwdsens2[i])+list(adjsens2[i]) for i in range(ndir)]))
+              vf2 = Function("vf2", inputss2+vec([fseeds2+aseeds2]),list(res2) + vec([list(fwdsens2)+list(adjsens2)]))
 
               vf2_in = list(inputs)
 
@@ -529,21 +512,29 @@ class casadiTestCase(unittest.TestCase):
               #self.checkarray(IM(a.sparsity(),1),IM(b.sparsity(),1),("%s, output(%d)" % (order,k))+str(vf.getInput(0))+failmessage,digits=digits_sens)
               self.checkarray(a,b,("%s, output(%d)" % (order,k))+failmessage,digits=digits_sens)
 
+  def check_sparsity(self, a,b):
+    self.assertTrue(a==b, msg=str(a) + " <-> " + str(b))
 
-  def check_codegen(self,F,inputs=None):
+  def check_codegen(self,F,inputs=None, opts=None):
     if args.run_slow:
       import hashlib
       name = "codegen_%s" % (hashlib.md5(("%f" % np.random.random()+str(F)+str(time.time())).encode()).hexdigest())
-      F.generate(name)
+      if opts is None: opts = {}
+      F.generate(name, opts)
       import subprocess
-      p = subprocess.Popen("gcc -fPIC -shared -O3 %s.c -o %s.so" % (name,name) ,shell=True).wait()
+      p = subprocess.Popen("gcc -pedantic -std=c89 -fPIC -shared -Wall -Werror -Wextra -Wno-unknown-pragmas -Wno-long-long -Wno-unused-parameter -O3 %s.c -o %s.so" % (name,name) ,shell=True).wait()
       F2 = external(F.name(), './' + name + '.so')
 
       Fout = F.call(inputs)
       Fout2 = F2.call(inputs)
 
-      for i in range(F.n_out()):
-        self.checkarray(Fout[i],Fout2[i])
+      if isinstance(inputs, dict):
+        self.assertEqual(F.name_out(), F2.name_out())
+        for k in F.name_out():
+          self.checkarray(Fout[k],Fout2[k])
+      else:
+        for i in range(F.n_out()):
+          self.checkarray(Fout[i],Fout2[i])
 
 
 class run_only(object):
@@ -598,6 +589,18 @@ class requires_nlpsol(object):
       print("Not available NLP plugin %s, skipping unittests" % self.n)
       return None
 
+class requires_expm(object):
+  def __init__(self,n):
+    self.n = n
+
+  def __call__(self,c):
+    try:
+      load_expm(self.n)
+      return c
+    except:
+      print("Not available Expm plugin %s, skipping unittests" % self.n)
+      return None
+
 class requires_integrator(object):
   def __init__(self,n):
     self.n = n
@@ -620,18 +623,6 @@ class requires_rootfinder(object):
       return c
     except:
       print("Not available RFP plugin %s, skipping unittests" % self.n)
-      return None
-
-class requires_linsol(object):
-  def __init__(self,n):
-    self.n = n
-
-  def __call__(self,c):
-    try:
-      load_linsol(self.n)
-      return c
-    except:
-      print("Not available linear solver plugin %s, skipping unittests" % self.n)
       return None
 
 class requiresPlugin(object):

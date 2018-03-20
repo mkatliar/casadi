@@ -26,7 +26,7 @@
 #ifndef CASADI_MA27_INTERFACE_HPP
 #define CASADI_MA27_INTERFACE_HPP
 
-#include "casadi/core/function/linsol_internal.hpp"
+#include "casadi/core/linsol_internal.hpp"
 #include <casadi/interfaces/hsl/casadi_linsol_ma27_export.h>
 
 extern "C" {
@@ -115,52 +115,48 @@ namespace casadi {
   public:
 
     // Create a linear solver given a sparsity pattern and a number of right hand sides
-    Ma27Interface(const std::string& name);
+    Ma27Interface(const std::string& name, const Sparsity& sp);
 
     /** \brief  Create a new Linsol */
-    static LinsolInternal* creator(const std::string& name) {
-      return new Ma27Interface(name);
+    static LinsolInternal* creator(const std::string& name, const Sparsity& sp) {
+      return new Ma27Interface(name, sp);
     }
 
     // Destructor
-    virtual ~Ma27Interface();
+    ~Ma27Interface() override;
 
     // Initialize the solver
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new Ma27Memory();}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<Ma27Memory*>(mem);}
+    void* alloc_mem() const override { return new Ma27Memory();}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
 
-    // Set sparsity pattern
-    virtual void reset(void* mem, const int* sp) const;
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<Ma27Memory*>(mem);}
 
     // Factorize the linear system
-    virtual void factorize(void* mem, const double* A) const;
+    int nfact(void* mem, const double* A) const override;
 
     /// Number of negative eigenvalues
-    virtual int neig(void* mem) const;
+    casadi_int neig(void* mem, const double* A) const override;
 
     /// Matrix rank
-    virtual int rank(void* mem) const;
+    casadi_int rank(void* mem, const double* A) const override;
 
     // Solve the linear system
-    virtual void solve(void* mem, double* x, int nrhs, bool tr) const;
+    int solve(void* mem, const double* A, double* x, casadi_int nrhs, bool tr) const override;
 
     /// A documentation string
     static const std::string meta_doc;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "ma27";}
+    const char* plugin_name() const override { return "ma27";}
 
-    /** \brief Set the (persistent) work vectors */
-    virtual void set_work(void* mem, const double**& arg, double**& res,
-                          int*& iw, double*& w) const;
+    // Get name of the class
+    std::string class_name() const override { return "Ma27Interface";}
   };
 
 } // namespace casadi

@@ -25,9 +25,9 @@
 #ifndef CASADI_CPLEX_INTERFACE_HPP
 #define CASADI_CPLEX_INTERFACE_HPP
 
-#include "casadi/core/function/conic_impl.hpp"
+#include "casadi/core/conic_impl.hpp"
 #include <casadi/interfaces/cplex/casadi_conic_cplex_export.h>
-#include "ilcplex/cplex.h"
+#include "ilcplex/cplexx.h"
 
 #include <string>
 
@@ -42,12 +42,12 @@
 
 namespace casadi {
 
-  struct CASADI_CONIC_CPLEX_EXPORT CplexMemory {
+  struct CASADI_CONIC_CPLEX_EXPORT CplexMemory : public ConicMemory {
     /// Indicates if we have to warm-start
     bool is_warm;
 
     /// Nature of problem (always minimization)
-    int objsen;
+    casadi_int objsen;
 
     /// Determines relation >,<, = in the linear constraints
     std::vector<char> sense;
@@ -73,6 +73,13 @@ namespace casadi {
     /// CPLEX environment
     CPXENVptr env;
     CPXLPptr lp;
+
+    std::vector<CPXDIM> a_row, h_row;
+    std::vector<CPXNNZ> a_colind, h_colind;
+
+
+    int return_status;
+    bool success;
 
     /// Constructor
     CplexMemory();
@@ -102,45 +109,51 @@ namespace casadi {
                             const std::map<std::string, Sparsity>& st);
 
     /// Destructor
-    virtual ~CplexInterface();
+    ~CplexInterface() override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "cplex";}
+    const char* plugin_name() const override { return "cplex";}
+
+    // Get name of the class
+    std::string class_name() const override { return "CplexInterface";}
 
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     // Initialize the solver
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new CplexMemory();}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<CplexMemory*>(mem);}
+    void* alloc_mem() const override { return new CplexMemory();}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
+
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<CplexMemory*>(mem);}
 
     // Solve the QP
-    virtual void eval(void* mem, const double** arg, double** res, int* iw, double* w) const;
+    int eval(const double** arg, double** res, casadi_int* iw, double* w, void* mem) const override;
 
     /// Can discrete variables be treated
-    virtual bool integer_support() const { return true;}
+    bool integer_support() const override { return true;}
+
+    /// Get all statistics
+    Dict get_stats(void* mem) const override;
 
     /// All CPLEX options
     Dict opts_;
 
     ///@{
     /// Options
-    int qp_method_;
+    casadi_int qp_method_;
     bool dump_to_file_;
     std::string dump_filename_;
     double tol_;
-    int dep_check_;
+    casadi_int dep_check_;
     bool warm_start_;
     ///@}
 

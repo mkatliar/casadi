@@ -220,6 +220,20 @@
 }
 
 {
+   False positive generalisation
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+}
+
+{
    Mysterious error in sdp
    Memcheck:Leak
    match-leak-kinds: definite
@@ -235,6 +249,16 @@
    fun:_PyImport_LoadDynamicModule
    fun:import_submodule.lto_priv.1588
    fun:ensure_fromlist.lto_priv.1420
+}
+
+{
+   leaks
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
 }
 
 
@@ -389,4 +413,17 @@ obj:*libworhp*
    match-leak-kinds: definite
    fun:malloc
    fun:ECOS_setup
+}
+
+# OpenMP
+{
+   Some issue with openmp
+   Memcheck:Param
+   sched_setaffinity(mask)
+   fun:syscall
+   fun:__kmp_affinity_determine_capable
+   fun:_Z20__kmp_env_initializePKc
+   fun:*kmp_do_serial_initialize*
+   fun:__kmp_get_global_thread_id_reg
+   fun:GOMP_parallel_start@@VERSION
 }

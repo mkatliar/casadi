@@ -26,7 +26,7 @@
 #ifndef CASADI_WORHP_INTERFACE_HPP
 #define CASADI_WORHP_INTERFACE_HPP
 
-#include "casadi/core/function/nlpsol_impl.hpp"
+#include "casadi/core/nlpsol_impl.hpp"
 #include <casadi/interfaces/worhp/casadi_nlpsol_worhp_export.h>
 
 // GCC_VERSION is defined in 'worhp.h'
@@ -43,6 +43,9 @@
 #undef Q
 /**\defgroup plugin_Nlpsol_worhp
  WORHP interface
+
+ Designed for Worhp 1.10
+
 */
 /** \pluginsection{Nlpsol,worhp} **/
 
@@ -56,13 +59,16 @@ namespace casadi {
     Control   worhp_c;
 
     // Stats
-    int iter;
-    int iter_sqp;
+    casadi_int iter;
+    casadi_int iter_sqp;
     double inf_pr;
     double inf_du;
     double alpha_pr;
-    int return_code;
+    casadi_int return_code;
     const char* return_status;
+    bool success;
+
+    bool init_;
 
     /// Constructor
     WorhpMemory();
@@ -90,10 +96,13 @@ namespace casadi {
     explicit WorhpInterface(const std::string& name, const Function& nlp);
 
     // Destructor
-    virtual ~WorhpInterface();
+    ~WorhpInterface() override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "worhp";}
+    const char* plugin_name() const override { return "worhp";}
+
+    // Get name of the class
+    std::string class_name() const override { return "WorhpInterface";}
 
     /** \brief  Create a new NLP Solver */
     static Nlpsol* creator(const std::string& name, const Function& nlp) {
@@ -106,35 +115,39 @@ namespace casadi {
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     // Initialize the solver
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new WorhpMemory();}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<WorhpMemory*>(mem);}
+    void* alloc_mem() const override { return new WorhpMemory();}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
+
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<WorhpMemory*>(mem);}
+
+    /// Get all statistics
+    Dict get_stats(void* mem) const override;
 
     /** \brief Set the (persistent) work vectors */
-    virtual void set_work(void* mem, const double**& arg, double**& res,
-                          int*& iw, double*& w) const;
+    void set_work(void* mem, const double**& arg, double**& res,
+                          casadi_int*& iw, double*& w) const override;
 
     // Solve the NLP
-    virtual void solve(void* mem) const;
+    int solve(void* mem) const override;
 
     // Options
     std::map<std::string, bool> bool_opts_;
-    std::map<std::string, int> int_opts_;
+    std::map<std::string, casadi_int> int_opts_;
     std::map<std::string, double> double_opts_;
+    Dict qp_opts_;
 
     // WORHP return codes
-    static const char* return_codes(int flag);
+    static const char* return_codes(casadi_int flag);
 
     /// A documentation string
     static const std::string meta_doc;

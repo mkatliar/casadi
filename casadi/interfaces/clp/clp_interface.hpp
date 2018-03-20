@@ -25,12 +25,13 @@
 #ifndef CASADI_CLP_INTERFACE_HPP
 #define CASADI_CLP_INTERFACE_HPP
 
-#include "casadi/core/function/conic_impl.hpp"
+#include "casadi/core/conic_impl.hpp"
 #include <casadi/interfaces/clp/casadi_conic_clp_export.h>
 
 #include "ClpSimplex.hpp"
 #include "ClpFactorization.hpp"
 #include "ClpNetworkMatrix.hpp"
+#include "ClpEventHandler.hpp"
 
 #include <string>
 
@@ -45,12 +46,19 @@
 
 namespace casadi {
 
-  struct CASADI_CONIC_CLP_EXPORT ClpMemory {
+  struct CASADI_CONIC_CLP_EXPORT ClpMemory : public ConicMemory {
     /// Constructor
     ClpMemory();
 
     /// Destructor
     ~ClpMemory();
+
+    std::vector<int> colind, row;
+
+    int return_status;
+    int secondary_return_status;
+    bool success;
+
   };
 
   /** \brief \pluginbrief{Conic,clp}
@@ -74,25 +82,31 @@ namespace casadi {
                             const std::map<std::string, Sparsity>& st);
 
     /// Destructor
-    virtual ~ClpInterface();
+    ~ClpInterface() override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "clp";}
+    const char* plugin_name() const override { return "clp";}
+
+    // Get name of the class
+    std::string class_name() const override { return "ClpInterface";}
 
     // Initialize the solver
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new ClpMemory();}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<ClpMemory*>(mem);}
+    void* alloc_mem() const override { return new ClpMemory();}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
+
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<ClpMemory*>(mem);}
+
+    /// Get all statistics
+    Dict get_stats(void* mem) const override;
 
     // Solve the QP
-    virtual void eval(void* mem, const double** arg, double** res, int* iw, double* w) const;
+    int eval(const double** arg, double** res, casadi_int* iw, double* w, void* mem) const override;
 
     /// A documentation string
     static const std::string meta_doc;

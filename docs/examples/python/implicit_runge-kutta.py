@@ -77,15 +77,14 @@ for j in range(d+1):
   for r in range(d+1):
     if r != j:
       L *= (tau-tau_root[r])/(tau_root[j]-tau_root[r])
-  lfcn = Function('lfcn', [tau], [L])
 
   # Evaluate the polynomial at the final time to get the coefficients of the continuity equation
+  lfcn = Function('lfcn', [tau], [L])
   D[j] = lfcn(1.0)
 
   # Evaluate the time derivative of the polynomial at all collocation points to get the coefficients of the continuity equation
-  tfcn = lfcn.tangent()
-  for r in range(d+1):
-    C[j,r], _ = tfcn(tau_root[r])
+  tfcn = Function('tfcn', [tau], [tangent(L,tau)])
+  for r in range(d+1): C[j,r] = tfcn(tau_root[r])
 
 # Total number of variables for one finite element
 X0 = MX.sym('X0',nx)
@@ -117,7 +116,7 @@ vfcn = Function('vfcn', [V, X0, P], [V_eq])
 vfcn_sx = vfcn.expand()
 
 # Create a implicit function instance to solve the system of equations
-ifcn = rootfinder('ifcn', 'newton', vfcn_sx, {'linear_solver':'csparse'})
+ifcn = rootfinder('ifcn', 'newton', vfcn_sx)
 V = ifcn(MX(),X0,P)
 X = [X0 if r==0 else V[(r-1)*nx:r*nx] for r in range(d+1)]
 

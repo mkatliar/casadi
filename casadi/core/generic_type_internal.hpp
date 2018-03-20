@@ -27,13 +27,14 @@
 #define CASADI_GENERIC_TYPE_INTERNAL_HPP
 
 #include "generic_type.hpp"
-#include "std_vector_tools.hpp"
+#include "casadi_misc.hpp"
+#include "shared_object_internal.hpp"
 
 /// \cond INTERNAL
 
 namespace casadi {
 
-  class CASADI_EXPORT GenericTypeBase : public SharedObjectNode {
+  class CASADI_EXPORT GenericTypeBase : public SharedObjectInternal {
   public:
     virtual ~GenericTypeBase() {}
     virtual TypeID getType() const = 0;
@@ -43,9 +44,10 @@ namespace casadi {
   class CASADI_EXPORT GenericTypeInternal : public GenericTypeBase {
   public:
     explicit GenericTypeInternal(const T& d) : d_(d) {}
-    virtual ~GenericTypeInternal() {}
-    virtual void print(std::ostream &stream) const { stream << d_; }
-    virtual TypeID getType() const { return ID;}
+    ~GenericTypeInternal() override {}
+    std::string class_name() const override {return "GenericTypeInternal";}
+    void disp(std::ostream& stream, bool more) const override { stream << d_; }
+    TypeID getType() const override { return ID;}
     T d_;
   };
 

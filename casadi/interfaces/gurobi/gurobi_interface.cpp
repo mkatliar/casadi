@@ -24,7 +24,7 @@
 
 
 #include "gurobi_interface.hpp"
-#include "casadi/core/std_vector_tools.hpp"
+#include "casadi/core/casadi_misc.hpp"
 
 using namespace std;
 namespace casadi {
@@ -35,7 +35,8 @@ namespace casadi {
     plugin->creator = GurobiInterface::creator;
     plugin->name = "gurobi";
     plugin->doc = GurobiInterface::meta_doc.c_str();
-    plugin->version = 31;
+    plugin->version = CASADI_VERSION;
+    plugin->options = &GurobiInterface::options_;
     return 0;
   }
 
@@ -50,14 +51,17 @@ namespace casadi {
   }
 
   GurobiInterface::~GurobiInterface() {
-    clear_memory();
+    clear_mem();
   }
 
   Options GurobiInterface::options_
   = {{&Conic::options_},
      {{"vtype",
        {OT_STRINGVECTOR,
-        "Type of variables: [CONTINUOUS|binary|integer|semicont|semiint]"}}
+        "Type of variables: [CONTINUOUS|binary|integer|semicont|semiint]"}},
+      {"gurobi",
+       {OT_DICT,
+        "Options to be passed to gurobi."}}
      }
   };
 
@@ -72,14 +76,16 @@ namespace casadi {
     for (auto&& op : opts) {
       if (op.first=="vtype") {
         vtype = op.second;
+      } else if (op.first=="gurobi") {
+        opts_ = op.second;
       }
     }
 
     // Variable types
     if (!vtype.empty()) {
-      casadi_assert_message(vtype.size()==nx_, "Option 'vtype' has wrong length");
+      casadi_assert(vtype.size()==nx_, "Option 'vtype' has wrong length");
       vtype_.resize(nx_);
-      for (int i=0; i<nx_; ++i) {
+      for (casadi_int i=0; i<nx_; ++i) {
         if (vtype[i]=="continuous") {
           vtype_[i] = GRB_CONTINUOUS;
         } else if (vtype[i]=="binary") {
@@ -103,17 +109,69 @@ namespace casadi {
     alloc_iw(nx_, true); // tr_ind
   }
 
-  void GurobiInterface::init_memory(void* mem) const {
+  int GurobiInterface::init_mem(void* mem) const {
     auto m = static_cast<GurobiMemory*>(mem);
 
     // Load environment
-    int flag = GRBloadenv(&m->env, 0); // no log file
-    casadi_assert_message(!flag && m->env, "Failed to create GUROBI environment");
+    casadi_int flag = GRBloadenv(&m->env, 0); // no log file
+    casadi_assert(!flag && m->env, "Failed to create GUROBI environment");
+
+    m->fstats["preprocessing"]  = FStats();
+    m->fstats["solver"]         = FStats();
+    m->fstats["postprocessing"] = FStats();
+    return 0;
   }
 
-  void GurobiInterface::
-  eval(void* mem, const double** arg, double** res, int* iw, double* w) const {
+  inline const char* return_status_string(casadi_int status) {
+    switch (status) {
+    case GRB_LOADED:
+      return "LOADED";
+    case GRB_OPTIMAL:
+      return "OPTIMAL";
+    case GRB_INFEASIBLE:
+      return "INFEASIBLE";
+    case GRB_INF_OR_UNBD:
+      return "INF_OR_UNBD";
+    case GRB_UNBOUNDED:
+      return "UNBOUNDED";
+    case GRB_CUTOFF:
+      return "CUTOFF";
+    case GRB_ITERATION_LIMIT:
+      return "ITERATION_LIMIT";
+    case GRB_NODE_LIMIT:
+      return "NODE_LIMIT";
+    case GRB_TIME_LIMIT:
+      return "TIME_LIMIT";
+    case GRB_SOLUTION_LIMIT:
+      return "SOLUTION_LIMIT";
+    case GRB_INTERRUPTED:
+      return "INTERRUPTED";
+    case GRB_NUMERIC:
+      return "NUMERIC";
+    case GRB_SUBOPTIMAL:
+      return "SUBOPTIMAL";
+    case GRB_INPROGRESS:
+      return "INPROGRESS";
+    }
+    return "Unknown";
+  }
+
+  int GurobiInterface::
+  eval(const double** arg, double** res, casadi_int* iw, double* w, void* mem) const {
     auto m = static_cast<GurobiMemory*>(mem);
+
+    // Statistics
+    for (auto&& s : m->fstats) s.second.reset();
+
+    m->fstats.at("preprocessing").tic();
+
+    // Problem has not been solved at this point
+    m->success = false;
+    m->return_status = -1;
+
+    if (inputs_check_) {
+      check_inputs(arg[CONIC_LBX], arg[CONIC_UBX], arg[CONIC_LBA], arg[CONIC_UBA]);
+    }
 
     // Inputs
     const double *h=arg[CONIC_H],
@@ -122,30 +180,30 @@ namespace casadi {
       *lba=arg[CONIC_LBA],
       *uba=arg[CONIC_UBA],
       *lbx=arg[CONIC_LBX],
-      *ubx=arg[CONIC_UBX],
-      *x0=arg[CONIC_X0],
-      *lam_x0=arg[CONIC_LAM_X0];
+      *ubx=arg[CONIC_UBX];
+      //*x0=arg[CONIC_X0],
+      //*lam_x0=arg[CONIC_LAM_X0];
 
     // Outputs
     double *x=res[CONIC_X],
-      *cost=res[CONIC_COST],
-      *lam_a=res[CONIC_LAM_A],
-      *lam_x=res[CONIC_LAM_X];
+      *cost=res[CONIC_COST];
+      //*lam_a=res[CONIC_LAM_A],
+      //*lam_x=res[CONIC_LAM_X];
 
     // Temporary memory
     double *val=w; w+=nx_;
-    int *ind=iw; iw+=nx_;
-    int *ind2=iw; iw+=nx_;
-    int *tr_ind=iw; iw+=nx_;
+    int *ind=reinterpret_cast<int*>(iw); iw+=nx_;
+    int *ind2=reinterpret_cast<int*>(iw); iw+=nx_;
+    int *tr_ind=reinterpret_cast<int*>(iw); iw+=nx_;
 
     // Greate an empty model
     GRBmodel *model = 0;
     try {
-      int flag = GRBnewmodel(m->env, &model, name_.c_str(), 0, 0, 0, 0, 0, 0);
-      casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+      casadi_int flag = GRBnewmodel(m->env, &model, name_.c_str(), 0, 0, 0, 0, 0, 0);
+      casadi_assert(!flag, GRBgeterrormsg(m->env));
 
       // Add variables
-      for (int i=0; i<nx_; ++i) {
+      for (casadi_int i=0; i<nx_; ++i) {
         // Get bounds
         double lb = lbx ? lbx[i] : 0., ub = ubx ? ubx[i] : 0.;
         if (isinf(lb)) lb = -GRB_INFINITY;
@@ -166,18 +224,18 @@ namespace casadi {
 
         // Pass to model
         flag = GRBaddvar(model, 0, 0, 0, g ? g[i] : 0., lb, ub, vtype, 0);
-        casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+        casadi_assert(!flag, GRBgeterrormsg(m->env));
       }
       flag = GRBupdatemodel(model);
-      casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+      casadi_assert(!flag, GRBgeterrormsg(m->env));
 
       // Add quadratic terms
-      const int *H_colind=sparsity_in(CONIC_H).colind(), *H_row=sparsity_in(CONIC_H).row();
+      const casadi_int *H_colind=H_.colind(), *H_row=H_.row();
       for (int i=0; i<nx_; ++i) {
 
         // Quadratic term nonzero indices
-        int numqnz = H_colind[1]-H_colind[0];
-        casadi_copy(H_row, numqnz, ind);
+        casadi_int numqnz = H_colind[1]-H_colind[0];
+        for (casadi_int k=0;k<numqnz;++k) ind[k]=H_row[k];
         H_colind++;
         H_row += numqnz;
 
@@ -195,21 +253,21 @@ namespace casadi {
 
         // Pass to model
         flag = GRBaddqpterms(model, numqnz, ind, ind2, val);
-        casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+        casadi_assert(!flag, GRBgeterrormsg(m->env));
       }
 
       // Add constraints
-      const int *A_colind=sparsity_in(CONIC_A).colind(), *A_row=sparsity_in(CONIC_A).row();
-      casadi_copy(A_colind, nx_, tr_ind);
-      for (int i=0; i<na_; ++i) {
+      const casadi_int *A_colind=A_.colind(), *A_row=A_.row();
+      for (casadi_int k=0;k<nx_;++k) tr_ind[k]=H_row[k];
+      for (casadi_int i=0; i<na_; ++i) {
         // Get bounds
         double lb = lba ? lba[i] : 0., ub = uba ? uba[i] : 0.;
 //        if (isinf(lb)) lb = -GRB_INFINITY;
 //        if (isinf(ub)) ub =  GRB_INFINITY;
 
         // Constraint nonzeros
-        int numnz = 0;
-        for (int j=0; j<nx_; ++j) {
+        casadi_int numnz = 0;
+        for (casadi_int j=0; j<nx_; ++j) {
           if (tr_ind[j]<A_colind[j+1] && A_row[tr_ind[j]]==i) {
             ind[numnz] = j;
             val[numnz] = a ? a[tr_ind[j]] : 0;
@@ -225,52 +283,104 @@ namespace casadi {
           } else {
             // Only upper bound
             flag = GRBaddconstr(model, numnz, ind, val, GRB_LESS_EQUAL, ub, 0);
-            casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+            casadi_assert(!flag, GRBgeterrormsg(m->env));
           }
         } else {
           if (isinf(ub)) {
             // Only lower bound
             flag = GRBaddconstr(model, numnz, ind, val, GRB_GREATER_EQUAL, lb, 0);
-            casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+            casadi_assert(!flag, GRBgeterrormsg(m->env));
           } else if (lb==ub) {
             // Upper and lower bounds equal
             flag = GRBaddconstr(model, numnz, ind, val, GRB_EQUAL, lb, 0);
-            casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+            casadi_assert(!flag, GRBgeterrormsg(m->env));
           } else {
             // Both upper and lower bounds
             flag = GRBaddrangeconstr(model, numnz, ind, val, lb, ub, 0);
-            casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+            casadi_assert(!flag, GRBgeterrormsg(m->env));
           }
         }
       }
 
+      flag = 0;
+      for (auto && op : opts_) {
+        int ret = GRBgetparamtype(m->env, op.first.c_str());
+        switch (ret) {
+          case -1:
+            casadi_error("Parameter '" + op.first + "' unknown to Gurobi.");
+          case 1:
+            {
+              flag = GRBsetintparam(GRBgetenv(model), op.first.c_str(), op.second);
+              break;
+            }
+          case 2:
+              flag = GRBsetdblparam(GRBgetenv(model), op.first.c_str(), op.second);
+              break;
+          case 3:
+            {
+              std::string s = op.second;
+              flag = GRBsetstrparam(GRBgetenv(model), op.first.c_str(), s.c_str());
+              break;
+            }
+          default:
+            casadi_error("Not implememented : " + str(ret));
+        }
+        casadi_assert(!flag, GRBgeterrormsg(m->env));
+      }
+
+      m->fstats.at("preprocessing").toc();
+      m->fstats.at("solver").tic();
+
       // Solve the optimization problem
       flag = GRBoptimize(model);
-      casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+      casadi_assert(!flag, GRBgeterrormsg(m->env));
+
+      m->fstats.at("solver").toc();
+      m->fstats.at("postprocessing").tic();
+
       int optimstatus;
       flag = GRBgetintattr(model, GRB_INT_ATTR_STATUS, &optimstatus);
-      casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+      casadi_assert(!flag, GRBgeterrormsg(m->env));
+
+      if (verbose_) uout() << "return status: " << return_status_string(optimstatus) <<
+        " (" << optimstatus <<")" << std::endl;
+
+      m->return_status = optimstatus;
+      m->success = optimstatus==GRB_OPTIMAL;
 
       // Get the objective value, if requested
       if (cost) {
         flag = GRBgetdblattr(model, GRB_DBL_ATTR_OBJVAL, cost);
-        casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+        if (flag) cost[0] = casadi::nan;
       }
 
       // Get the optimal solution, if requested
       if (x) {
         flag = GRBgetdblattrarray(model, GRB_DBL_ATTR_X, 0, nx_, x);
-        casadi_assert_message(!flag, GRBgeterrormsg(m->env));
+        if (flag) fill_n(x, nx_, casadi::nan);
       }
 
       // Free memory
       GRBfreemodel(model);
+      m->fstats.at("postprocessing").toc();
 
     } catch (...) {
       // Free memory
       if (model) GRBfreemodel(model);
       throw;
     }
+
+    // Show statistics
+    if (print_time_)  print_fstats(static_cast<ConicMemory*>(mem));
+    return 0;
+  }
+
+  Dict GurobiInterface::get_stats(void* mem) const {
+    Dict stats = Conic::get_stats(mem);
+    auto m = static_cast<GurobiMemory*>(mem);
+    stats["return_status"] = return_status_string(m->return_status);
+    stats["success"] = m->success;
+    return stats;
   }
 
   GurobiMemory::GurobiMemory() {

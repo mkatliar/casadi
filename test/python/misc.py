@@ -22,7 +22,6 @@
 #
 #
 from casadi import *
-from casadi.tools import capture_stdout
 import casadi as c
 import numpy
 import unittest
@@ -47,7 +46,7 @@ class Misctests(casadiTestCase):
     def calc_sparsity():
       x = casadi.SX.sym("x")
       f = casadi.Function('f', [x], [x ** 2])
-      return f.sparsity_jac()
+      return f.sparsity_jac(0, 0)
 
     def print_sparsity():
         sparsity = calc_sparsity()
@@ -323,10 +322,11 @@ class Misctests(casadiTestCase):
       print(str(e))
       self.assertTrue("x must be larger than 3" in str(e))
 
-  @requiresPlugin(nlpsol,"ipopt")
+  @requires_nlpsol("ipopt")
   def test_output(self):
     with capture_stdout() as result:
       DM([1,2]).print_dense()
+
 
     assert "2" in result[0]
 
@@ -334,11 +334,10 @@ class Misctests(casadiTestCase):
     f = {'x':x, 'f':x**2}
     solver = nlpsol("solver", "ipopt",f)
     with capture_stdout() as result:
-      solver_out = solver(solver_in)
+      solver_out = solver(x0=0)
 
     assert "Number of nonzeros in equality constraint" in result[0]
     assert "iter    objective    inf_pr" in result[0]
-    assert "main loop" in result[0]
 
     with capture_stdout() as result:
       try:
@@ -351,4 +350,3 @@ class Misctests(casadiTestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

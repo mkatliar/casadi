@@ -288,6 +288,17 @@ class MXtests(casadiTestCase):
     self.assertAlmostEqual(z2, 21,10)
     self.assertAlmostEqual(z1, 10,10)
 
+  def test_which_depends_empty(self):
+    for X in [SX,MX]:
+      x=X.sym("x")
+
+      for tr in [True,False]:
+        for i in [0,1,2]:
+          self.assertEqual(which_depends(x,X(0,1),i,tr),[False]*(1 if tr else 0))
+
+          self.assertEqual(which_depends(X(0,1),x,i,tr),[False]*(0 if tr else 1))
+          self.assertTrue(len(which_depends(X(0,1),X(0,1),i,tr))==0)
+
   def test_issue83(self):
     x=MX.sym("x")
     y=MX.sym("y")
@@ -530,7 +541,7 @@ class MXtests(casadiTestCase):
     x0=array([[0.738]])
 
     def fmod(f,x):
-      J=f.jacobian()
+      J=f.jacobian_old(0, 0)
       return J
 
     self.numpyEvaluationCheckPool(self.Jpool,[x],x0,name="MX unary operations, jacobian",fmod=fmod)
@@ -542,7 +553,7 @@ class MXtests(casadiTestCase):
       x0=array([0.738,0.9,0.3])
 
       def fmod(f,x):
-        J=f.jacobian()
+        J=f.jacobian_old(0, 0)
         return J
 
       self.numpyEvaluationCheckPool(self.Jpool,[x],x0,name="MX unary operations, jacobian",fmod=fmod)
@@ -750,7 +761,7 @@ class MXtests(casadiTestCase):
 
     for w in [0, 1]:
       f = Function("f", [x,A,b,C,D,e], [a], {"ad_weight":w, "ad_weight_sp":w})
-      J = f.jacobian()
+      J = f.jacobian_old(0, 0)
       J_in = [0]*J.n_in();J_in[0]=x_
       J_in[1]=A_
       J_in[2]=b_
@@ -820,7 +831,7 @@ class MXtests(casadiTestCase):
     for w in [0, 1]:
       f = Function("f", [x,A,b,C,D,e], [a], {"ad_weight":w, "ad_weight_sp":w})
 
-      J = f.jacobian()
+      J = f.jacobian_old(0, 0)
       J_in = [0]*J.n_in();J_in[0]=x_
       J_in[1]=A_
       J_in[2]=b_
@@ -893,7 +904,7 @@ class MXtests(casadiTestCase):
 
     for w in [0, 1]:
       f = Function("f", [x,A,b,C,D,e], [a], {"ad_weight":w, "ad_weight_sp":w})
-      J = f.jacobian()
+      J = f.jacobian_old(0, 0)
       J_in = [0]*J.n_in();J_in[0]=x_
       J_in[1]=A_
       J_in[2]=b_
@@ -910,7 +921,7 @@ class MXtests(casadiTestCase):
     x=SX.sym("x")
     y=x**3
     f=Function("f", [x],[y])
-    J=f.jacobian()
+    J=f.jacobian_old(0, 0)
 
     X=MX.sym("X")
     F=Function("F", [X], J(X))
@@ -934,140 +945,56 @@ class MXtests(casadiTestCase):
     self.message("symbolic variables and constants jac")
     X =  MX.sym("X",10)
     V =  MX.sym("V")
-    f =  Function("f", [X,V],[X,MX.eye(3)])
-    self.assertTrue(isinstance(MX.jac(f, 0,0),MX))
-    self.assertEqual(MX.jac(f, 0,0).nnz(),10)
-    self.assertEqual(MX.jac(f, 0,0).size1(),10)
-    self.assertEqual(MX.jac(f, 0,0).size2(),10)
+    J = jacobian(X,X)
+    self.assertTrue(isinstance(J,MX))
+    self.assertEqual(J.nnz(),10)
+    self.assertEqual(J.size1(),10)
+    self.assertEqual(J.size2(),10)
 
-    g_in = []
+    g = Function("g", [],[J])
+    [g_out] = g.call([])
+    self.checkarray(g_out,eye(10),"unit matrix")
+    g = Function("g", [],[jacobian(MX.eye(3),X)])
+    [g_out] = g.call([])
+    self.checkarray(g_out,zeros((9,10)),"zero matrix")
+    g = Function("g", [],[jacobian(X,V)])
+    [g_out] = g.call([])
+    self.checkarray(g_out,zeros((10,1)),"zero matrix")
 
-    g = Function("g", [],[MX.jac(f, 0,0)])
-    g_out = g.call(g_in)
-    self.checkarray(g_out[0],eye(10),"unit matrix")
-
-    g = Function("g", [],[MX.jac(f, 0,1)])
-    g_out = g.call(g_in)
-    self.checkarray(g_out[0],zeros((9,10)),"zero matrix")
-
-    g = Function("g", [],[MX.jac(f, 1,0)])
-    g_out = g.call(g_in)
-    self.checkarray(g_out[0],zeros((10,1)),"zero matrix")
-
-    g = Function("g", [],[MX.jac(f, 1,1)])
-    g_out = g.call(g_in)
-    self.checkarray(g_out[0],zeros((9,1)),"zero matrix")
+    g = Function("g", [],[jacobian(MX.eye(3),V)])
+    [g_out] = g.call([])
+    self.checkarray(g_out,zeros((9,1)),"zero matrix")
 
   def test_MXd_substractionl(self):
     self.message("substraction jac")
     V =  MX.sym("V")
     X =  MX.sym("X")
-    f =  Function("f", [X,V],[X-V])
+    g = Function("g", [],[jacobian(X-V, X)])
+    [g_out] = g.call([])
+    self.checkarray(g_out,ones((1,1)), "one")
 
-    g_in = []
+    g = Function("g", [],[jacobian(X-V, V)])
+    [g_out] = g.call([])
+    self.checkarray(g_out,-ones((1,1)), "one")
 
-    g = Function("g", [],[MX.jac(f, 0,0)])
-    g_out = g.call(g_in)
-    self.checkarray(g_out[0],ones((1,1)), "one")
+    g = Function("g", [],[jacobian(V-X, X)])
+    [g_out] = g.call([])
+    self.checkarray(g_out,-ones((1,1)), "one")
 
-    g = Function("g", [],[MX.jac(f, 1,0)])
-    g_out = g.call(g_in)
-    self.checkarray(g_out[0],-ones((1,1)), "one")
-
-    f =  Function("f", [X,V],[V-X])
-
-    g = Function("g", [],[MX.jac(f, 0,0)])
-    g_out = g.call(g_in)
-    self.checkarray(g_out[0],-ones((1,1)), "one")
-
-    g = Function("g", [],[MX.jac(f, 1,0)])
-    g_out = g.call(g_in)
-    self.checkarray(g_out[0],ones((1,1)),"one")
+    g = Function("g", [],[jacobian(V-X, V)])
+    [g_out] = g.call([])
+    self.checkarray(g_out,ones((1,1)),"one")
 
   def test_MXd_mapping(self):
     self.message("mapping jac")
     X = MX.sym("X",3)
     Y = MX.sym("Y",2)
-    f = Function("f", [X,Y],[vertcat(*[X,Y])])
-    J = MX.jac(f, 0,0)
+    J = jacobian(vertcat(X,Y),X)
     JJ = DM.ones(J.sparsity())
     self.checkarray(JJ,numpy.vstack((eye(3),zeros((2,3)))),"diag")
-    J = MX.jac(f, 1,0)
+    J = jacobian(vertcat(X,Y),Y)
     JJ = DM.ones(J.sparsity())
     self.checkarray(JJ,numpy.vstack((zeros((3,2)),eye(2))),"diag")
-
-
-  def test_MatrixAlgebraTableDense(self):
-    self.message("Table of derivatives https://ccrma.stanford.edu/~dattorro/matrixcalc.pdf")
-
-    n = m = K = L = k = 3
-    t_ = 0.3
-    mu_ = 0.13
-
-    def gentest(m,n):
-      A = MX.sym("A",m,n)
-      return (DM(numpy.random.random((m,n))),A)
-
-    (a_,a) = gentest(m,1)
-    (b_,b) = gentest(m,1)
-    (x_,x) = gentest(n,1)
-    (y_,y) = gentest(n,1)
-    (A_,A) = gentest(m,n)
-    (B_,B) = gentest(m,n)
-    (C_,C) = gentest(m,n)
-    (X_,X) = gentest(K,L)
-    (Y_,Y) = gentest(K,L)
-    t = MX(t_)
-    mu = MX(mu_)
-
-    ins = [a,b,x,y,A,B,C,X,Y]
-    ins_ = [a_,b_,x_,y_,A_,B_,C_,X_,Y_]
-
-    def grad(y,x):
-      f = Function("f", ins,[x])
-      J = f.jacobian([i for i in range(len(ins)) if ins[i] is y][0])
-      if x.shape[0]==1 and x.shape[1]==1:
-        return (J(*ins)[0].T).reshape(y.shape)
-      return J(*ins)[0].T
-
-    def eye(n):
-      return DM(numpy.eye(n))
-
-    Axb = mtimes(A,x)-b
-    ab = mtimes(a,b.T)
-    tests = [
-    (grad(x,x),eye(k)),
-    (grad(x,x.T),eye(k)),
-    (grad(x,Axb),A.T),
-    #(grad(x,Axb.T),A)   incorrect?
-    (grad(x,mtimes(Axb.T,Axb)),2*mtimes(A.T,Axb)),
-    #(grad(x,norm_2(Axb)),mtimes(A.T,Axb)/norm_2(Axb)), #  norm_2 not implemented
-    (grad(x,mtimes(mtimes(x.T,A),x)+2*mtimes(mtimes(x.T,B),y)+mtimes(mtimes(y.T,C),y)),mtimes((A+A.T),x)+2*mtimes(B,y)),
-    #(grad(x,mtimes(a.T,mtimes(x.T,x)*b)),2*mtimes(mtimes(x,a.T),b))
-    (grad(X,X),eye(k**2)),
-    #(grad(X,X.T),eye(k**2))
-    (grad(X,mtimes(a.T,mtimes(X,b))),ab),
-    (grad(X,mtimes(b.T,mtimes(X.T,a))),ab),
-    (grad(X,mtimes(a.T,mtimes(mtimes(X,X),b))),mtimes(X.T,ab)+mtimes(ab,X.T)),
-    (grad(X,mtimes(a.T,mtimes(mtimes(X.T,X),b))),mtimes(X,ab + ab.T)),
-    (grad(x,x*mu),MX(eye(k))*mu),
-    (grad(X,c.trace(X*mu)),MX(eye(k))*mu),
-    (grad(X,c.trace(mtimes(X.T,Y))),Y),
-    (grad(X,c.trace(mtimes(Y,X.T))),Y),
-    (grad(X,c.trace(mtimes(Y.T,X))),Y),
-    (grad(X,c.trace(mtimes(X,Y.T))),Y),
-    (grad(X,c.trace(mtimes(a.T,mtimes(X,b)))),ab)
-    #(grad(X,log(c.det(X))),c.inv(X_)),
-    ]
-
-    cnt = 0
-    for symbol, solution in tests:
-      f = Function("f", ins,[symbol])
-      f_out = f(*ins_)
-      g = Function("g", ins,[solution])
-      g_out = g(*ins_)
-      self.checkarray(f_out, g_out, "#%d" % cnt )
-      cnt+=1
 
   def test_null(self):
     self.message("Function null")
@@ -1266,7 +1193,7 @@ class MXtests(casadiTestCase):
         gfcn = Function("gfcn", [U], [G]).expand("e_gfcn", {"ad_weight":1})
       else:
         gfcn = Function("gfcn", [U],[G], {"ad_weight":1})
-      J = gfcn.jacobian()
+      J = gfcn.jacobian_old(0, 0)
       J_in = [0]*J.n_in();J_in[0]=1
       J_out = J.call(J_in)
       self.assertAlmostEqual(J_out[0],1,9)
@@ -1300,7 +1227,8 @@ class MXtests(casadiTestCase):
 
     T = X.nz[i]
 
-    f = Function("f", [X], [T.T.nz[:]**2])
+    q = T.T.nz[:]**2
+    f = Function("f", [X], [q])
     f_out = f(list(range(10)))
 
     self.checkarray(IM([0,1,9,4,16,25]),f_out)
@@ -1312,7 +1240,7 @@ class MXtests(casadiTestCase):
 
     self.checkarray(IM([0,1,9,4,16,25]),ff_out)
 
-    J = Function("J", [X],[MX.jac(f)])
+    J = Function("J", [X],[jacobian(q, X)])
     J_out = J(list(range(10)))
 
     i = horzcat(*[diag([0,2,4,6,8,10]),IM.zeros(6,4)])
@@ -1320,9 +1248,8 @@ class MXtests(casadiTestCase):
 
     self.checkarray(i,J_out)
 
-    f = Function("f", [X],[(T.T).nz[:]**2], {"ad_weight":1, "ad_weight_sp":1})
-
-    J = Function("J", [X],[MX.jac(f)])
+    q = (T.T).nz[:]**2
+    J = Function("J", [X],[jacobian(q,X)])
     J_in = [0]*J.n_in();J_in[0]=list(range(10))
     J_out = J(*J_in)
 
@@ -1336,8 +1263,8 @@ class MXtests(casadiTestCase):
     X = MX.sym("X",10)
 
     T = vertcat(*[X[4],X[2]])
-
-    f = Function("f", [X],[T**2])
+    q = T**2
+    f = Function("f", [X],[q])
     f_in = [0]*f.n_in();f_in[0]=list(range(10))
     f_out = f.call(f_in)
 
@@ -1350,8 +1277,7 @@ class MXtests(casadiTestCase):
     ff_out = ff(*ff_in)
 
     self.checkarray(IM([16,4]),ff_out)
-
-    J = Function("J", [X],[MX.jac(f)])
+    J = Function("J", [X],[jacobian(q,X)])
     J_in = [0]*J.n_in();J_in[0]=list(range(10))
     J_out = J(*J_in)
 
@@ -1360,10 +1286,8 @@ class MXtests(casadiTestCase):
     i[1,2] = 4
 
     self.checkarray(i,J_out)
-
-    f = Function("f", [X],[T**2], {"ad_weight":1, "ad_weight_sp":1})
-
-    J = Function("J", [X],[MX.jac(f)])
+    q = T**2
+    J = Function("J", [X],[jacobian(q, X)])
     J_in = [0]*J.n_in();J_in[0]=list(range(10))
     J_out = J(*J_in)
 
@@ -1932,7 +1856,7 @@ class MXtests(casadiTestCase):
     self.checkarray(f_out[3],A)
     self.checkarray(f_out[4],A)
 
-  @requires_linsol("csparse")
+  @requiresPlugin(Linsol,"csparse")
   def test_bizarre_bug(self):
 
     A = [[-26.9091,00,00,1,00,00,00,00,00,00,00,00,00,00,00],
@@ -2291,7 +2215,7 @@ class MXtests(casadiTestCase):
 
     f = Function("f", [x],[y])
 
-    H = f.hessian()
+    H = f.hessian_old(0, 0)
 
   def test_bug_1042(self):
 
@@ -2304,7 +2228,7 @@ class MXtests(casadiTestCase):
     mfg = mf.reverse(1)
 
     mfunctiong = mfunction.reverse(1)
-    
+
     f_in = [0, 5, DM([1,2])]
 
     self.checkfunction(mfg,mfunctiong,inputs=f_in)
@@ -2358,6 +2282,10 @@ class MXtests(casadiTestCase):
 
       x2 = vertcat(*[c.zeros(0,0)] + x1s + [c.zeros(0,0)])
       self.checkarray(x2.shape,(10,0))
+      
+      x0 = c.zeros(0,1)
+      x2 = vertcat(x0,c.zeros(0,0),x0)
+      self.checkarray(x2.shape,(0,1))
 
     for c in [MX,SX,DM]:
       x0 = c.zeros(0,10)
@@ -2372,6 +2300,10 @@ class MXtests(casadiTestCase):
 
       x2 = horzcat(*[c.zeros(0,0)] + x1s + [c.zeros(0,0)])
       self.checkarray(x2.shape,(0,10))
+
+      x0 = c.zeros(1,0)
+      x2 = horzcat(x0,c.zeros(0,0),x0)
+      self.checkarray(x2.shape,(1,0))
 
     for c in [MX,SX,DM]:
       x0 = c.zeros(10,0)
@@ -2398,15 +2330,6 @@ class MXtests(casadiTestCase):
 
       x2 = diagcat(*[c.zeros(0,0)] + x1s+x1st + [c.zeros(0,0)])
       self.checkarray(x2.shape,(10,10))
-  def test_empty_symm_jac(self):
-
-    x = MX.sym("x",2)
-
-    g = Function("g", [x],[MX(1,1)])
-
-    h = g.jacobian(0,0,False,True)
-
-    x = MX.sym("x",2)
 
   def test_exprjac(self):
 
@@ -2424,6 +2347,315 @@ class MXtests(casadiTestCase):
         fr = Function("fr", [x],[op(fun(x),x)])
 
         self.checkfunction(f,fr,inputs=[0])
+
+  @memory_heavy()
+  def test_einstein(self):
+        dim_b = [3, 3]
+        dim_a = [3, 3]
+
+
+
+
+        def free(a):
+            return set([i for i in a if i<0])
+
+
+        def dim_map(dim_a, dim_b, dim_c, ind_a, ind_b, ind_c):
+          dim_map = {}
+          for dim, ind in [(dim_a,ind_a), (dim_b,ind_b)]:
+            for i,j in enumerate(ind):
+              if j<0:
+                if j in dim_map:
+                  assert dim_map[j]==dim[i]
+                else:
+                  dim_map[j]=dim[i]
+          return dim_map
+
+        def sub2ind(dims, sub):
+          ret = []
+          for i in range(len(dims)):
+            ret.append(sub % dims[i])
+            sub/= dims[i]
+          return ret
+
+        def ind2sub(dims, ind):
+          ret=0
+          cumprod = 1
+          for i in range(len(dims)):
+            ret+= ind[i]*cumprod
+            cumprod*= dims[i]
+          return ret
+
+        def combine(dim_a, dim_b, ind_a, ind_b, ind_c):
+          dim_map = {}
+          for dim, ind in [(dim_a,ind_a), (dim_b,ind_b)]:
+            for i,j in enumerate(ind):
+              if j<0:
+                if j in dim_map:
+                  assert dim_map[j]==dim[i]
+                else:
+                  dim_map[j]=dim[i]
+          return [dim_map[i] for i in ind_c]
+
+
+        def subs(e,old,n):
+          return [ n[old.index(i)] if i in old else i for i in e ]
+
+
+        def einstein_tests(dim_a, dim_b, dim_c, ind_a, ind_b, ind_c):
+
+
+          A = MX.sym("A", np.product(dim_a))
+          B = MX.sym("B", np.product(dim_b))
+          C = MX.sym("C", int(np.product(dim_c)),1)
+
+          A_sx = SX.sym("A", np.product(dim_a))
+          B_sx = SX.sym("B", np.product(dim_b))
+          C_sx = SX.sym("C", int(np.product(dim_c)),1)
+
+          np.random.seed(0)
+
+          A_ = np.random.random(A.shape)
+          B_ = np.random.random(B.shape)
+          C_ = np.random.random(C.shape)
+
+
+
+          out = casadi.einstein(A, B, C, dim_a, dim_b, dim_c, ind_a, ind_b, ind_c)
+          out_sx = casadi.einstein(A_sx, B_sx, C_sx, dim_a, dim_b, dim_c, ind_a, ind_b, ind_c)
+          f = Function('f',[A,B,C],[out],{"ad_weight_sp": 0})
+          frev = Function('f',[A,B,C],[out],{"ad_weight_sp": 1})
+          fr = Function('fr',[A,B,C],[my_einstein(A, B, C, dim_a, dim_b, dim_c, ind_a, ind_b, ind_c)])
+          f_sx = Function('f',[A_sx,B_sx,C_sx],[out_sx])
+
+          fsx = f.expand()
+          self.checkfunction(f, fr, inputs=[A_,B_,C_])
+          self.checkfunction(fsx, fr, inputs=[A_,B_,C_])
+          self.check_codegen(f, inputs=[A_,B_,C_])
+          self.checkfunction(fsx, f_sx, inputs=[A_,B_,C_])
+
+          for i in range(3):
+            self.check_sparsity(f.sparsity_jac(i, 0), fsx.sparsity_jac(i, 0))
+            self.check_sparsity(frev.sparsity_jac(i, 0), fsx.sparsity_jac(i, 0))
+
+
+        def my_einstein(A, B, C, dim_a, dim_b, dim_c, ind_a, ind_b, ind_c):
+          try:
+            R = DM(C)
+          except:
+            R = MX(C)
+
+          d = dim_map(dim_a, dim_b, dim_c, ind_a, ind_b, ind_c)
+
+          dk = list(d.keys())
+
+          for val in itertools.product(*[range(d[k]) for k in dk]):
+            ind_a_ = subs(ind_a, dk, val)
+            ind_b_ = subs(ind_b, dk, val)
+            ind_c_ = subs(ind_c, dk, val)
+
+
+            ai = ind2sub(dim_a, ind_a_)
+            bi = ind2sub(dim_b, ind_b_)
+            ci = ind2sub(dim_c, ind_c_)
+
+            R[ci]+= A[ai]*B[bi]
+
+          return R
+
+        ind = [ [0, -1], [1, -1], [0, 1], [-1, -2], [-2, -1] ]
+
+        for ind_a in ind:
+            for ind_b in ind:
+                for ind_c in itertools.permutations(list(free(ind_a) ^ free(ind_b))):
+                  dim_c = combine(dim_a, dim_b, ind_a, ind_b, ind_c)
+                  einstein_tests(dim_a, dim_b, dim_c, ind_a, ind_b, ind_c)
+
+        einstein_tests([2,4,3], [2,5,3], [5, 4], [-1, -2, -3], [-1, -4, -3], [-4, -2])
+
+  def test_sparsity_operation(self):
+    L = [MX(Sparsity(1,1)),MX(Sparsity(2,1)), MX.sym("x",1,1), MX.sym("x", Sparsity(1,1)), DM(1), DM(Sparsity(1,1),1), DM(Sparsity(2,1),1), DM(Sparsity.dense(2,1),1)]
+
+    for a in L:
+      for b in L:
+        c = a*b
+
+        if a.nnz()==0 or b.nnz()==0:
+          self.assertTrue(c.nnz()==0)
+        else:
+          self.assertTrue(c.nnz()>0)
+
+  @requiresPlugin(Linsol,"lapackqr")
+  def test_solve(self):
+    N = 3
+    nrhs = 50
+    np.random.seed(0)
+    A = np.random.random((3,3))
+    B = np.random.random((3,50))
+
+
+    C = solve(A, B, "lapackqr", {"max_nrhs": 50})
+    C1 = solve(A, B, "lapackqr", {"max_nrhs": 20})
+    C2 = solve(A, B, "lapackqr")
+
+    self.checkarray(C, C1)
+    self.checkarray(C1, C2)
+  def test_sparse_lt(self):
+    x = MX.sym("x",Sparsity.lower(5))
+    self.assertEqual((x>0).nnz(),5*6/2)
+    self.assertEqual((x>=0).nnz(),5*5)
+  def test_inv(self):
+   np.random.seed(0)
+
+   for X in [SX, MX]:
+     A  = X.sym("x",3,3)
+     Av = np.random.random((3,3))
+     f = Function('f',[A],[inv(A),inv(DM(Av)),A.__mpower__(-1), DM(Av).__mpower__(-1)])
+     out = f(Av)
+     for o in out:
+       self.checkarray(o, np.linalg.inv(np.array(Av)))
+    
+
+  def test_interp1d(self):
+    v = [7,3,4,-3]
+    vs = MX.sym("x",4,1)
+
+    xq = [10,0,1,2,4,8,7,5,1.5]
+    x = [1,2,4,8]
+    F = Function("f",[vs],[interp1d(x,vs,xq)])
+
+    self.checkarray(F(v),np.interp(xq,x,v))
+
+    F = Function("f",[vs],[interp1d(x,vs,xq,"floor")])
+
+    self.checkarray(F(v),DM([-3,7,7,3,4,-3,4,4,7]))
+
+    F = Function("f",[vs],[interp1d(x,vs,xq,"ceil")])
+
+    self.checkarray(F(v),DM([-3,7,7,3,4,-3,-3,-3,3]))
+
+    v = [7,3,4,-3]
+    vs = MX.sym("x",4,1)
+
+    xq = [10,0,1,2,3,4,3.5,3.25,1.5]
+    x = [1,2,3,4]
+    F = Function("f",[vs],[interp1d(x,vs,xq,"linear",True)])
+
+    self.checkarray(F(v),np.interp(xq,x,v))
+    
+  def test_bilin_etc(self):
+    x = MX.sym("x",3,3)
+    y = MX.sym("y",3,1)
+    z = MX.sym("z",3,1)
+    
+    import numpy
+    numpy.random.seed(42)
+    x0 = numpy.random.random((3,3))
+    y0 = numpy.random.random((3,1))
+    z0 = numpy.random.random((3,1))
+    
+    for e in [(bilin(x,y,z),mtimes(mtimes(y.T,x),z)),(rank1(x,0.3,y,z),x+0.3*mtimes(y,z.T))]:
+      f = Function('f',[x,y,z],[e[0]])
+      fref = Function('fref',[x,y,z],[e[1]])
+      f_sx = f.expand()    
+      self.checkfunction(f,fref,inputs=[x0,y0,z0])
+      self.checkfunction(f_sx,fref,inputs=[x0,y0,z0])
+      self.check_codegen(f,inputs=[x0,y0,z0])
+
+  def test_det_shape(self):
+    X = MX.sym("x",2,3)
+    with self.assertRaises(RuntimeError):
+      det(X)
+    X = MX.sym("x",3,3)
+    det(X)
+    
+    
+  @known_bug()
+  def test_det(self):
+    X = MX.sym("x",3,3)
+    x = SX.sym("x",3,3)
+
+    import numpy
+    numpy.random.seed(42)
+    x0 = numpy.random.random((3,3))
+    
+    f = Function('f',[x],[det(x)])
+    F = Function('F',[X],[det(X)])
+    self.checkfunction(f,F,inputs=[x0])
+
+  def test_mtimes_mismatch_segfault(self):
+    with self.assertInException("incompatible dimensions"):
+      mtimes(DM(Sparsity.lower(5)),MX.sym('x',100))
+    
+  def test_monitor(self):
+    x = MX.sym("x")
+    y = sqrt(x.monitor("hey"))
+
+    f = Function('f',[x],[y])
+    with capture_stdout() as out:
+      f(3)
+    self.assertTrue(out[0]=="hey:\n[3]\n")
+
+    with capture_stdout() as out2:
+      self.check_codegen(f,inputs=[3])
+    if args.run_slow:
+      self.assertTrue(out2[0]=="hey:\n[3]\n")
+
+  def test_codegen_specials(self):
+    x = MX.sym("x")
+    y = MX.sym("y")
+
+    for z in [ x**2, if_else(y>0,2*x,x*y), fmin(x,y), fmax(x,y), sign(x*y)]:
+      f = Function('f',[x,y],[z])
+      self.check_codegen(f,inputs=[1,2])
+      self.check_codegen(f,inputs=[1,-2])
+
+
+  @memory_heavy()    
+  def test_getsetnonzeros(self):
+    import numpy
+    numpy.random.seed(42)
+    for S in [Sparsity.lower(5),Sparsity.dense(5,5)]:
+      M = MX.sym("X",S.nnz())
+      
+      m = sin(MX(S,M))
+      for i in [0,2]:
+        for ind in [(i,i),(1,i),(i,1),(slice(None),i),(i,slice(None)),(slice(i,i+2),slice(i,i+2)),(slice(i,i+2),slice(None)),([i,i],[0,0]),([],[])]:
+          E = m.__getitem__(ind)
+          e = cos(E)
+          e = dot(e,e)
+          f = Function('f',[M],[e])
+          self.checkfunction(f,f.expand(),inputs=[ numpy.random.random((S.nnz(),1))])
+        
+          mc = m+0
+          
+          Y = MX.sym("y",E.nnz())
+          y = MX(E.sparsity(),Y)
+          mc.__setitem__(ind,y)
+          e = cos(mc)
+          e = dot(e,e)
+          
+          f = Function('f',[M,Y],[e])
+          self.checkfunction(f,f.expand(),inputs=[ numpy.random.random((S.nnz(),1)), numpy.random.random((E.nnz(),1))])
+
+  def test_evalf(self):
+    x = MX.sym("x")
+
+    p = MX.sym("p")
+    f = Function('f',[x],[sin(x)])
+    y = f.call([p],False,True)[0]
+    y = substitute(y,p,3)
+
+    with self.assertInException("not defined"):
+      y.to_DM()
+    self.checkarray(evalf(y),sin(3))
+    with self.assertInException("since variables [x] are free"):
+      evalf(x)
+
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

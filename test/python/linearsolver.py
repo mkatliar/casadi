@@ -62,13 +62,30 @@ try:
   lsolvers.append(("symbolicqr",{},set()))
 except:
   pass
-  
+
+try:
+  load_linsol("lsqr")
+  lsolvers.append(("lsqr",{},set()))
+except:
+  pass
+
 try:
   load_linsol("ma27")
   lsolvers.append(("ma27",{},{"symmetry"}))
 except:
   pass
 
+try:
+  load_linsol("qr")
+  lsolvers.append(("qr",{},set()))
+except:
+  pass
+
+try:
+  load_linsol("ldl")
+  lsolvers.append(("ldl",{},{"posdef","symmetry"}))
+except:
+  pass
 
 nsolvers = []
 
@@ -79,7 +96,7 @@ def nullspacewrapper(name, sp, options):
 
 nsolvers.append((nullspacewrapper,{},set()))
 
-print(lsolvers)
+print("linear solvers", lsolvers)
 
 class LinearSolverTests(casadiTestCase):
 
@@ -107,13 +124,13 @@ class LinearSolverTests(casadiTestCase):
         options["ad_weight_sp"] = 0
         solver = Solver("solver", A.T.sparsity(), options)
 
-        Jf = solver.jacobian()
+        Jf = solver.jacobian_old(0, 0)
 
         options["ad_weight"] = 1
         options["ad_weight_sp"] = 1
         solver = Solver("solver", A.T.sparsity(), options)
 
-        Jb = solver.jacobian()
+        Jb = solver.jacobian_old(0, 0)
 
         Jf_in = [0]*Jf.n_in();Jf_in[0]=A.T
         Jb_in = [0]*Jb.n_in();Jb_in[0]=A.T
@@ -262,7 +279,7 @@ class LinearSolverTests(casadiTestCase):
         A0 = A.T+A
       else:
         A0 = A
-      solver = casadi.Linsol("solver", Solver, options)
+      solver = casadi.Linsol("solver", Solver, A0.sparsity(), options)
       b = DM([1,0.5])
       x = solver.solve(A0.T, b)
       res = np.linalg.solve(A0.T,b)
@@ -276,39 +293,11 @@ class LinearSolverTests(casadiTestCase):
         A0 = A.T+A
       else:
         A0 = A
-      solver = casadi.Linsol("solver", Solver, options)
+      solver = casadi.Linsol("solver", Solver, A0.sparsity(), options)
       b = DM([1,0.5])
       x = solver.solve(A0, b)
       res = np.linalg.solve(A0,b)
       self.checkarray(x, res)
-
-  def test_simple_function_direct(self):
-
-    for Solver, options,req in lsolvers:
-      A_ = DM([[3,1],[7,2]])
-      if "symmetry" in req: A_ = A_.T + A_
-      A = MX.sym("A",A_.sparsity())
-      b_ = DM([1,0.5])
-      b = MX.sym("b",b_.sparsity())
-
-      print(Solver)
-      solver = casadi.linsol_new("solver", Solver, A.sparsity(),1, options)
-      solver_in = {}
-      solver_in["A"]=A_
-      solver_in["B"]=b_
-
-      A_0 = A[0,0]
-      A_1 = A[0,1]
-      A_2 = A[1,0]
-      A_3 = A[1,1]
-
-      b_0 = b[0]
-      b_1 = b[1]
-
-      solution = Function("solution", {"A":A, "B":b, "X":vertcat(*[(((A_3/((A_0*A_3)-(A_2*A_1)))*b_0)+(((-A_1)/((A_0*A_3)-(A_2*A_1)))*b_1)),((((-A_2)/((A_0*A_3)-(A_2*A_1)))*b_0)+((A_0/((A_0*A_3)-(A_2*A_1)))*b_1))])}, ["A","B"], ["X"])
-
-      self.checkfunction(solver,solution,inputs=solver_in,jacobian=False,evals=False)
-
 
   def test_simple_function_indirect(self):
 
@@ -319,12 +308,12 @@ class LinearSolverTests(casadiTestCase):
       b = MX.sym("b",b_.sparsity())
       if "symmetry" in req: A_ = A_.T + A_
       print(Solver)
-      solver = casadi.linsol_new("solver", Solver, A.sparsity(), 1, options)
+      solver = casadi.Linsol("solver", Solver, A.sparsity(), options)
       solver_in = {}
       solver_in["A"]=A_
       solver_in["B"]=b_
 
-      sol = solver(A=A,B=b)
+      sol = {"X": solver.solve(A,b)}
       sol["A"] = A
       sol["B"] = b
       relay = Function("relay", sol, ["A","B"], ["X"])
@@ -339,24 +328,28 @@ class LinearSolverTests(casadiTestCase):
 
       solution = Function("solution", {"A":A, "B":b, "X":vertcat(*[(((A_3/((A_0*A_3)-(A_2*A_1)))*b_0)+(((-A_1)/((A_0*A_3)-(A_2*A_1)))*b_1)),((((-A_2)/((A_0*A_3)-(A_2*A_1)))*b_0)+((A_0/((A_0*A_3)-(A_2*A_1)))*b_1))])}, ["A", "B"], ["X"])
 
-      self.checkfunction(relay,solution,inputs=solver_in,jacobian=False,evals=False)
+
+      self.checkfunction(relay,solution,inputs=solver_in)
+
+      if Solver in ["qr","ldl"]:
+        self.check_codegen(relay,inputs=solver_in)
 
   @memory_heavy()
   def test_simple_solve_node(self):
 
     for Solver, options, req in lsolvers:
-    
+
       for A_,b_ in [
                        (DM([[3,1],[7,2]]),DM([[1,0.3],[0.5,0.7]])),
                        (sparsify(DM([[3,0],[7,2]])),DM([[1,0.3],[0.5,0.7]])),
                        (DM([[3,1],[7,2]]),sparsify(DM([[1,0],[0,0.7]])))
                    ]:
         if "symmetry" in req: A_ = A_.T+A_
-        
+
         A = MX.sym("A",A_.sparsity())
         b = MX.sym("b",b_.sparsity())
         print(Solver)
-        solver = casadi.Linsol("solver", Solver, options)
+        solver = casadi.Linsol("solver", Solver, A.sparsity(), options)
         for tr in [True, False]:
           x = solver.solve(A,b,tr)
           f = Function("f", [A,b],[x])
@@ -393,57 +386,8 @@ class LinearSolverTests(casadiTestCase):
 
           self.checkfunction(solversx,solution,digits_sens = 7)
 
-  @known_bug()
-  @requires_linsol("csparsecholesky")
-  def test_cholesky(self):
-    numpy.random.seed(0)
-    n = 10
-    L = self.randDM(n,n,sparsity=0.2) +  1.5*c.diag(list(range(1,n+1)))
-    L = L[Sparsity.lower(n)]
-    M = mtimes(L,L.T)
-    b = self.randDM(n,1)
-
-    M.sparsity().spy()
-
-    S = casadi.Linsol("S", "csparsecholesky")
-    S_in = [0]*S.n_in()
-    S_in[0]=M
-    S.linsol_prepare()
-
-    self.checkarray(M,M.T)
-
-    C = S.linsol_cholesky()
-    self.checkarray(mtimes(C,C.T),M)
-    self.checkarray(C,L)
-
-    print(C)
-
-    S.linsol_cholesky_sparsity().spy()
-
-    C = solve(M,b,"csparsecholesky")
-    self.checkarray(mtimes(M,C),b)
-
-
-  @known_bug()
-  @requires_linsol("csparsecholesky")
-  def test_cholesky2(self):
-    numpy.random.seed(0)
-    n = 10
-    L = c.diag(list(range(1,n+1)))
-    M = mtimes(L,L.T)
-
-    print(L)
-    S = casadi.linsol("S", "csparsecholesky", M.sparsity(), 0)
-
-    S.linsol_cholesky_sparsity().spy()
-    S_in = [0]*S.n_in();S_in[0]=M
-    S.linsol_prepare()
-
-    C = S.linsol_cholesky()
-    self.checkarray(mtimes(C,C.T),M)
-
   def test_large_sparse(self):
-    
+
     n = 10
 
     for Solver, options,req in lsolvers:
@@ -466,18 +410,19 @@ class LinearSolverTests(casadiTestCase):
 
   def test_ma27(self):
       n = np.nan
-  
+
       A = DM([[2, 3, n, n, n],
              [3, 0, 4, n, 6],
              [n, 4, 1, 5, n],
              [n, n, 5, 0, n],
              [n, 6, n, n, 1]])
       A = A[sparsify(A==A).sparsity()]
-      
+
       b = DM([8,45,31,15,17])
-      
+
       ref = np.linalg.solve(A,b)
       for Solver, options, req in lsolvers:
+        if "posdef" in req: continue
         As = MX.sym("A",A.sparsity())
         bs = MX.sym("B",b.sparsity())
         C = solve(A,b,Solver,options)
@@ -489,11 +434,14 @@ class LinearSolverTests(casadiTestCase):
     n = 10
 
     for Solver, options, req in lsolvers:
-      
+
       print(Solver)
       A = self.randDM(n,n,sparsity=0.5)
       b = self.randDM(n,3)
-      if "symmetry" in req:
+      if "posdef" in req:
+        A = mtimes(A.T, A)
+        A = densify(A)
+      elif "symmetry" in req:
         A = A.T+A
         A[Sparsity.diag(n)] =1e-8
         A = densify(A)
@@ -501,27 +449,28 @@ class LinearSolverTests(casadiTestCase):
       As = MX.sym("A",A.sparsity())
       bs = MX.sym("B",b.sparsity())
       C = solve(A,b,Solver,options)
+      digits = 7 if "ma" in str(Solver) else 10
 
-      self.checkarray(mtimes(A,C),b)
+      self.checkarray(mtimes(A,C),b,digits=digits)
 
       for As_,A_ in [(As,A),(densify(As),densify(A)),(densify(As).T,densify(A).T),(densify(As.T),densify(A.T)),(As.T,A.T)]:
         f = Function("f", [As,bs],[solve(As_,bs,Solver,options)])
         f_out = f(A, b)
 
-        self.checkarray(mtimes(A_,f_out),b)
+        self.checkarray(mtimes(A_,f_out),b,digits=digits)
 
   def test_dimmismatch(self):
     A = DM.eye(5)
     b = DM.ones((4,1))
     As = MX.sym("A",A.sparsity())
     bs = MX.sym("b",b.sparsity())
-    
+
     for Solver, options, req in lsolvers:
       with self.assertRaises(Exception):
         solve(A,b,Solver,options)
-        
+
       with self.assertRaises(Exception):
         solve(As,bs,Solver,options)
-        
+
 if __name__ == '__main__':
     unittest.main()

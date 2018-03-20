@@ -26,7 +26,7 @@
 #ifndef CASADI_LAPACK_QR_HPP
 #define CASADI_LAPACK_QR_HPP
 
-#include "casadi/core/function/linsol_internal.hpp"
+#include "casadi/core/linsol_internal.hpp"
 #include <casadi/interfaces/lapack/casadi_linsol_lapackqr_export.h>
 
 extern "C" {
@@ -74,42 +74,54 @@ namespace casadi {
   class CASADI_LINSOL_LAPACKQR_EXPORT LapackQr : public LinsolInternal {
   public:
     // Create a linear solver given a sparsity pattern and a number of right hand sides
-    LapackQr(const std::string& name);
+    LapackQr(const std::string& name, const Sparsity& sp);
 
     /** \brief  Create a new Linsol */
-    static LinsolInternal* creator(const std::string& name) {
-      return new LapackQr(name);
+    static LinsolInternal* creator(const std::string& name, const Sparsity& sp) {
+      return new LapackQr(name, sp);
     }
 
     // Destructor
-    virtual ~LapackQr();
+    ~LapackQr() override;
 
     // Initialize the solver
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
+
+    ///@{
+    /** \brief Options */
+    static Options options_;
+    const Options& get_options() const override { return options_;}
+    ///@}
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new LapackQrMemory();}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<LapackQrMemory*>(mem);}
+    void* alloc_mem() const override { return new LapackQrMemory();}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
 
-    // Set sparsity pattern
-    virtual void reset(void* mem, const int* sp) const;
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<LapackQrMemory*>(mem);}
 
     // Factorize the linear system
-    virtual void factorize(void* mem, const double* A) const;
+    int nfact(void* mem, const double* A) const override;
 
     // Solve the linear system
-    virtual void solve(void* mem, double* x, int nrhs, bool tr) const;
+    int solve_batch(void* mem, const double* A, double* x, casadi_int nrhs, bool tr) const;
+
+    // Solve the linear system
+    int solve(void* mem, const double* A, double* x, casadi_int nrhs, bool tr) const override;
 
     /// A documentation string
     static const std::string meta_doc;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "lapackqr";}
+    const char* plugin_name() const override { return "lapackqr";}
+
+    // Get name of the class
+    std::string class_name() const override { return "LapackQr";}
+
+    // Maximum number of right-hand-sides
+    casadi_int max_nrhs_;
   };
 
 } // namespace casadi

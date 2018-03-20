@@ -46,7 +46,7 @@ namespace casadi {
       std::string description;
 
       // Print entry
-      void print(const std::string& name, std::ostream &stream) const;
+      void disp(const std::string& name, std::ostream &stream) const;
     };
 
     // Lookup for options
@@ -55,14 +55,23 @@ namespace casadi {
     // Locate an entry
     const Options::Entry* find(const std::string& name) const;
 
+    // Get all entries
+    std::vector<std::string> all() const;
+
+    // Get type of an entry
+    std::string type(const std::string& name) const;
+
+    // Get description for an entry
+    std::string info(const std::string& name) const;
+
     // Print all entries
-    void print(std::ostream &stream) const;
+    void disp(std::ostream& stream) const;
 
     /** \brief A distance metric between two words */
     static double word_distance(const std::string &a, const std::string &b);
 
     /** \brief Get the best suggestions for a misspelled word */
-    std::vector<std::string> suggestions(const std::string& word, int amount=5) const;
+    std::vector<std::string> suggestions(const std::string& word, casadi_int amount=5) const;
 
     /** \brief Find best matches */
     void best_matches(const std::string& word,

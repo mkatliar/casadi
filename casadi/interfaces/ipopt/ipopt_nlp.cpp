@@ -68,8 +68,8 @@ namespace casadi {
   // returns the variable bounds
   bool IpoptUserClass::get_bounds_info(Index n, Number* x_l, Number* x_u,
                                        Index m, Number* g_l, Number* g_u) {
-    casadi_assert(n==solver_.nx_);
-    casadi_assert(m==solver_.ng_);
+    casadi_assert_dev(n==solver_.nx_);
+    casadi_assert_dev(m==solver_.ng_);
     return solver_.get_bounds_info(mem_, x_l, x_u, g_l, g_u);
   }
 
@@ -78,8 +78,8 @@ namespace casadi {
                                           bool init_z, Number* z_L, Number* z_U,
                                           Index m, bool init_lambda,
                                           Number* lambda) {
-    casadi_assert(n==solver_.nx_);
-    casadi_assert(m==solver_.ng_);
+    casadi_assert_dev(n==solver_.nx_);
+    casadi_assert_dev(m==solver_.ng_);
     return solver_.get_starting_point(mem_, init_x, x, init_z, z_L, z_U, init_lambda, lambda);
   }
 
@@ -121,14 +121,14 @@ namespace casadi {
       return solver_.calc_function(mem_, "nlp_jac_g")==0;
     } else {
       // Get the sparsity pattern
-      int ncol = solver_.jacg_sp_.size2();
-      const int* colind = solver_.jacg_sp_.colind();
-      const int* row = solver_.jacg_sp_.row();
+      casadi_int ncol = solver_.jacg_sp_.size2();
+      const casadi_int* colind = solver_.jacg_sp_.colind();
+      const casadi_int* row = solver_.jacg_sp_.row();
       if (nele_jac!=colind[ncol]) return false; // consistency check
 
       // Pass to IPOPT
-      for (int cc=0; cc<ncol; ++cc) {
-        for (int el=colind[cc]; el<colind[cc+1]; ++el) {
+      for (casadi_int cc=0; cc<ncol; ++cc) {
+        for (casadi_int el=colind[cc]; el<colind[cc+1]; ++el) {
           *iRow++ = row[el];
           *jCol++ = cc;
         }
@@ -153,13 +153,13 @@ namespace casadi {
       return true;
     } else {
       // Get the sparsity pattern
-      int ncol = solver_.hesslag_sp_.size2();
-      const int* colind = solver_.hesslag_sp_.colind();
-      const int* row = solver_.hesslag_sp_.row();
+      casadi_int ncol = solver_.hesslag_sp_.size2();
+      const casadi_int* colind = solver_.hesslag_sp_.colind();
+      const casadi_int* row = solver_.hesslag_sp_.row();
 
       // Pass to IPOPT
-      for (int cc=0; cc<ncol; ++cc) {
-        for (int el=colind[cc]; el<colind[cc+1]; ++el) {
+      for (casadi_int cc=0; cc<ncol; ++cc) {
+        for (casadi_int el=colind[cc]; el<colind[cc+1]; ++el) {
           *iRow++ = row[el];
           *jCol++ = cc;
         }
@@ -199,7 +199,6 @@ namespace casadi {
     bool full_callback = false;
 
 #ifdef WITH_IPOPT_CALLBACK
-    mem_->fstats.at("callback_prep").tic();
     OrigIpoptNLP* orignlp = dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ip_cq->GetIpoptNLP()));
     if (!orignlp) return true;
     TNLPAdapter* tnlp_adapter = dynamic_cast<TNLPAdapter*>(GetRawPtr(orignlp->nlp()));
@@ -251,7 +250,6 @@ namespace casadi {
         }
       }
     }
-    mem_->fstats.at("callback_prep").toc();
     full_callback = true;
 #endif // WITH_IPOPT_CALLBACK
 
@@ -286,8 +284,8 @@ namespace casadi {
                                          Index m, const StringMetaDataMapType& con_string_md,
                                          const IntegerMetaDataMapType& con_integer_md,
                                          const NumericMetaDataMapType& con_numeric_md) {
-    casadi_assert(n==solver_.nx_);
-    casadi_assert(m==solver_.ng_);
+    casadi_assert_dev(n==solver_.nx_);
+    casadi_assert_dev(m==solver_.ng_);
     mem_->var_string_md = var_string_md;
     mem_->var_integer_md = var_integer_md;
     mem_->var_numeric_md = var_numeric_md;

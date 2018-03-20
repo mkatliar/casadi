@@ -27,6 +27,7 @@ from casadi import *
 import numpy as np
 import operator
 import sys
+import copy
 
 import __builtin__
 
@@ -96,6 +97,9 @@ def vec(e):
     return sum(map(vec,e),[])
   else:
     return e
+
+def correct_vector_indexing(x, i):
+  return casadi.reshape(x[i], i.shape)
 
 # Decoraters
 
@@ -569,7 +573,7 @@ class GetterDispatcher(Dispatcher):
 
       try:
         if type is None:
-          return self.master[i]
+          return correct_vector_indexing(self.master, i)
         elif type=="symm":
           return triu2symm(self.master[i])
         else:
@@ -885,7 +889,7 @@ class CasadiStructured(Structured,CasadiStructureDerivable):
     self.__init__(cs,order=state["order"])
 
   def __getstate__(self):
-    d = self.struct.__getstate__()
+    d = copy.deepcopy(self.struct.__getstate__())
     d["order"] = self.order
     return d
 
@@ -1010,7 +1014,6 @@ class MatrixStruct(CasadiStructured,MasterGettable,MasterSettable):
     elif data is None:
       self.master = mtype.nan(self.size,1)
     else:
-      print type(data), data.__class__
       self.master = mtype(data)
 
     if self.master.shape[0]!=self.size:
@@ -1033,7 +1036,7 @@ class DMStruct(MatrixStruct):
     self.__init__(cs,data=state["master"])
 
   def __getstate__(self):
-    d = self.struct.__getstate__()
+    d = copy.deepcopy(self.struct.__getstate__())
     d["master"] = self.master
     return d
 
@@ -1107,7 +1110,7 @@ class MXVeccatStruct(CasadiStructured,MasterGettable):
       raise Exception("Problem in MX vecNZcat structure cat: missing expressions. The following entries are missing: %s" % str(missing))
 
     if self.dirty:
-      self.master_cached = vertcat(*[i.nz[:] for i in self.storage])
+      self.master_cached = vertcat(*[casadi.vec(i.nz[:]) for i in self.storage])
 
     return self.master_cached
 

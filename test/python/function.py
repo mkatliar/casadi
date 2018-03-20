@@ -27,6 +27,15 @@ import numpy
 import unittest
 from types import *
 from helpers import *
+import pickle
+
+scipy_interpolate = False
+try:
+  import scipy.interpolate
+  scipy.interpolate.RectBivariateSpline
+  scipy_interpolate = True
+except:
+  pass
 
 class Functiontests(casadiTestCase):
 
@@ -78,7 +87,10 @@ class Functiontests(casadiTestCase):
 
     self.checkarray(sin(n1)+N1,out[0],"output")
     self.checkarray(sin(n2)+N2,out[1],"output")
-
+  def test_segfault(self):
+    f = Function()
+    with self.assertRaises(Exception):
+      f.stats()
   def test_issue304(self):
     self.message("regression test for #304") # this code used to segfault
     x = SX.sym("x")
@@ -97,7 +109,7 @@ class Functiontests(casadiTestCase):
 
     f = Function("f", [x,y],[x**2,y,x*y[0]])
 
-    g = f.jacobian(0,0)
+    g = f.jacobian_old(0, 0)
 
     self.assertEqual(g.n_in(),f.n_in())
     self.assertEqual(g.n_out(),f.n_out()+1)
@@ -218,7 +230,7 @@ class Functiontests(casadiTestCase):
       x = SX.sym("x",sp.size2())
       self.assertTrue(sp==sp.T)
       f = Function("f", [x],[mtimes([x.T,DM.ones(sp),x])])
-      J = f.hessian()
+      J = f.hessian_old(0, 0)
       sp2 = J.sparsity_out(0)
       self.checkarray(sp.row(),sp2.row())
       self.checkarray(sp.colind(),sp2.colind())
@@ -318,26 +330,6 @@ class Functiontests(casadiTestCase):
     with self.assertRaises(Exception):
       self.checkarray(ret["baz"],DM([12]))
 
-  def test_setjacsparsity(self):
-    x = MX.sym("x",4)
-
-    f = Function("f", [x],[x])
-    x0 = DM([1,2,3,4])
-    J = f.jacobian()
-    out,_ = J(x0)
-
-    self.assertEqual(out.nnz(),4)
-
-    f = Function("f", [x],[x])
-    f.set_jac_sparsity(Sparsity.dense(4,4),0,0,True)
-
-    J2 = f.jacobian()
-    out2,_ = J2(x0)
-
-    self.assertEqual(out2.nnz(),16)
-    self.checkfunction(J,J2,inputs=[x0])
-
-
   def test_derivative_simplifications(self):
 
     n = 1
@@ -352,7 +344,7 @@ class Functiontests(casadiTestCase):
 
     Pf = Function("P", [X, P], [mtimes(M_X,P)])
 
-    P_P = Pf.jacobian(1)
+    P_P = Pf.jacobian_old(1, 0)
 
     self.assertFalse("derivative" in str(P_P))
 
@@ -393,11 +385,11 @@ class Functiontests(casadiTestCase):
       for i in range(2):
         f = XFunction("nlp",[V],[vertcat(*g)],{"ad_weight_sp":i})
 
-        assert f.sparsity_jac().nnz()==162
+        assert f.sparsity_jac(0, 0).nnz()==162
 
         f2 = XFunction("nlp",[V],[vertcat(*g2)],{"ad_weight_sp":i})
 
-        assert f2.sparsity_jac().nnz()==162
+        assert f2.sparsity_jac(0, 0).nnz()==162
 
   def test_callback(self):
     class mycallback(Callback):
@@ -485,7 +477,7 @@ class Functiontests(casadiTestCase):
     Z = [MX.sym("z",2,2) for i in range(n)]
     V = [MX.sym("z",Sparsity.upper(3)) for i in range(n)]
 
-    for parallelization in ["serial","openmp","unroll"] if args.run_slow else ["serial"]:
+    for parallelization in ["serial","openmp","unroll","inline","thread"] if args.run_slow else ["serial"]:
         print(parallelization)
         res = fun.map(n, parallelization).call([horzcat(*x) for x in [X,Y,Z,V]])
 
@@ -509,6 +501,67 @@ class Functiontests(casadiTestCase):
 
           self.checkfunction(f,Fref,inputs=X_+Y_+Z_+V_,sparsity_mod=args.run_slow)
 
+  def test_map_node_light(self):
+    x = SX.sym("x")
+    y = SX.sym("y",2)
+    z = SX.sym("z",2,2)
+    v = SX.sym("z",Sparsity.upper(3))
+
+    fun = Function("f",[x,y,z,v],[mtimes(z,y)+x,sin(y*x).T,v/x])
+
+    n = 2
+
+    X = [MX.sym("x") for i in range(n)]
+    Y = [MX.sym("y",2) for i in range(n)]
+    Z = [MX.sym("z",2,2) for i in range(n)]
+    V = [MX.sym("z",Sparsity.upper(3)) for i in range(n)]
+
+    for parallelization in ["serial","openmp","unroll","inline","thread"]:
+        print(parallelization)
+        res = fun.map(n, parallelization).call([horzcat(*x) for x in [X,Y,Z,V]])
+
+
+        F = Function("F",X+Y+Z+V,list(map(sin,res)))
+
+        resref = [[] for i in range(fun.n_out())]
+        for r in zip(X,Y,Z,V):
+          for i,e in enumerate(map(sin,fun.call(r))):
+            resref[i] = resref[i] + [e]
+
+        Fref = Function("F",X+Y+Z+V,[horzcat(*x) for x in resref])
+
+        np.random.seed(0)
+        X_ = [ DM(i.sparsity(),np.random.random(i.nnz())) for i in X ]
+        Y_ = [ DM(i.sparsity(),np.random.random(i.nnz())) for i in Y ]
+        Z_ = [ DM(i.sparsity(),np.random.random(i.nnz())) for i in Z ]
+        V_ = [ DM(i.sparsity(),np.random.random(i.nnz())) for i in V ]
+
+        for f in [F, F.expand('expand_'+F.name())]:
+          self.checkfunction_light(f,Fref,inputs=X_+Y_+Z_+V_,)
+
+  def test_map_node_n_threads(self):
+    x = SX.sym("x")
+    y = SX.sym("y",2)
+    z = SX.sym("z",2,2)
+    v = SX.sym("z",Sparsity.upper(3))
+
+    fun = Function("f",[x,y,z,v],[mtimes(z,y)+x,sin(y*x).T,v/x])
+
+    X_ = [ DM(x.sparsity(),np.random.random(x.nnz())) for i in range(10) ]
+    Y_ = [ DM(y.sparsity(),np.random.random(y.nnz())) for i in range(10) ]
+    Z_ = [ DM(z.sparsity(),np.random.random(z.nnz())) for i in range(10) ]
+    V_ = [ DM(v.sparsity(),np.random.random(v.nnz())) for i in range(10) ]
+
+
+    print(fun.map(3,"thread",2))
+    
+
+    self.checkfunction_light(fun.map(2,"thread",1),fun.map(2),inputs=[hcat(X_[:2]),hcat(Y_[:2]),hcat(Z_[:2]),hcat(V_[:2])])
+    self.checkfunction_light(fun.map(3,"thread",1),fun.map(3),inputs=[hcat(X_[:3]),hcat(Y_[:3]),hcat(Z_[:3]),hcat(V_[:3])])
+    self.checkfunction_light(fun.map(3,"thread",2),fun.map(3),inputs=[hcat(X_[:3]),hcat(Y_[:3]),hcat(Z_[:3]),hcat(V_[:3])])
+    self.checkfunction_light(fun.map(4,"thread",2),fun.map(4),inputs=[hcat(X_[:4]),hcat(Y_[:4]),hcat(Z_[:4]),hcat(V_[:4])])
+    self.checkfunction_light(fun.map(4,"thread",5),fun.map(4),inputs=[hcat(X_[:4]),hcat(Y_[:4]),hcat(Z_[:4]),hcat(V_[:4])])
+
   @memory_heavy()
   def test_mapsum(self):
     x = SX.sym("x")
@@ -528,7 +581,7 @@ class Functiontests(casadiTestCase):
     zi = 0
     for Z_alt in [Z,[MX()]*3]:
       zi+= 1
-      for parallelization in ["serial","openmp","unroll"]:
+      for parallelization in ["serial","openmp","unroll","thread"]:
         res = fun.mapsum([horzcat(*x) for x in [X,Y,Z_alt,V]],parallelization) # Joris - clean alternative for this?
 
         for ad_weight_sp in [0,1]:
@@ -549,7 +602,8 @@ class Functiontests(casadiTestCase):
 
           inputs = X_+Y_+Z_+V_
 
-          self.check_codegen(F,inputs=inputs)
+          if parallelization!="thread":
+            self.check_codegen(F,inputs=inputs)
 
           for f in [F,toSX_fun(F)]:
             self.checkfunction(f,Fref,inputs=inputs,sparsity_mod=args.run_slow)
@@ -573,7 +627,7 @@ class Functiontests(casadiTestCase):
 
     for Z_alt in [Z]:
 
-      for parallelization in ["serial","openmp","unroll"]:
+      for parallelization in ["serial","openmp","unroll","thread"]:
 
         for ad_weight_sp in [0,1]:
           for ad_weight in [0,1]:
@@ -599,43 +653,11 @@ class Functiontests(casadiTestCase):
 
             inputs = [horzcat(*X_),horzcat(*Y_),Z_,V_]
 
-            self.check_codegen(F,inputs=inputs)
+            if parallelization!="thread":
+              self.check_codegen(F,inputs=inputs)
 
             for f in [F,toSX_fun(F)]:
               self.checkfunction(f,Fref,inputs=inputs,sparsity_mod=args.run_slow)
-
-  def test_issue1522(self):
-    V = MX.sym("X",2)
-    P = MX.sym("X",0)
-
-    x =  V[0]
-    y =  V[1]
-
-    obj = (x-(x+y))**2
-
-    nlp = Function("nlp", [V, P], [obj, MX()], ['x', 'p'], ['f', 'g'])
-
-    self.assertTrue(nlp.hessian(0,0).sparsity_out(0).is_symmetric())
-
-    V = MX.sym("X",6)
-
-    xs =      [ V[0:2], V[2:4] ]
-    travels = [ V[4],   V[5]   ]
-
-    dist = 0
-
-    for j in range(2):
-      dist+=sum1((xs[0]-(xs[j]+travels[j]))**2)
-
-    nlp = Function("nlp", [V, P], [-dist, MX()], ['x', 'p'], ['f', 'g'])
-
-    hs = []
-    for n in [nlp, nlp.expand('nlp_expanded')]:
-        H = n.reverse(1).jacobian(0,0,False,True)
-
-        h = H(der_x=1,adj0_f=1)[H.name_out(0)]
-        hs.append(h)
-    self.checkarray(*hs)
 
   def test_repmatnode(self):
     x = MX.sym("x",2)
@@ -863,28 +885,246 @@ class Functiontests(casadiTestCase):
     self.assertTrue("not symbolic" in s)
 
   def test_1d_interpolant(self):
-    grid = [[0, 1, 2]]
-    values = [0, 1, 2]
+    grid = [[0, 1, 1.5, 2, 3]]
+    values = [0, 1, 2, 5, 3]
     F = interpolant('F', 'linear', grid, values)
     def same(a, b): return abs(float(a)-b)<1e-8
-    self.assertTrue(same(F(2.4), 2.4))
-    self.assertTrue(same(F(1.4), 1.4))
-    self.assertTrue(same(F(0.4), 0.4))
-    self.assertTrue(same(F(-.6), -.6))
+    pairs = [
+      (3.4,3-0.4*2),
+      (2.4,5-0.4*2),
+      (1.6,2+3*0.1/0.5),
+      (1.4,1+0.4/0.5),
+      (0.4,0.4),
+      (-.6,-0.6)
+    ]
+
+    X = MX.sym("x")
+
+    J = Function("F",[X],[F(X)])
+
+    for a,r in pairs:
+      self.assertTrue(same(F(a), r))
+      self.check_codegen(F,inputs=[a])
+
+
+    X = MX.sym("x")
+
+    J = Function("F",[X],[jacobian(F(X),X)])
+
+    pairs = [
+      (3.4,-2),
+      (2.4,-2),
+      (1.6,6),
+      (1.4,2),
+      (0.4,1),
+      (-.6,1),
+
+      (1,2),
+      (0.99,1),
+    ]
+
+    for a,r in pairs:
+      self.assertTrue(same(J(a), r))
+      self.check_codegen(J,inputs=[a])
 
   def test_2d_interpolant(self):
+    grid = [[0, 1, 4, 5],
+            [0, 2, 3]]
+
+    values = [0,   1,  8,  3,
+              10, -11, 12, 13,
+              20, 31, -42, 53]
+    F = interpolant('F', 'linear', grid, values)
+
+
+    a0 = -11+0.4*(31+11)
+    a1 = 12+0.4*(-42-12)
+    pairs = [
+      (vertcat(1,2), -11),
+      (vertcat(1,3), 31),
+      (vertcat(4,2), 12),
+      (vertcat(4,3), -42),
+
+      (vertcat(1,2.4), a0),
+      (vertcat(4,2.4), a1),
+
+      (vertcat(3,2), -11+2.0/3*(12+11)),
+      (vertcat(3,3), 31+2.0/3*(-42-31)),
+
+      (vertcat(3,2.4), a0+2.0/3*(a1-a0))
+    ]
+
+    for a,r in pairs:
+      self.checkarray(F(a), r)
+      self.check_codegen(F,inputs=[a])
+
+
+    X = MX.sym("x",2)
+
+    J = Function("J",[X],[jacobian(F(X),X)])
+
+    jx0 = (12+11)/3.0
+    jx1 = (-42-31)/3.0
+    jx2 = (13-12)
+    jx3 = (53+42)
+
+    jy0 = 31+11
+    jy1 = -42-12
+
+    pairs = [
+      (vertcat(1,2), vertcat(jx0,jy0)),
+      (vertcat(1,3), vertcat(jx1,jy0)),
+      (vertcat(4,2), vertcat(jx2,jy1)),
+      (vertcat(4,3), vertcat(jx3,jy1)),
+
+      (vertcat(1,2.4), vertcat(jx0+(jx1-jx0)*0.4, 31+11)),
+      (vertcat(4,2.4), vertcat(jx2+(jx3-jx2)*0.4, -42-12)),
+
+      (vertcat(3,2), vertcat(jx0,jy0+(jy1-jy0)*2.0/3)),
+      (vertcat(3,3), vertcat(jx1,jy0+(jy1-jy0)*2.0/3)),
+
+      (vertcat(3,2.4), vertcat(jx0+(jx1-jx0)*0.4,jy0+(jy1-jy0)*2.0/3)),
+
+    ]
+
+    for a,r in pairs:
+      self.checkarray(J(a).T, r)
+      self.check_codegen(J,inputs=[a])
+
+  def test_1d_interpolant_uniform(self):
+    grid = [[0, 1, 2]]
+    values = [0, 1, 2]
+    for opts in [{"lookup_mode": ["linear"]},{"lookup_mode": ["exact"]},{"lookup_mode": ["binary"]}]:
+      F = interpolant('F', 'linear', grid, values, opts)
+      def same(a, b): return abs(float(a)-b)<1e-8
+      self.assertTrue(same(F(2.4), 2.4))
+      self.assertTrue(same(F(1.4), 1.4))
+      self.assertTrue(same(F(0), 0))
+      self.assertTrue(same(F(1), 1))
+      self.assertTrue(same(F(2), 2))
+      self.assertTrue(same(F(6), 6))
+      self.assertTrue(same(F(0.4), 0.4))
+      self.assertTrue(same(F(-.6), -.6))
+
+      F = interpolant('F', 'linear', [np.linspace(0,1,7)], list(range(7)), {"lookup_mode": ["exact"]})
+
+    grid = [[2, 4, 6]]
+    values = [10, 7, 1]
+    for opts in [{"lookup_mode": ["linear"]},{"lookup_mode": ["exact"]},{"lookup_mode": ["binary"]}]:
+      F = interpolant('F', 'linear', grid, values, opts)
+      def same(a, b): return abs(float(a)-b)<1e-8
+      self.assertTrue(same(F(1), 11.5))
+      self.assertTrue(same(F(2), 10))
+      self.assertTrue(same(F(3), 8.5))
+      self.assertTrue(same(F(4), 7))
+      self.assertTrue(same(F(5), 4))
+      self.assertTrue(same(F(6), 1))
+      self.assertTrue(same(F(7), -2))
+
+      F = interpolant('F', 'linear', [np.linspace(0,1,7)], list(range(7)), {"lookup_mode": ["exact"]})
+
+  def test_2d_interpolant_uniform(self):
     grid = [[0, 1, 2], [0, 1, 2]]
     values = [0, 1, 2, 10, 11, 12, 20, 21, 22]
-    F = interpolant('F', 'linear', grid, values)
-    def same(a, b): return abs(float(a)-b)<1e-8
-    self.assertTrue(same(F([2.4, 0.5]), 7.4))
-    self.assertTrue(same(F([1.4, 0.5]), 6.4))
-    self.assertTrue(same(F([0.4, 0.5]), 5.4))
-    self.assertTrue(same(F([-.6, 0.5]), 4.4))
-    self.assertTrue(same(F([-.6, 1.5]), 14.4))
-    self.assertTrue(same(F([-.6, 2.5]), 24.4))
-    self.assertTrue(same(F([-.6, 3.5]), 34.4))
+    for opts in [{"lookup_mode": ["linear","linear"]},{"lookup_mode": ["exact","exact"]},{"lookup_mode": ["binary","binary"]}]:
+      F = interpolant('F', 'linear', grid, values, opts)
+      def same(a, b): return abs(float(a)-b)<1e-8
+      self.assertTrue(same(F([2.4, 0.5]), 7.4))
+      self.assertTrue(same(F([1.4, 0.5]), 6.4))
+      self.assertTrue(same(F([0.4, 0.5]), 5.4))
+      self.assertTrue(same(F([1, 0.5]), 6))
+      self.assertTrue(same(F([1, 0]), 1))
+      self.assertTrue(same(F([0, 0]), 0))
+      self.assertTrue(same(F([0.4, 1]), 10.4))
+      self.assertTrue(same(F([-.6, 0.5]), 4.4))
+      self.assertTrue(same(F([-.6, 1.5]), 14.4))
+      self.assertTrue(same(F([-.6, 2.5]), 24.4))
+      self.assertTrue(same(F([-.6, 3.5]), 34.4))
 
+  @skip(not scipy_interpolate)
+  def test_2d_bspline(self):
+    import scipy.interpolate
+    np.random.seed(0)
+
+    d_knots = [list(np.linspace(0,1,5)),list(np.linspace(0,1,6))]
+
+    data = np.random.random([len(e) for e in d_knots])
+    r = np.meshgrid(*d_knots,indexing='ij')
+
+    xyz = np.vstack(e.ravel(order='F') for e in r).ravel(order='F')
+
+    d_flat = data.ravel(order='F')
+
+    LUT = casadi.interpolant('name','bspline',d_knots,d_flat)
+    LUTJ = LUT.jacobian_old(0, 0)
+    LUTH = LUT.hessian_old(0, 0)
+
+    self.check_codegen(LUT, [vertcat(0.2,0.3)])
+    #scipy.interpolate.interpn(d_knots, data, [0.2,0.3], method='splinef2d')
+
+    interp = scipy.interpolate.RectBivariateSpline(d_knots[0], d_knots[1], data)
+    for x in [0,0.01,0.1,0.2,0.9,0.99,1]:
+      for y in [0,0.01,0.1,0.2,0.9,0.99,1]:
+        m = LUT([x,y])
+        r = interp.ev(x,y)
+        self.checkarray(m,r)
+
+        m = LUTJ([x,y])[0]
+        try:
+          r = [interp.ev(x,y, 1, 0), interp.ev(x,y, 0, 1)]
+        except:
+          r = None
+        if r is not None:
+          self.checkarray(m,r)
+
+        m = LUTH([x,y])[0]
+        try:
+          r = blockcat([[interp.ev(x,y, 2, 0),interp.ev(x,y, 1, 1)],[interp.ev(x,y, 1, 1), interp.ev(x,y, 0, 2)]])
+        except:
+          r = None
+        if r is not None:
+          self.checkarray(m,r)
+
+  @skip(not scipy_interpolate)
+  def test_1d_bspline(self):
+    import scipy.interpolate
+    np.random.seed(0)
+
+    d_knots = [list(np.linspace(0,1,5))]
+
+    data = np.random.random([len(e) for e in d_knots])
+    r = np.array(d_knots)
+
+    xyz = np.vstack(e.ravel(order='F') for e in r).ravel(order='F')
+
+    d_flat = data.ravel(order='F')
+
+    LUT = casadi.interpolant('name','bspline',d_knots,d_flat)
+    self.check_codegen(LUT, [0.2])
+    LUTJ = LUT.jacobian_old(0, 0)
+    LUTH = LUT.hessian_old(0, 0)
+
+    interp = scipy.interpolate.InterpolatedUnivariateSpline(d_knots[0], data)
+    for x in [0,0.01,0.1,0.2,0.9,0.99,1]:
+      m = LUT(x)
+      r = interp(x)
+      self.checkarray(m,r)
+
+      m = LUTJ(x)[0]
+      try:
+        r = interp(x, 1)
+      except:
+        r = None
+      if r is not None:
+        self.checkarray(m,r)
+
+      m = LUTH(x)[0]
+      try:
+        r = interp(x, 2)
+      except:
+        r = None
+      if r is not None:
+        self.checkarray(m,r)
 
   def test_Callback_Jacobian(self):
     x = MX.sym("x")
@@ -911,15 +1151,16 @@ class Functiontests(casadiTestCase):
           z2 = sin(z1)
           return [z2]
 
-        def get_n_forward(self): return 0
-        def get_n_reverse(self): return 0
+        def has_forward(self,nfwd): return False
+        def has_reverse(self,nadj): return False
 
         def has_jacobian(self): return True
 
-        def get_jacobian(self, name, opts):
+        def get_jacobian(self, name, inames, onames, opts):
           x = SX.sym("x")
           y = SX.sym("y")
-          J = Function(name, [x,y],[horzcat(cos(x+3*y),3*cos(x+3*y))], opts)
+          out_g = SX.sym('out_g', Sparsity(1,1))
+          J = Function(name, [x,y,out_g],[horzcat(cos(x+3*y),3*cos(x+3*y))], inames, onames, opts)
           return J
 
     f = Fun()
@@ -973,6 +1214,7 @@ class Functiontests(casadiTestCase):
         def __init__(self):
           Callback.__init__(self)
           self.construct("Fun", {})
+
         def get_n_in(self): return 2
         def get_n_out(self): return 1
 
@@ -985,13 +1227,12 @@ class Functiontests(casadiTestCase):
           z2 = sin(z1)
           return [z2]
 
-      f = Fun()
-      f.__disown__()
+      self.cb = Fun()
 
       if not indirect:
-        return f
+        return self.cb
 
-      f = Function("f", [x,y],[f(x,y)])
+      f = Function("f", [x,y],[self.cb(x,y)])
 
       return f
 
@@ -1003,7 +1244,7 @@ class Functiontests(casadiTestCase):
         f.gradient()
 
       with self.assertRaises(Exception):
-        f.jacobian()
+        f.jacobian_old(0, 0)
 
       with self.assertRaises(Exception):
         f.forward(1)
@@ -1044,7 +1285,7 @@ class Functiontests(casadiTestCase):
         f(2,3)
       except Exception as e:
         s = str(e)
-      self.assertTrue("Callback::eval" in s)
+      self.assertTrue("Expected 1 output" in s)
       s = ""
       class Fun(Callback):
         def __init__(self):
@@ -1060,7 +1301,7 @@ class Functiontests(casadiTestCase):
         f(2,3)
       except Exception as e:
         s = str(e)
-      self.assertTrue("Callback::eval" in s)
+      self.assertTrue("Shape mismatch" in s)
 
   def test_Callback_sens(self):
     x = MX.sym("x")
@@ -1070,7 +1311,7 @@ class Functiontests(casadiTestCase):
 
     g = Function("g", [x,y],[sin(x+3*y)])
 
-    def getP(max_fwd=1,max_adj=1,has_fwd=True,has_adj=True,indirect=True):
+    def getP(has_fwd=True,has_adj=True,indirect=True):
 
       class Fun(Callback):
         # sin(x+3*y)
@@ -1089,20 +1330,20 @@ class Functiontests(casadiTestCase):
           z2 = sin(z1)
           return [z2]
 
-        def get_n_forward(self): return max_fwd
         if has_fwd:
-          def get_forward(self,name,nfwd,opts):
+          def has_forward(self,nfwd): return nfwd==1
+          def get_forward(self,nfwd,name,inames,onames,opts):
+            assert(nfwd==1)
             class ForwardFun(Callback):
               # sin(x+3*y)
 
               def __init__(self):
                 Callback.__init__(self)
                 self.construct(name, {"verbose":True})
-              def get_n_in(self): return 2+1+nfwd*2
-              def get_n_out(self): return nfwd
+              def get_n_in(self): return 2+1+2
+              def get_n_out(self): return 1
 
               def eval(self,arg):
-                assert(max_fwd)
                 x,y = arg[0],arg[1]
                 z = arg[2]
                 seeds = arg[3:]
@@ -1122,24 +1363,24 @@ class Functiontests(casadiTestCase):
                   ret.append(dz2)
 
                 return ret
-            ffun = ForwardFun()
-            ffun.__disown__()
-            return ffun
 
-        def get_n_reverse(self): return max_adj
+            self.cb_fwd = ForwardFun()
+            return self.cb_fwd
+
         if has_adj:
-          def get_reverse(self,name,nadj,opts):
+          def has_reverse(self,nadj): return nadj==1
+          def get_reverse(self,nadj,name,inames,onames,opts):
+            assert(nadj==1)
             class BackwardFun(Callback):
               # sin(x+3*y)
 
               def __init__(self):
                 Callback.__init__(self)
                 self.construct(name, {"verbose":True})
-              def get_n_in(self): return 2+1+nadj
-              def get_n_out(self): return nadj*2
+              def get_n_in(self): return 2+1+1
+              def get_n_out(self): return 2
 
               def eval(self,arg):
-                assert(max_adj)
                 x,y = arg[0],arg[1]
                 z = arg[2]
                 seeds = arg[3:]
@@ -1165,13 +1406,12 @@ class Functiontests(casadiTestCase):
                   ret.append(by)
                 return ret
 
-            bfun = BackwardFun()
-            bfun.__disown__()
-            return bfun
+            self.cb_rev = BackwardFun()
+            return self.cb_rev
 
       opts = {"verbose":True}
-      f = Fun(opts)
-      f.__disown__()
+      self.cb = Fun(opts)
+      f = self.cb
 
       if not indirect:
         return f
@@ -1181,24 +1421,23 @@ class Functiontests(casadiTestCase):
       return f
 
     for indirect in [True,False]:
-      f = getP(max_fwd=1,max_adj=1,indirect=indirect)
+      f = getP(has_fwd=True,has_adj=True,indirect=indirect)
 
       self.checkfunction(f,g,inputs=num_inputs,sens_der=False,hessian=False,evals=1)
 
-      f = getP(max_fwd=1,max_adj=0,indirect=indirect)
+      f = getP(has_fwd=True,has_adj=False,indirect=indirect)
 
       self.checkfunction(f,g,inputs=num_inputs,sens_der=False,hessian=False,adj=False,evals=1)
 
-      f = getP(max_fwd=0,max_adj=1,indirect=indirect)
+      f = getP(has_fwd=False,has_adj=True,indirect=indirect)
 
       self.checkfunction(f,g,inputs=num_inputs,sens_der=False,hessian=False,fwd=False,evals=1)
 
-
-      f = getP(max_fwd=1,max_adj=0,has_fwd=True,has_adj=False,indirect=indirect)
+      f = getP(has_fwd=True,has_adj=False,indirect=indirect)
 
       self.checkfunction(f,g,inputs=num_inputs,sens_der=False,hessian=False,adj=False,evals=1)
 
-      f = getP(max_fwd=0,max_adj=1,has_fwd=False,has_adj=True,indirect=indirect)
+      f = getP(has_fwd=False,has_adj=True,indirect=indirect)
 
       self.checkfunction(f,g,inputs=num_inputs,sens_der=False,hessian=False,fwd=False,evals=1)
 
@@ -1209,31 +1448,317 @@ class Functiontests(casadiTestCase):
 
       nlp = {"x": x, "f": x**2}
 
-      with capture() as out:
+      with capture_stdout() as out:
         solver = nlpsol("solver","ipopt",nlp)
       self.assertTrue("nlp_f" not in out[0])
-      with capture() as out:
+      with capture_stdout() as out:
         solver = nlpsol("solver","ipopt",nlp,{"common_options":{"verbose":True}})
       self.assertTrue("nlp_f" in out[0])
-      with capture() as out:
+      with capture_stdout() as out:
         solver = nlpsol("solver","ipopt",nlp,{"specific_options":{ "nlp_f" : {"verbose":True}}})
       self.assertTrue("nlp_f" in out[0])
-      with capture() as out:
+      with capture_stdout() as out:
         solver = nlpsol("solver","ipopt",nlp,{"common_options":{"verbose":True},"specific_options":{ "nlp_f" : {"verbose":False}}})
       self.assertTrue("nlp_f" not in out[0])
-      with capture() as out:
+      with capture_stdout() as out:
         solver = nlpsol("solver","ipopt",nlp,{"common_options":{"verbose":False},"specific_options":{ "nlp_f" : {"verbose":True}}})
       self.assertTrue("nlp_f" in out[0])
 
-      with capture() as out:
+      with capture_stdout() as out:
         solver = nlpsol("solver","ipopt",nlp)
       self.assertTrue(len(out[1])==0)
-      with capture() as out:
+      with capture_stdout() as out:
         solver = nlpsol("solver","ipopt",nlp,{"specific_options":{ "nlp_foo" : {"verbose":True}}})
       self.assertTrue("Ignoring" + out[1])
       self.assertTrue("nlp_g" in out[1])
       with self.assertRaises(Exception):
         solver = nlpsol("solver","ipopt",nlp,{"specific_options":{ "nlp_foo" : 3}})
+
+  @requires_expm("slicot")
+  @memory_heavy()
+  def test_expm(self):
+      eps = 1e-6
+      t = MX.sym('t')
+      tnum = 0.2
+
+      n = 4
+
+      np.random.seed(0)
+      Anum = np.random.random((n,n))
+      Bnum = np.random.random((n,2))
+      Bb = np.random.random((n,2))
+
+      dA = np.random.random((n,n))
+      Yb = np.random.random((n,2))
+
+      def expm(A):
+
+        n = A.shape[0]
+        x = MX.sym('x',n)
+        As = MX.sym('A',n,n)
+
+        dae = {'x':x,'p':vec(As),'ode':mtimes(As,x)}
+        intg = integrator('intg','cvodes',dae,{'reltol':1e-14,'abstol':1e-14})
+
+        Intg = intg.map('identity','serial',n,[1],[])
+
+        out = Intg(x0=DM.eye(n),p=vec(As))
+        expmF = Function('expm',[As],[out["xf"]])
+        return expmF(A)
+
+      A = MX.sym("A",n,n)
+      t = MX.sym("t")
+      fr = Function('fr',[A,t],[expm(A*t)])
+      f = Function('f',[A,t],[casadi.expm(A*t)])
+
+      self.checkfunction(fr,f,inputs=[Anum, 1.1],digits=8)
+
+      fr = Function('fr',[t],[expm(Anum*t)])
+      f = Function('f',[t],[casadi.expm_const(Anum,t)])
+
+      self.checkfunction(fr,f,inputs=[1.1],digits=8)
+
+      JA = jacobian(casadi.expm(A*t),A)
+      Jt = jacobian(casadi.expm(A*t),t)
+
+      self.assertTrue(JA.nnz()==n**4)
+      self.assertTrue(Jt.nnz()==n**2)
+
+      JA = jacobian(casadi.expm_const(A,t),A)
+      Jt = jacobian(casadi.expm_const(A,t),t)
+
+      self.assertTrue(JA.nnz()==0)
+      self.assertTrue(Jt.nnz()==n**2)
+
+  def test_conditional(self):
+
+    np.random.seed(5)
+
+    x = MX.sym('x',2,2)
+    y = MX.sym('y',2,2)
+
+    sp1 = MX.sym('y',Sparsity.lower(2))
+    sp2 = MX.sym('z',Sparsity.diag(2))
+
+    f1 = Function("f",[sp2,x],[x**2,x*sp2])
+    f2 = Function("f",[sp1,x],[2*x**2,sin(sp1)])
+    f3 = Function("f",[sp1,sp2],[sp1*sp2,sp1+sp2])
+
+    F = Function.conditional("test",[f1,f2], f3)
+    Fsx = F.expand()
+
+    A = np.random.random((2,2))
+    B = np.random.random((2,2))
+
+    for i in range(-1,3):
+      self.checkfunction(F,Fsx,inputs = [i,A,B])
+      self.check_codegen(F,inputs=[i,A,B])
+
+  def test_max_num_dir(self):
+    x = MX.sym("x",10)
+
+    f = Function("ffff",[x],[mtimes(DM.ones(10,10),x)],{"max_num_dir":4,"verbose":True})
+    f = f.expand()
+
+
+    y = f.call([sin(x)],False,True)[0]
+
+
+
+    acc = Function('acc',[x],[y])
+    acc = acc.mapaccum('accd',5)
+
+
+    cons = vec(acc(x))
+
+    os.system("callgrind_control -i on")
+
+    e = jacobian(cons,x)
+    os.system("callgrind_control -i off")
+
+    g = Function('g',[x],[e])
+
+
+    c = CodeGenerator('me')
+    c.add(g)
+    code= c.dump()
+
+    self.assertTrue("fwd4_ffff" in code)
+
+  def test_max_num_dir(self):
+    x = MX.sym("x")
+
+    f = Function("ffff",[x],[sin(x)])
+    fm = f.mapaccum("mapaccum",100,1,{"base":4})
+   
+    c = CodeGenerator('me')
+    c.add(fm)
+    code= c.dump()
+
+    self.assertTrue("ffff_acc4_acc4_acc4" in code)
+
+  def test_2d_linear_multiout(self):
+    np.random.seed(0)
+
+    d_knots = [list(np.linspace(0,1,5)),list(np.linspace(0,1,6))]
+
+    data0 = np.random.random([len(e) for e in d_knots])
+    data1 = np.random.random([len(e) for e in d_knots])
+    r = np.meshgrid(*d_knots,indexing='ij')
+
+    xyz = np.vstack(e.ravel(order='F') for e in r).ravel(order='F')
+
+    d_flat0 = data0.ravel(order='F')
+
+    LUT0 = casadi.interpolant('name','linear',d_knots,d_flat0)
+
+    d_flat1 = data1.ravel(order='F')
+
+    LUT1 = casadi.interpolant('name','linear',d_knots,d_flat1)
+    
+    data = np.vstack((data0.ravel(order='F'),data1.ravel(order='F'))).ravel(order='F')
+
+    d_flat = data.ravel(order='F')
+
+    
+    LUT = casadi.interpolant('name','linear',d_knots,d_flat)
+    
+    
+    x = MX.sym("x")
+    y = MX.sym("y")
+    
+    
+    LUT_sep = Function('f',[x,y],[vertcat(LUT0(vertcat(x,y)),LUT1(vertcat(x,y)))])
+    LUT = Function('f',[x,y],[LUT(vertcat(x,y))])
+    
+    self.checkfunction(LUT,LUT_sep, inputs=[0.2,0.333])
+    self.check_codegen(LUT,inputs=[0.2,0.333])
+
+  def test_2d_bspline_multiout(self):
+    np.random.seed(0)
+
+    d_knots = [list(np.linspace(0,1,5)),list(np.linspace(0,1,6))]
+
+    data0 = np.random.random([len(e) for e in d_knots])
+    data1 = np.random.random([len(e) for e in d_knots])
+    r = np.meshgrid(*d_knots,indexing='ij')
+
+    xyz = np.vstack(e.ravel(order='F') for e in r).ravel(order='F')
+
+    d_flat0 = data0.ravel(order='F')
+
+    LUT0 = casadi.interpolant('name','bspline',d_knots,d_flat0)
+
+    d_flat1 = data1.ravel(order='F')
+
+    LUT1 = casadi.interpolant('name','bspline',d_knots,d_flat1)
+    
+    data = np.vstack((data0.ravel(order='F'),data1.ravel(order='F'))).ravel(order='F')
+
+    d_flat = data.ravel(order='F')
+
+    
+    LUT = casadi.interpolant('name','bspline',d_knots,d_flat)
+    
+    
+    x = MX.sym("x")
+    y = MX.sym("y")
+    
+    
+    LUT_sep = Function('f',[x,y],[vertcat(LUT0(vertcat(x,y)),LUT1(vertcat(x,y)))])
+    LUT = Function('f',[x,y],[LUT(vertcat(x,y))])
+    
+    self.checkfunction(LUT,LUT_sep, inputs=[0.2,0.333])
+    self.check_codegen(LUT,inputs=[0.2,0.333])
+
+  def test_codegen_avoid_stack(self):
+    x = SX.sym("x",3,3)
+    f = Function('f',[x],[det(x)])
+    np.random.seed(0)
+    self.check_codegen(f,inputs=[np.random.random((3,3))])
+    self.check_codegen(f,inputs=[np.random.random((3,3))], opts={"avoid_stack": True})
+  
+
+  def test_sx_serialize(self):
+    x = SX.sym("x")
+    y = x+3
+    z = sin(y)
+
+    f = Function('f',[x],[z])
+    fs = Function.deserialize(f.serialize())
+
+    self.checkfunction(f,fs,inputs=[2])
+
+    x = SX.sym("x")
+    y = x+3
+    z = sin(y)
+
+    f = Function('f',[x],[z,np.nan,-np.inf,np.inf])
+    fs = Function.deserialize(f.serialize())
+    self.checkfunction(f,fs,inputs=[2])
+
+    x = SX.sym("x")
+    y = SX.sym("y", Sparsity.lower(3))
+    z = x+y
+    z1 = sparsify(vertcat(z[0],0,z[1]))
+    z2 = z.T
+
+    f = Function('f',[x,y],[z1,z2,x**2],["x","y"],["a","b","c"])
+    fs = Function.deserialize(f.serialize())
+    
+    self.assertEqual(fs.name_in(0), "x")
+    self.assertEqual(fs.name_out(0), "a")
+    self.assertEqual(fs.name(), "f")
+
+    self.checkfunction(f,fs,inputs=[3.7,np.array([[1,0,0],[2,3,0],[4,5,6]])],hessian=False)
+
+
+    fs = pickle.loads(pickle.dumps(f))
+    self.checkfunction(f,fs,inputs=[3.7,np.array([[1,0,0],[2,3,0],[4,5,6]])],hessian=False)
+
+    x = SX.sym("x")
+    p = SX.sym("p")
+
+    f = Function('f',[x],[p])
+
+    with self.assertInException("Cannot serialize SXFunction with free parameters"):
+      pickle.loads(pickle.dumps(f))
+
+
+    x = MX.sym("x")
+    f = Function('f',[x],[x**2])
+
+    with self.assertInException("'serialize' not defined for MXFunction"):
+      pickle.loads(pickle.dumps(f))
+
+  def test_string(self):
+    x=MX.sym("x")
+    y=MX.sym("y")
+    f = Function('f',[x],[],["x"],[])
+    self.assertTrue("(x)->()" in str(f))
+
+    f = Function('f',[],[x],[],["y"])
+    self.assertTrue("()->(y)" in str(f))
+
+    f = Function('f',[x],[x**2],["x"],["y"])
+    self.assertTrue("(x)->(y)" in str(f))
+
+    f = Function('f',[x,y],[x**2,x*y],["x","y"],["w","z"])
+    self.assertTrue("(x,y)->(w,z)" in str(f))
+
+  def test_fold(self):
+    x = SX.sym("x",2,2)
+
+    f = Function("f",[x],[sin(x)])
+
+    F = f.fold(10)
+
+    x0 = x
+    for i in range(10):
+      x = f(x)
+    Fref = Function("f",[x0],[x])
+
+    self.checkfunction(F,Fref,inputs=[DM([[1,2],[3,7]])])
 
 if __name__ == '__main__':
     unittest.main()

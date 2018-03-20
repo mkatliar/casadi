@@ -129,7 +129,7 @@ int main(){
   offset += nx;
 
   // Make sure that the size of the variable vector is consistent with the number of variables that we have referenced
-  casadi_assert(offset==NV);
+  casadi_assert(offset==NV, "");
 
   // Objective function
   MX J = 0;
@@ -156,7 +156,6 @@ int main(){
   Dict opts;
   opts["ipopt.tol"] = 1e-5;
   opts["ipopt.max_iter"] = 100;
-  opts["ipopt.linear_solver"] = "ma27";
 
   // Create an NLP solver and buffers
   Function solver = nlpsol("nlpsol", "ipopt", nlp, opts);

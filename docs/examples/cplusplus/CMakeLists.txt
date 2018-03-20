@@ -1,7 +1,7 @@
 include_directories(../../)
 
 # Add IPOPT link directories
-if(IPOPT_FOUND)
+if(WITH_IPOPT)
   link_directories(${IPOPT_LIBRARY_DIRS})
 endif()
 
@@ -18,19 +18,25 @@ add_executable(propagating_sparsity propagating_sparsity.cpp)
 target_link_libraries(propagating_sparsity casadi)
 
 # Rosenbrock problem
-if(IPOPT_FOUND)
+if(WITH_IPOPT)
   add_executable(rosenbrock rosenbrock.cpp)
   target_link_libraries(rosenbrock casadi)
 endif()
 
 # Rocket using Ipopt
-if(IPOPT_FOUND)
+if(WITH_IPOPT)
   add_executable(rocket_ipopt rocket_ipopt.cpp)
   target_link_libraries(rocket_ipopt casadi)
 endif()
 
+# Race car using Ipopt
+if(WITH_IPOPT)
+  add_executable(race_car race_car.cpp)
+  target_link_libraries(race_car casadi)
+endif()
+
 # basic snopt example
-if(SNOPT_FOUND)
+if(WITH_SNOPT)
   add_executable(snopt_nl snopt_nl.cpp)
   target_link_libraries(snopt_nl casadi)
 
@@ -39,13 +45,13 @@ if(SNOPT_FOUND)
 endif()
 
 # Rocket solved with MX + SX
-if(IPOPT_FOUND)
+if(WITH_IPOPT)
   add_executable(rocket_mx_and_sx rocket_mx_and_sx.cpp)
   target_link_libraries(rocket_mx_and_sx casadi)
 endif()
 
 # Parse AMPL models and solve with Ipopt
-if(IPOPT_FOUND)
+if(WITH_IPOPT)
   add_executable(ipopt_nl ipopt_nl.cpp)
   target_link_libraries(ipopt_nl casadi)
 
@@ -54,19 +60,19 @@ if(IPOPT_FOUND)
 endif()
 
 # Parse AMPL models and solve with Worhp
-if(WORHP_FOUND AND IPOPT_FOUND)
+if(WITH_WORHP AND WITH_IPOPT)
   add_executable(worhp_nl worhp_nl.cpp)
   target_link_libraries(worhp_nl casadi)
 endif()
 
 # Parse AMPL models and solve with KNITRO
-if(KNITRO_FOUND)
+if(WITH_KNITRO)
   add_executable(knitro_nl knitro_nl.cpp)
   target_link_libraries(knitro_nl casadi)
 endif()
 
 # rocket example using sundials and ipopt, also demonstrating linking with plugins
-if(WITH_SUNDIALS AND IPOPT_FOUND)
+if(WITH_SUNDIALS AND WITH_IPOPT)
   add_executable(rocket_single_shooting rocket_single_shooting.cpp)
   target_link_libraries(rocket_single_shooting
     casadi_integrator_cvodes
@@ -77,7 +83,7 @@ if(WITH_SUNDIALS AND IPOPT_FOUND)
 endif()
 
 # Writing a multiple shooting code from scratch
-if(WITH_SUNDIALS AND IPOPT_FOUND)
+if(WITH_SUNDIALS AND WITH_IPOPT)
   add_executable(multiple_shooting_from_scratch multiple_shooting_from_scratch.cpp)
   target_link_libraries(multiple_shooting_from_scratch casadi)
 endif()
@@ -92,20 +98,8 @@ if(WITH_SUNDIALS AND WITH_CSPARSE)
   target_link_libraries(sensitivity_analysis casadi)
 endif()
 
-# Parametric sensitivities with sIPOPT
-if(IPOPT_FOUND AND WITH_SIPOPT)
-  add_executable(parametric_sensitivities parametric_sensitivities.cpp)
-  target_link_libraries(parametric_sensitivities casadi)
-endif()
-
-# Reduced hessian calculations with sIPOPT
-if(IPOPT_FOUND AND WITH_SIPOPT)
-  add_executable(reduced_hessian reduced_hessian.cpp)
-  target_link_libraries(reduced_hessian casadi)
-endif()
-
 # Parametric NLP
-if(IPOPT_FOUND)
+if(WITH_IPOPT)
   add_executable(parametric_nlp parametric_nlp.cpp)
   target_link_libraries(parametric_nlp casadi)
 endif()
@@ -116,7 +110,7 @@ if(WITH_OPENCL)
   target_link_libraries(test_opencl ${OPENCL_LIBRARIES})
 endif()
 
-if(WITH_DL AND IPOPT_FOUND)
+if(WITH_DL AND WITH_IPOPT)
   add_executable(nlp_codegen nlp_codegen.cpp)
   target_link_libraries(nlp_codegen casadi)
 endif()
@@ -132,7 +126,7 @@ if(WITH_SUNDIALS AND WITH_CSPARSE)
   target_link_libraries(implicit_runge-kutta casadi)
 endif()
 
-if (QPOASES_FOUND)
+if (WITH_QPOASES)
   add_executable(chain_qp chain_qp.cpp)
   target_link_libraries(chain_qp casadi)
 
@@ -140,7 +134,11 @@ if (QPOASES_FOUND)
   target_link_libraries(lowlevel_qp casadi)
 endif()
 
-if(BLOCKSQP_FOUND)
+if(WITH_BLOCKSQP)
   add_executable(test_blocksqp test_blocksqp.cpp)
   target_link_libraries(test_blocksqp casadi)
 endif()
+
+# DaeBuilder
+add_executable(daebuilder daebuilder.cpp)
+target_link_libraries(daebuilder casadi)

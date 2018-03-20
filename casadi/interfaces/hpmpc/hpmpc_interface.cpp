@@ -34,7 +34,8 @@ namespace casadi {
     plugin->creator = HpmpcInterface::creator;
     plugin->name = "hpmpc";
     plugin->doc = HpmpcInterface::meta_doc.c_str();
-    plugin->version = 30;
+    plugin->version = CASADI_VERSION;
+    plugin->options = &HpmpcInterface::options_;
     return 0;
   }
 
@@ -49,7 +50,7 @@ namespace casadi {
   }
 
   HpmpcInterface::~HpmpcInterface() {
-    clear_memory();
+    clear_mem();
   }
 
   Options HpmpcInterface::options_
@@ -101,7 +102,7 @@ namespace casadi {
     inf_ = 1e6;
     target_ = "C99_4X4";
     blasfeo_target_ = "GENERIC";
-    int struct_cnt=0;
+    casadi_int struct_cnt=0;
     // Read options
     for (auto&& op : opts) {
       if (op.first=="N") {
@@ -136,13 +137,13 @@ namespace casadi {
     }
 
     bool detect_structure = struct_cnt==0;
-    casadi_assert_message(struct_cnt==0 || struct_cnt==4,
+    casadi_assert(struct_cnt==0 || struct_cnt==4,
       "You must either set all of N, nx, nu, ng; "
       "or set none at all (automatic detection).");
 
-    const std::vector<int>& nx = nxs_;
-    const std::vector<int>& ng = ngs_;
-    const std::vector<int>& nu = nus_;
+    const std::vector<casadi_int>& nx = nxs_;
+    const std::vector<casadi_int>& ng = ngs_;
+    const std::vector<casadi_int>& nu = nus_;
 
     if (detect_structure) {
       /* General strategy: look for the xk+1 diagonal part in A
@@ -151,12 +152,12 @@ namespace casadi {
       // Find the right-most column for each row in A -> A_skyline
       // Find the second-to-right-most column -> A_skyline2
       // Find the left-most column -> A_bottomline
-      Sparsity AT = sparsity_in(CONIC_A).T();
-      std::vector<int> A_skyline;
-      std::vector<int> A_skyline2;
-      std::vector<int> A_bottomline;
-      for (int i=0;i<AT.size2();++i) {
-        int pivot = AT.colind()[i+1];
+      Sparsity AT = A_.T();
+      std::vector<casadi_int> A_skyline;
+      std::vector<casadi_int> A_skyline2;
+      std::vector<casadi_int> A_bottomline;
+      for (casadi_int i=0;i<AT.size2();++i) {
+        casadi_int pivot = AT.colind()[i+1];
         A_bottomline.push_back(AT.row()[AT.colind()[i]]);
         if (pivot>AT.colind()[i]) {
           A_skyline.push_back(AT.row()[pivot-1]);
@@ -176,10 +177,10 @@ namespace casadi {
       they form the diagonal part due to xk+1 in gap constraints.
       detect when the diagonal pattern is broken -> new stage
       */
-      int pivot = 0; // Current right-most element
-      int start_pivot = pivot; // First right-most element that started the stage
-      int cg = 0; // Counter for non-gap-closing constraints
-      for (int i=0;i<na_;++i) { // Loop over all rows
+      casadi_int pivot = 0; // Current right-most element
+      casadi_int start_pivot = pivot; // First right-most element that started the stage
+      casadi_int cg = 0; // Counter for non-gap-closing constraints
+      for (casadi_int i=0;i<na_;++i) { // Loop over all rows
         bool commit = false; // Set true to jump to the stage
         if (A_skyline[i]>pivot+1) { // Jump to a diagonal in the future
           nus_.push_back(A_skyline[i]-pivot-1); // Size of jump equals number of states
@@ -208,8 +209,8 @@ namespace casadi {
       nxs_[0] = A_skyline[0];
       nus_[0] = 0;
       ngs_.erase(ngs_.begin());
-      int cN=0;
-      for (int i=na_-1;i>=0;--i) {
+      casadi_int cN=0;
+      for (casadi_int i=na_-1;i>=0;--i) {
         if (A_bottomline[i]<start_pivot) break;
         cN++;
       }
@@ -217,28 +218,26 @@ namespace casadi {
       ngs_.push_back(cN);
 
       N_ = nus_.size();
-      if (verbose()) {
-        std::stringstream ss;
-        ss << "HPMPC detected structure:" <<
-        " N " << N_ << ", nx " << nx << ", nu " << nu << ", ng " << ng << ".";
-        log(ss.str());
+      if (verbose_) {
+        casadi_message("Detected structure: N " + str(N_) + ", nx " + str(nx) + ", "
+          "nu " + str(nu) + ", ng " + str(ng) + ".");
       }
     }
 
+    casadi_assert_dev(nx.size()==N_+1);
+    casadi_assert_dev(nu.size()==N_);
+    casadi_assert_dev(ng.size()==N_+1);
 
-
-    casadi_assert(nx.size()==N_+1);
-    casadi_assert(nu.size()==N_);
-    casadi_assert(ng.size()==N_+1);
-
-    casadi_assert_message(nx_ == std::accumulate(nx.begin(), nx.end(), 0) +
+    casadi_assert(nx_ == std::accumulate(nx.begin(), nx.end(), 0) +
       std::accumulate(nu.begin(), nu.end(), 0),
-      "sum(nx)+sum(nu) = must equal total size of variables (" << nx_ << "). "
-      "Structure is: N " << N_ << ", nx " << nx << ", nu " << nu << ", ng " << ng << ".");
-    casadi_assert_message(na_ == std::accumulate(nx.begin()+1, nx.end(), 0) +
+      "sum(nx)+sum(nu) = must equal total size of variables (" + str(nx_) + "). "
+      "Structure is: N " + str(N_) + ", nx " + str(nx) + ", "
+      "nu " + str(nu) + ", ng " + str(ng) + ".");
+    casadi_assert(na_ == std::accumulate(nx.begin()+1, nx.end(), 0) +
       std::accumulate(ng.begin(), ng.end(), 0),
-      "sum(nx+1)+sum(ng) = must equal total size of constraints (" << na_ << "). "
-      "Structure is: N " << N_ << ", nx " << nx << ", nu " << nu << ", ng " << ng << ".");
+      "sum(nx+1)+sum(ng) = must equal total size of constraints (" + str(na_) + "). "
+      "Structure is: N " + str(N_) + ", nx " + str(nx) + ", "
+      "nu " + str(nu) + ", ng " + str(ng) + ".");
     // Load library HPMPC when applicable
     std::string searchpath;
 
@@ -260,7 +259,7 @@ namespace casadi {
     hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes = (Work_size)dlsym(handle, work_size_name.c_str());
 #endif // _WIN32
 
-    casadi_assert_message(hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes!=0,
+    casadi_assert(hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes!=0,
       "HPMPC interface: symbol \"" + work_size_name + "\" found in " + searchpath + ".");
 
     std::string ocp_solve_name = "fortran_order_d_ip_ocp_hard_tv";
@@ -276,26 +275,18 @@ namespace casadi {
     fortran_order_d_ip_ocp_hard_tv = (Ocp_solve)dlsym(handle, ocp_solve_name.c_str());
 #endif // _WIN32
 
-    casadi_assert_message(fortran_order_d_ip_ocp_hard_tv!=0,
+    casadi_assert(fortran_order_d_ip_ocp_hard_tv!=0,
       "HPMPC interface: symbol \"" + ocp_solve_name + "\" found in " + searchpath + ".");
 #endif
 
-
-
-    /* Disassemble A input into:
-       B A   I
-       D C
-           B A  I
-           D C
-    */
     /* Disassemble A input into:
        A B I
        C D
            A B I
            C D
     */
-    int offset_r = 0, offset_c = 0;
-    for (int k=0;k<N_;++k) { // Loop over blocks
+    casadi_int offset_r = 0, offset_c = 0;
+    for (casadi_int k=0;k<N_;++k) { // Loop over blocks
       A_blocks.push_back({offset_r,        offset_c,            nx[k+1], nx[k]});
       B_blocks.push_back({offset_r,        offset_c+nx[k],      nx[k+1], nu[k]});
       C_blocks.push_back({offset_r+nx[k+1], offset_c,           ng[k], nx[k]});
@@ -318,10 +309,12 @@ namespace casadi {
     Isp_ = blocksparsity(na_, nx_, I_blocks, true);
 
     Sparsity total = Asp_ + Bsp_ + Csp_ + Dsp_ + Isp_;
-    casadi_assert_message((sparsity_in(CONIC_A) + total).nnz() == total.nnz(),
+    casadi_assert((A_ + total).nnz() == total.nnz(),
       "HPMPC: specified structure of A does not correspond to what the interface can handle. "
-      "Structure is: N " << N_ << ", nx " << nx << ", nu " << nu << ", ng " << ng << ".");
-    casadi_assert(total.nnz() == Asp_.nnz() + Bsp_.nnz() + Csp_.nnz() + Dsp_.nnz() + Isp_.nnz());
+      "Structure is: N " + str(N_) + ", nx " + str(nx) + ", nu " + str(nu) + ", "
+      "ng " + str(ng) + ".");
+    casadi_assert_dev(total.nnz() == Asp_.nnz() + Bsp_.nnz() + Csp_.nnz() + Dsp_.nnz()
+                      + Isp_.nnz());
 
     /* Disassemble H input into:
        Q S'
@@ -331,8 +324,8 @@ namespace casadi {
 
        Multiply by 2
     */
-    int offset = 0;
-    for (int k=0;k<N_;++k) { // Loop over blocks
+    casadi_int offset = 0;
+    for (casadi_int k=0;k<N_;++k) { // Loop over blocks
       R_blocks.push_back({offset+nx[k], offset+nx[k],       nu[k], nu[k]});
       S_blocks.push_back({offset+nx[k], offset,             nu[k], nx[k]});
       Q_blocks.push_back({offset,       offset,             nx[k], nx[k]});
@@ -345,10 +338,11 @@ namespace casadi {
     Qsp_ = blocksparsity(nx_, nx_, Q_blocks);
 
     total = Rsp_ + Ssp_ + Qsp_ + Ssp_.T();
-    casadi_assert_message((sparsity_in(CONIC_H) + total).nnz() == total.nnz(),
+    casadi_assert((H_ + total).nnz() == total.nnz(),
       "HPMPC: specified structure of H does not correspond to what the interface can handle. "
-      "Structure is: N " << N_ << ", nx " << nx << ", nu " << nu << ", ng " << ng << ".");
-    casadi_assert(total.nnz() == Rsp_.nnz() + 2*Ssp_.nnz() + Qsp_.nnz());
+      "Structure is: N " + str(N_) + ", nx " + str(nx) + ", nu " + str(nu) + ", "
+      "ng " + str(ng) + ".");
+    casadi_assert_dev(total.nnz() == Rsp_.nnz() + 2*Ssp_.nnz() + Qsp_.nnz());
 
     /* Disassemble LBA/UBA input into:
        b
@@ -359,7 +353,7 @@ namespace casadi {
     */
     offset = 0;
 
-    for (int k=0;k<N_;++k) {
+    for (casadi_int k=0;k<N_;++k) {
       b_blocks.push_back({offset,   0, nx[k+1], 1}); offset+= nx[k+1];
       lug_blocks.push_back({offset, 0, ng[k], 1}); offset+= ng[k];
     }
@@ -368,8 +362,8 @@ namespace casadi {
     bsp_ = blocksparsity(na_, 1, b_blocks);
     lugsp_ = blocksparsity(na_, 1, lug_blocks);
     total = bsp_ + lugsp_;
-    casadi_assert(total.nnz() == bsp_.nnz() + lugsp_.nnz());
-    casadi_assert(total.nnz() == na_);
+    casadi_assert_dev(total.nnz() == bsp_.nnz() + lugsp_.nnz());
+    casadi_assert_dev(total.nnz() == na_);
 
     /* Disassemble G/X0 input into:
        r/u
@@ -380,7 +374,7 @@ namespace casadi {
     */
     offset = 0;
 
-    for (int k=0;k<N_;++k) {
+    for (casadi_int k=0;k<N_;++k) {
       x_blocks.push_back({offset, 0, nx[k], 1}); offset+= nx[k];
       u_blocks.push_back({offset, 0, nu[k], 1}); offset+= nu[k];
     }
@@ -389,13 +383,13 @@ namespace casadi {
     usp_ = blocksparsity(nx_, 1, u_blocks);
     xsp_ = blocksparsity(nx_, 1, x_blocks);
     total = usp_ + xsp_;
-    casadi_assert(total.nnz() == usp_.nnz() + xsp_.nnz());
-    casadi_assert(total.nnz() == nx_);
+    casadi_assert_dev(total.nnz() == usp_.nnz() + xsp_.nnz());
+    casadi_assert_dev(total.nnz() == nx_);
 
     std::vector< Block > theirs_u_blocks, theirs_x_blocks;
     offset = 0;
 
-    for (int k=0;k<N_;++k) {
+    for (casadi_int k=0;k<N_;++k) {
       theirs_u_blocks.push_back({offset, 0, nu[k], 1}); offset+= nu[k];
       theirs_x_blocks.push_back({offset, 0, nx[k], 1}); offset+= nx[k];
     }
@@ -404,12 +398,12 @@ namespace casadi {
     theirs_usp_ = blocksparsity(nx_, 1, theirs_u_blocks);
     theirs_xsp_ = blocksparsity(nx_, 1, theirs_x_blocks);
     total = theirs_usp_ + theirs_xsp_;
-    casadi_assert(total.nnz() == theirs_usp_.nnz() + theirs_xsp_.nnz());
-    casadi_assert(total.nnz() == nx_);
+    casadi_assert_dev(total.nnz() == theirs_usp_.nnz() + theirs_xsp_.nnz());
+    casadi_assert_dev(total.nnz() == nx_);
 
     offset = 0;
     std::vector< Block > lamg_gap_blocks;
-    for (int k=0;k<N_;++k) {
+    for (casadi_int k=0;k<N_;++k) {
       lamg_gap_blocks.push_back({offset,       0, nx[k+1], 1});offset+= nx[k+1] + ng[k];
     }
     lamg_gapsp_ = blocksparsity(na_, 1, lamg_gap_blocks);
@@ -417,7 +411,7 @@ namespace casadi {
 
     offset = 0;
 
-    for (int k=0;k<N_;++k) {
+    for (casadi_int k=0;k<N_;++k) {
       lam_ul_blocks.push_back({offset, 0, nu[k], 1}); offset+= nu[k];
       lam_xl_blocks.push_back({offset, 0, nx[k], 1}); offset+= nx[k];
       lam_uu_blocks.push_back({offset, 0, nu[k], 1}); offset+= nu[k];
@@ -440,9 +434,9 @@ namespace casadi {
     pisp_ = Sparsity::dense(std::accumulate(nx.begin()+1, nx.end(), 0), 1);
 
     total = lam_ulsp_ + lam_uusp_ + lam_xlsp_ + lam_xusp_ + lam_clsp_ + lam_cusp_;
-    casadi_assert(total.nnz() == lam_ulsp_.nnz() + lam_uusp_.nnz() + lam_xlsp_.nnz() +
+    casadi_assert_dev(total.nnz() == lam_ulsp_.nnz() + lam_uusp_.nnz() + lam_xlsp_.nnz() +
       lam_xusp_.nnz() + lam_clsp_.nnz() + lam_cusp_.nnz());
-    casadi_assert(total.nnz() == offset);
+    casadi_assert_dev(total.nnz() == offset);
 
     theirs_Xsp_ = Sparsity::dense(std::accumulate(nx.begin(), nx.end(), 0), 1);
     theirs_Usp_ = Sparsity::dense(std::accumulate(nu.begin(), nu.end(), 0), 1);
@@ -450,13 +444,13 @@ namespace casadi {
   }
 
 
-  void HpmpcInterface::init_memory(void* mem) const {
-    Conic::init_memory(mem);
+  int HpmpcInterface::init_mem(void* mem) const {
+    if (Conic::init_mem(mem)) return 1;
     auto m = static_cast<HpmpcMemory*>(mem);
 
-    m->nx = nxs_;
-    m->nu = nus_; m->nu.push_back(0);
-    m->ng = ngs_;
+    init_vector(m->nx, nxs_);
+    init_vector(m->nu, nus_); m->nu.push_back(0);
+    init_vector(m->ng, ngs_);
 
     const std::vector<int>& nx = m->nx;
     const std::vector<int>& nu = m->nu;
@@ -464,8 +458,8 @@ namespace casadi {
     const std::vector<int>& nb = m->nb;
 
     m->nb.resize(N_+1);
-    int offset = 0;
-    for (int k=0;k<N_;++k) m->nb[k] = nx[k]+nu[k];
+    casadi_int offset = 0;
+    for (casadi_int k=0;k<N_;++k) m->nb[k] = nx[k]+nu[k];
     m->nb[N_] = nx[N_];
 
     m->A.resize(Asp_.nnz());
@@ -486,11 +480,11 @@ namespace casadi {
     m->pi.resize(pisp_.nnz());
 
     offset = 0;
-    for (int k=0;k<N_+1;++k) offset+=m->nx[k]+nu[k];
+    for (casadi_int k=0;k<N_+1;++k) offset+=m->nx[k]+nu[k];
     m->hidxb.resize(offset);
 
     offset = 0;
-    for (int k=0;k<N_;++k) offset+=ng[k]+nx[k]+nu[k];
+    for (casadi_int k=0;k<N_;++k) offset+=ng[k]+nx[k]+nu[k];
     offset+=ng[N_]+nx[N_];
     m->lam.resize(2*offset);
 
@@ -513,7 +507,7 @@ namespace casadi {
 
     m->pis.resize(N_);
     offset = 0;
-    for (int k=0;k<N_;++k) {
+    for (casadi_int k=0;k<N_;++k) {
       m->pis[k] = get_ptr(m->pi)+offset;
       offset+=nx[k+1];
     }
@@ -521,7 +515,7 @@ namespace casadi {
     m->lbs.resize(N_+1);
     m->ubs.resize(N_+1);
     offset = 0;
-    for (int k=0;k<N_+1;++k) {
+    for (casadi_int k=0;k<N_+1;++k) {
       m->lbs[k] = get_ptr(m->lb)+offset;
       m->ubs[k] = get_ptr(m->ub)+offset;
       offset+=nu[k]+nx[k];
@@ -529,16 +523,16 @@ namespace casadi {
 
     m->lams.resize(N_+1);
     offset = 0;
-    for (int k=0;k<N_+1;++k) {
+    for (casadi_int k=0;k<N_+1;++k) {
       m->lams[k] = get_ptr(m->lam)+offset;
       offset+=2*(ng[k]+nb[k]);
     }
 
     m->hidxbs.resize(N_+1);
     offset = 0;
-    for (int k=0;k<N_+1;++k) {
+    for (casadi_int k=0;k<N_+1;++k) {
       m->hidxbs[k] = get_ptr(m->hidxb)+offset;
-      for (int i=0;i<m->nb[k];++i) m->hidxbs[k][i] = i;
+      for (casadi_int i=0;i<m->nb[k];++i) m->hidxbs[k][i] = i;
       offset+=nb[k];
     }
 
@@ -555,10 +549,37 @@ namespace casadi {
     m->fstats["preprocessing"]  = FStats();
     m->fstats["solver"]         = FStats();
     m->fstats["postprocessing"] = FStats();
+    return 0;
   }
 
-  void HpmpcInterface::
-  eval(void* mem, const double** arg, double** res, int* iw, double* w) const {
+  void HpmpcInterface::mproject(double factor, const double* x, const casadi_int* sp_x,
+                                double* y, const casadi_int* sp_y, double* w) {
+    casadi_int ncol_y = sp_y[1];
+    const casadi_int *colind_y = sp_y+2;
+    casadi_project(x, sp_x, y, sp_y, w);
+    casadi_scal(colind_y[ncol_y], factor, y);
+  }
+
+  void HpmpcInterface::dense_transfer(double factor, const double* x,
+                                      const casadi_int* sp_x, double* y,
+                                      const casadi_int* sp_y, double* w) {
+    CASADI_PREFIX(sparsify)(x, w, sp_x, false);
+    casadi_int nrow_y = sp_y[0];
+    casadi_int ncol_y = sp_y[1];
+    const casadi_int *colind_y = sp_y+2, *row_y = sp_y + 2 + ncol_y+1;
+    /* Loop over columns of y */
+    casadi_int i, el;
+    for (i=0; i<ncol_y; ++i) {
+      for (el=colind_y[i]; el<colind_y[i+1]; ++el) y[nrow_y*i + row_y[el]] += factor*(*w++);
+    }
+  }
+
+  int HpmpcInterface::
+  eval(const double** arg, double** res, casadi_int* iw, double* w, void* mem) const {
+    if (inputs_check_) {
+      check_inputs(arg[CONIC_LBX], arg[CONIC_UBX], arg[CONIC_LBA], arg[CONIC_UBA]);
+    }
+
     auto m = static_cast<HpmpcMemory*>(mem);
     // Statistics
     for (auto&& s : m->fstats) s.second.reset();
@@ -567,86 +588,93 @@ namespace casadi {
     double* pv =  get_ptr(m->pv);
 
     // Dissect A matrix
-    casadi_project(arg[CONIC_A], sparsity_in(CONIC_A), get_ptr(m->A), Asp_, pv);
-    casadi_project(arg[CONIC_A], sparsity_in(CONIC_A), get_ptr(m->B), Bsp_, pv);
-    casadi_project(arg[CONIC_A], sparsity_in(CONIC_A), get_ptr(m->C), Csp_, pv);
-    casadi_project(arg[CONIC_A], sparsity_in(CONIC_A), get_ptr(m->D), Dsp_, pv);
-    casadi_project(arg[CONIC_A], sparsity_in(CONIC_A), get_ptr(m->I), Isp_, pv);
+    casadi_project(arg[CONIC_A], A_, get_ptr(m->A), Asp_, pv);
+    casadi_project(arg[CONIC_A], A_, get_ptr(m->B), Bsp_, pv);
+    casadi_project(arg[CONIC_A], A_, get_ptr(m->C), Csp_, pv);
+    casadi_project(arg[CONIC_A], A_, get_ptr(m->D), Dsp_, pv);
+    casadi_project(arg[CONIC_A], A_, get_ptr(m->I), Isp_, pv);
 
     // Dissect H matrix; definition of HPMPC lacks a factor 2
-    casadi_mproject(0.5, arg[CONIC_H], sparsity_in(CONIC_H), get_ptr(m->R), Rsp_, pv);
-    casadi_mproject(0.5, arg[CONIC_H], sparsity_in(CONIC_H), get_ptr(m->S), Ssp_, pv);
-    casadi_mproject(0.5, arg[CONIC_H], sparsity_in(CONIC_H), get_ptr(m->Q), Qsp_, pv);
+    mproject(0.5, arg[CONIC_H], H_, get_ptr(m->R), Rsp_, pv);
+    mproject(0.5, arg[CONIC_H], H_, get_ptr(m->S), Ssp_, pv);
+    mproject(0.5, arg[CONIC_H], H_, get_ptr(m->Q), Qsp_, pv);
 
     // Dissect LBA/UBA
-    casadi_mproject(-1.0, arg[CONIC_LBA], sparsity_in(CONIC_LBA), get_ptr(m->b), bsp_, pv);
-    casadi_mproject(-1.0, arg[CONIC_UBA], sparsity_in(CONIC_UBA), get_ptr(m->b2), bsp_, pv);
-    casadi_assert(std::equal(m->b.begin(), m->b.end(), m->b2.begin()));
-    casadi_project(arg[CONIC_LBA], sparsity_in(CONIC_LBA), get_ptr(m->lg), lugsp_, pv);
-    casadi_project(arg[CONIC_UBA], sparsity_in(CONIC_UBA), get_ptr(m->ug), lugsp_, pv);
+    mproject(-1.0, arg[CONIC_LBA], sparsity_in_.at(CONIC_LBA), get_ptr(m->b), bsp_, pv);
+    mproject(-1.0, arg[CONIC_UBA], sparsity_in_.at(CONIC_UBA), get_ptr(m->b2), bsp_, pv);
+    casadi_assert_dev(std::equal(m->b.begin(), m->b.end(), m->b2.begin()));
+    casadi_project(arg[CONIC_LBA], sparsity_in_.at(CONIC_LBA), get_ptr(m->lg), lugsp_, pv);
+    casadi_project(arg[CONIC_UBA], sparsity_in_.at(CONIC_UBA), get_ptr(m->ug), lugsp_, pv);
 
     // Dissect LBX/UBX input
     std::fill(m->lb.begin(), m->lb.end(), 0);
     std::fill(m->ub.begin(), m->ub.end(), 0);
 
-    casadi_dense_transfer(1.0, arg[CONIC_LBX], xsp_, get_ptr(m->lb), theirs_xsp_, pv);
-    casadi_dense_transfer(1.0, arg[CONIC_UBX], xsp_, get_ptr(m->ub), theirs_xsp_, pv);
-    casadi_dense_transfer(1.0, arg[CONIC_LBX], usp_, get_ptr(m->lb), theirs_usp_, pv);
-    casadi_dense_transfer(1.0, arg[CONIC_UBX], usp_, get_ptr(m->ub), theirs_usp_, pv);
+    dense_transfer(1.0, arg[CONIC_LBX], xsp_, get_ptr(m->lb), theirs_xsp_, pv);
+    dense_transfer(1.0, arg[CONIC_UBX], xsp_, get_ptr(m->ub), theirs_xsp_, pv);
+    dense_transfer(1.0, arg[CONIC_LBX], usp_, get_ptr(m->lb), theirs_usp_, pv);
+    dense_transfer(1.0, arg[CONIC_UBX], usp_, get_ptr(m->ub), theirs_usp_, pv);
 
     // Dissect G
-    casadi_mproject(0.5, arg[CONIC_G], sparsity_in(CONIC_G), get_ptr(m->r), usp_, pv);
-    casadi_mproject(0.5, arg[CONIC_G], sparsity_in(CONIC_G), get_ptr(m->q), xsp_, pv);
+    mproject(0.5, arg[CONIC_G], sparsity_in_.at(CONIC_G), get_ptr(m->r), usp_, pv);
+    mproject(0.5, arg[CONIC_G], sparsity_in_.at(CONIC_G), get_ptr(m->q), xsp_, pv);
 
     // Dissect X0
-    casadi_project(arg[CONIC_X0], sparsity_in(CONIC_X0), get_ptr(m->u), usp_, pv);
-    casadi_project(arg[CONIC_X0], sparsity_in(CONIC_X0), get_ptr(m->x), xsp_, pv);
+    casadi_project(arg[CONIC_X0], sparsity_in_.at(CONIC_X0), get_ptr(m->u), usp_, pv);
+    casadi_project(arg[CONIC_X0], sparsity_in_.at(CONIC_X0), get_ptr(m->x), xsp_, pv);
 
     m->iter_count = -1;
 
-    int N = N_;
-
     // Deal with non-unity I block
-    for (int k=0;k<N_;++k) {
-      int n_row = m->nx[k+1];
-      for (int i=0;i<n_row;++i) {
+    for (casadi_int k=0;k<N_;++k) {
+      casadi_int n_row = m->nx[k+1];
+      for (casadi_int i=0;i<n_row;++i) {
         double f = -1/m->Is[k][i];
         m->bs[k][i]*=f;
-        for (int j=0;j<m->nx[k];++j) m->As[k][i+j*n_row]*=f;
-        for (int j=0;j<m->nu[k];++j) m->Bs[k][i+j*n_row]*=f;
+        for (casadi_int j=0;j<m->nx[k];++j) m->As[k][i+j*n_row]*=f;
+        for (casadi_int j=0;j<m->nu[k];++j) m->Bs[k][i+j*n_row]*=f;
       }
     }
 
     // replace infinities
-    for (int i=0;i<m->lb.size();++i) {
+    for (casadi_int i=0;i<m->lb.size();++i) {
       if (m->lb[i]==-std::numeric_limits<double>::infinity()) m->lb[i] = -inf_;
     }
-    for (int i=0;i<m->ub.size();++i) {
+    for (casadi_int i=0;i<m->ub.size();++i) {
       if (m->ub[i]==std::numeric_limits<double>::infinity()) m->ub[i] = inf_;
     }
-    for (int i=0;i<m->lg.size();++i) {
+    for (casadi_int i=0;i<m->lg.size();++i) {
       if (m->lg[i]==-std::numeric_limits<double>::infinity()) m->lg[i] = -inf_;
     }
-    for (int i=0;i<m->ug.size();++i) {
+    for (casadi_int i=0;i<m->ug.size();++i) {
       if (m->ug[i]==std::numeric_limits<double>::infinity()) m->ug[i] = inf_;
     }
 
     m->fstats.at("preprocessing").toc();
     m->fstats.at("solver").tic();
 
-    casadi_dense_transfer(0.5, arg[CONIC_LAM_A0], lamg_gapsp_, get_ptr(m->pi), pisp_, pv);
-    // Deal with non-unity I block
-    for (int k=0;k<N_;++k) {
-      int n_row = m->nx[k+1];
-      for (int i=0;i<n_row;++i) {
-        double f = -m->Is[k][i];
-        m->pis[k][i]*=f;
+
+    std::fill(m->pi.begin(), m->pi.end(), 0);
+    std::fill(m->lam.begin(), m->lam.end(), 0);
+
+    if (arg[CONIC_LAM_A0]) {
+      dense_transfer(0.5, arg[CONIC_LAM_A0], lamg_gapsp_, get_ptr(m->pi), pisp_, pv);
+      // Deal with non-unity I block
+      for (casadi_int k=0;k<N_;++k) {
+        casadi_int n_row = m->nx[k+1];
+        for (casadi_int i=0;i<n_row;++i) {
+          double f = -m->Is[k][i];
+          m->pis[k][i]*=f;
+        }
       }
+
+      dense_transfer(0.5, arg[CONIC_LAM_A0], lamg_csp_, get_ptr(m->lam), lam_cusp_, pv);
     }
 
-    casadi_dense_transfer(0.5, arg[CONIC_LAM_A0], lamg_csp_, get_ptr(m->lam), lam_cusp_, pv);
-    casadi_dense_transfer(0.5, arg[CONIC_LAM_X0], usp_, get_ptr(m->lam), lam_uusp_, pv);
-    casadi_dense_transfer(0.5, arg[CONIC_LAM_X0], xsp_, get_ptr(m->lam), lam_xusp_, pv);
+    if (arg[CONIC_LAM_X0]) {
+      dense_transfer(0.5, arg[CONIC_LAM_X0], usp_, get_ptr(m->lam), lam_uusp_, pv);
+      dense_transfer(0.5, arg[CONIC_LAM_X0], xsp_, get_ptr(m->lam), lam_xusp_, pv);
+    }
 
     m->return_status =
       fortran_order_d_ip_ocp_hard_tv(&m->iter_count, max_iter_, mu0_, tol_, N_, get_ptr(m->nx),
@@ -660,45 +688,47 @@ namespace casadi {
     m->fstats.at("solver").toc();
     m->fstats.at("postprocessing").tic();
     if (print_level_>0) {
-      userOut() << "HPMPC finished after " << m->iter_count << " iterations." << std::endl;
-      userOut() << "return status: " << m->return_status << std::endl;
-      userOut() << "residuals: " << m->res << std::endl;
+      uout() << "HPMPC finished after " << m->iter_count << " iterations." << std::endl;
+      uout() << "return status: " << m->return_status << std::endl;
+      uout() << "residuals: " << m->res << std::endl;
     }
 
     std::fill(res[CONIC_X], res[CONIC_X]+nx_, 0);
-    casadi_dense_transfer(1.0, get_ptr(m->x), theirs_Xsp_, res[CONIC_X], xsp_, pv);
-    casadi_dense_transfer(1.0, get_ptr(m->u), theirs_Usp_, res[CONIC_X], usp_, pv);
+    dense_transfer(1.0, get_ptr(m->x), theirs_Xsp_, res[CONIC_X], xsp_, pv);
+    dense_transfer(1.0, get_ptr(m->u), theirs_Usp_, res[CONIC_X], usp_, pv);
 
     std::fill(res[CONIC_LAM_X], res[CONIC_LAM_X]+nx_, 0);
     std::fill(res[CONIC_LAM_A], res[CONIC_LAM_A]+na_, 0);
 
     // Deal with non-unity I block
-    for (int k=0;k<N_;++k) {
-      int n_row = m->nx[k+1];
-      for (int i=0;i<n_row;++i) {
+    for (casadi_int k=0;k<N_;++k) {
+      casadi_int n_row = m->nx[k+1];
+      for (casadi_int i=0;i<n_row;++i) {
         double f = -1/m->Is[k][i];
         m->pis[k][i]*=f;
       }
     }
 
-    casadi_dense_transfer(2.0, get_ptr(m->pi), pisp_, res[CONIC_LAM_A], lamg_gapsp_, pv);
-    casadi_dense_transfer(2.0, get_ptr(m->lam), lam_cusp_, res[CONIC_LAM_A], lamg_csp_, pv);
-    casadi_dense_transfer(-2.0, get_ptr(m->lam), lam_clsp_, res[CONIC_LAM_A], lamg_csp_, pv);
+    dense_transfer(2.0, get_ptr(m->pi), pisp_, res[CONIC_LAM_A], lamg_gapsp_, pv);
+    dense_transfer(2.0, get_ptr(m->lam), lam_cusp_, res[CONIC_LAM_A], lamg_csp_, pv);
+    dense_transfer(-2.0, get_ptr(m->lam), lam_clsp_, res[CONIC_LAM_A], lamg_csp_, pv);
 
-    casadi_dense_transfer(-2.0, get_ptr(m->lam), lam_ulsp_, res[CONIC_LAM_X], usp_, pv);
-    casadi_dense_transfer(2.0, get_ptr(m->lam), lam_uusp_, res[CONIC_LAM_X], usp_, pv);
-    casadi_dense_transfer(-2.0, get_ptr(m->lam), lam_xlsp_, res[CONIC_LAM_X], xsp_,  pv);
-    casadi_dense_transfer(2.0, get_ptr(m->lam), lam_xusp_, res[CONIC_LAM_X], xsp_,  pv);
+    dense_transfer(-2.0, get_ptr(m->lam), lam_ulsp_, res[CONIC_LAM_X], usp_, pv);
+    dense_transfer(2.0, get_ptr(m->lam), lam_uusp_, res[CONIC_LAM_X], usp_, pv);
+    dense_transfer(-2.0, get_ptr(m->lam), lam_xlsp_, res[CONIC_LAM_X], xsp_,  pv);
+    dense_transfer(2.0, get_ptr(m->lam), lam_xusp_, res[CONIC_LAM_X], xsp_,  pv);
 
     // Construct f
     double f = casadi_dot(nx_, arg[CONIC_G], res[CONIC_X]);
-    f += 0.5*casadi_bilin(arg[CONIC_H], sparsity_in(CONIC_H), res[CONIC_X], res[CONIC_X]);
-    res[CONIC_COST][0] = f;
+    f += 0.5*casadi_bilin(arg[CONIC_H], H_, res[CONIC_X], res[CONIC_X]);
+
+    if (res[CONIC_COST]) res[CONIC_COST][0] = f;
 
     m->fstats.at("postprocessing").toc();
 
     // Show statistics
     if (print_time_)  print_fstats(static_cast<ConicMemory*>(mem));
+    return 0;
   }
 
   Dict HpmpcInterface::get_stats(void* mem) const {
@@ -717,14 +747,14 @@ namespace casadi {
 
   }
 
-  Sparsity HpmpcInterface::blocksparsity(int rows, int cols, const std::vector<Block>& blocks,
-      bool eye) {
+  Sparsity HpmpcInterface::blocksparsity(casadi_int rows, casadi_int cols,
+      const std::vector<Block>& blocks, bool eye) {
     DM r(rows, cols);
     for (auto && b : blocks) {
       if (eye) {
         r(range(b.offset_r, b.offset_r+b.rows),
           range(b.offset_c, b.offset_c+b.cols)) = DM::eye(b.rows);
-        casadi_assert(b.rows==b.cols);
+        casadi_assert_dev(b.rows==b.cols);
       } else {
         r(range(b.offset_r, b.offset_r+b.rows),
         range(b.offset_c, b.offset_c+b.cols)) = DM::zeros(b.rows, b.cols);
@@ -734,13 +764,13 @@ namespace casadi {
   }
   void HpmpcInterface::blockptr(std::vector<double *>& vs, std::vector<double>& v,
       const std::vector<Block>& blocks, bool eye) {
-    int N = blocks.size();
+    casadi_int N = blocks.size();
     vs.resize(N);
-    int offset=0;
-    for (int k=0;k<N;++k) {
+    casadi_int offset=0;
+    for (casadi_int k=0;k<N;++k) {
       vs[k] = get_ptr(v)+offset;
       if (eye) {
-        casadi_assert(blocks[k].rows==blocks[k].cols);
+        casadi_assert_dev(blocks[k].rows==blocks[k].cols);
         offset+=blocks[k].rows;
       } else {
         offset+=blocks[k].rows*blocks[k].cols;

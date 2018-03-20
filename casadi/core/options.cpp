@@ -47,7 +47,7 @@ namespace casadi {
     }
   }
 
-  void Options::Entry::print(const std::string& name, std::ostream &stream) const {
+  void Options::Entry::disp(const std::string& name, std::ostream &stream) const {
     stream << "> \"" << name << "\"          ["
            << GenericType::get_type_description(this->type)
            << "] ";
@@ -56,55 +56,55 @@ namespace casadi {
     stream << "     \"" << this->description << "\""<< std::endl;
   }
 
-  void Options::print(std::ostream &stream) const {
+  void Options::disp(std::ostream& stream) const {
     // Print bases
     for (auto&& b : bases) {
-      b->print(stream);
+      b->disp(stream);
     }
 
     // Print all entries
     for (auto&& e : entries) {
-      e.second.print(e.first, stream);
+      e.second.disp(e.first, stream);
     }
   }
 
   double Options::word_distance(const std::string &a, const std::string &b) {
     /// Levenshtein edit distance
     if (a == b) return 0;
-    int na = a.size();
-    int nb = b.size();
-    if (na == 0) return nb;
-    if (nb == 0) return na;
+    casadi_int na = a.size();
+    casadi_int nb = b.size();
+    if (na == 0) return static_cast<double>(nb);
+    if (nb == 0) return static_cast<double>(na);
 
-    vector<int> v0(nb+1, 0);
-    vector<int> v1(nb+1, 0);
+    vector<casadi_int> v0(nb+1, 0);
+    vector<casadi_int> v1(nb+1, 0);
 
-    for (int i=0;i<nb+1;++i)
+    for (casadi_int i=0;i<nb+1;++i)
       v0[i] = i;
 
     char s;
     char t;
     std::locale loc;
-    for (int i=0;i<na;i++) {
+    for (casadi_int i=0;i<na;i++) {
       v1[0] = i + 1;
-      for (int j=0; j<nb; j++) {
+      for (casadi_int j=0; j<nb; j++) {
         s = std::tolower(a[i], loc);
         t = std::tolower(b[j], loc);
-        int cost = 0;
+        casadi_int cost = 0;
         if (s != t)
           cost = 1;
 
         v1[j+1] = min(min(v1[j] + 1, v0[j+1] + 1), v0[j] + cost);
       }
 
-      for (int j=0; j<nb+1; j++)
+      for (casadi_int j=0; j<nb+1; j++)
         v0[j] = v1[j];
     }
 
-    return v1[nb];
+    return static_cast<double>(v1[nb]);
   }
 
-  vector<string> Options::suggestions(const string& word, int amount) const {
+  vector<string> Options::suggestions(const string& word, casadi_int amount) const {
     // Best distances so far
     const double inf = numeric_limits<double>::infinity();
     vector<pair<double, string> > best(amount, {inf, ""});
@@ -247,7 +247,7 @@ namespace casadi {
       }
 
       // Check type
-      casadi_assert_message(op.second.can_cast_to(entry->type),
+      casadi_assert(op.second.can_cast_to(entry->type),
                             "Illegal type for " + op.first + ": " +
                             op.second.get_description() +
                             " cannot be cast to " +
@@ -258,17 +258,35 @@ namespace casadi {
 
   void Options::print_all(std::ostream &stream) const {
     stream << "\"Option name\" [type] = value" << endl;
-    print(stream);
+    disp(stream);
     stream << endl;
   }
 
   void Options::print_one(const std::string &name, std::ostream &stream) const {
     const Options::Entry* entry = find(name);
     if (entry!=0) {
-      entry->print(name, stream);
+      entry->disp(name, stream);
     } else {
       stream << "  \"" << name << "\" does not exist.";
     }
+  }
+
+  std::vector<std::string> Options::all() const {
+    std::vector<std::string> ret;
+    for (auto&& e : entries) ret.push_back(e.first);
+    return ret;
+  }
+
+  std::string Options::type(const std::string& name) const {
+    const Options::Entry* entry = find(name);
+    casadi_assert(entry!=0, "Option \"" + name + "\" does not exist");
+    return GenericType::get_type_description(entry->type);
+  }
+
+  std::string Options::info(const std::string& name) const {
+    const Options::Entry* entry = find(name);
+    casadi_assert(entry!=0, "Option \"" + name + "\" does not exist");
+    return entry->description;
   }
 
 } // namespace casadi

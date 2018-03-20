@@ -26,7 +26,7 @@
 #ifndef CASADI_OOQP_INTERFACE_HPP
 #define CASADI_OOQP_INTERFACE_HPP
 
-#include "casadi/core/function/conic_impl.hpp"
+#include "casadi/core/conic_impl.hpp"
 #include <casadi/interfaces/ooqp/casadi_conic_ooqp_export.h>
 
 /** \defgroup plugin_Conic_ooqp
@@ -60,44 +60,50 @@ namespace casadi {
     }
 
     /** \brief  Destructor */
-    virtual ~OoqpInterface();
+    ~OoqpInterface() override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "ooqp";}
+    const char* plugin_name() const override { return "ooqp";}
+
+    // Get name of the class
+    std::string class_name() const override { return "OoqpInterface";}
 
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     /** \brief  Initialize */
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /// Solve the QP
-    virtual void eval(void* mem, const double** arg, double** res, int* iw, double* w) const;
+    int eval(const double** arg, double** res, casadi_int* iw, double* w, void* mem) const override;
 
     /// Throw error
     static const char* errFlag(int flag);
 
     /// Print an OOQP bounds vector
     static std::string printBounds(const std::vector<double>& b,
-                                   const std::vector<char>& ib, int n, const char *sign);
+                                   const std::vector<char>& ib, casadi_int n, const char *sign);
+
+    /// Get all statistics
+    Dict get_stats(void* mem) const override;
 
     // Transpose of linear constraints
     Sparsity spAT_;
 
     // Number of nonzeros in upper triangular half of Hessian
-    int nQ_;
+    casadi_int nQ_;
 
     // Number of nonzeros in Hessian
-    int nH_;
+    casadi_int nH_;
 
     // Number of nonzeros in constraint matrix
-    int nA_;
+    casadi_int nA_;
 
     // Print level
-    int print_level_;
+    casadi_int print_level_;
 
     // Tolerances
     double mutol_, artol_;
@@ -105,10 +111,12 @@ namespace casadi {
     /// A documentation string
     static const std::string meta_doc;
 
+    mutable int return_status_;
+    mutable bool success_;
+
   };
 
 } // namespace casadi
 
 /// \endcond
 #endif // CASADI_OOQP_INTERFACE_HPP
-

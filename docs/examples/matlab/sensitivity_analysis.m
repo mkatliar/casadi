@@ -117,7 +117,6 @@ for ode=0:1
     opts = struct('tf', tf);
     if strcmp(MyIntegrator,'collocation')
       opts.rootfinder = 'kinsol';
-      opts.rootfinder_options = struct('linear_solver', 'csparse');
     end
 
     % Integrator
@@ -148,7 +147,6 @@ for ode=0:1
 
     % Calculate one directional derivative, reverse mode
     I_adj = I.factory('I_adj', {'x0', 'z0', 'p', 'adj:qf'}, {'adj:x0', 'adj:p'});
-    arg = struct('der_x0',x0,'der_p',u0,'der_xf',xf,'der_qf',qf);
     res = I_adj('x0', x0, 'p', u0, 'adj_qf', 1);
     adj_x0 = full(res.adj_x0);
     adj_p = full(res.adj_p);

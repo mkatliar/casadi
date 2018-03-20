@@ -25,10 +25,12 @@ from casadi import *
 import casadi as c
 import numpy
 import numpy as n
+import sys
 from numpy import array, double, int32, atleast_2d, ones, matrix, zeros
 import unittest
 from types import *
 from helpers import *
+from distutils.version import LooseVersion
 
 scipy_available = True
 try:
@@ -43,6 +45,23 @@ class typemaptests(casadiTestCase):
   def setUp(self):
     pass
 
+  def test_memleak(self):
+  
+   a = numpy.array([[0, 0]])
+   self.assertEqual(sys.getrefcount(a), 2)
+   casadi.DM(a)
+   self.assertEqual(sys.getrefcount(a), 2)
+   casadi.DM(a)
+   self.assertEqual(sys.getrefcount(a), 2)
+   casadi.IM(a)
+   self.assertEqual(sys.getrefcount(a), 2)   
+   casadi.IM(a)
+   self.assertEqual(sys.getrefcount(a), 2)
+   casadi.SX(a)
+   self.assertEqual(sys.getrefcount(a), 2)   
+   casadi.SX(a)
+   self.assertEqual(sys.getrefcount(a), 2)
+   
   def test_0a(self):
     self.message("Typemap array -> IM")
     arrays = [array([[1,2,3],[4,5,6]],dtype=int32),array([[1,2,3],[4,5,6]]),array([[1,2,3],[4,5,6]],dtype=int)]
@@ -230,8 +249,13 @@ class typemaptests(casadiTestCase):
   def test_matmul(self):
     A = DM([[1,3],[4,5]])
     B = DM([[7,2],[0,9]])
-    for L in [np.array(A),A]:
-      for R in [np.array(B),B]:
+    LA = [A]
+    RB = [B]
+    if LooseVersion(np.__version__) >= LooseVersion("1.10"):
+      LA.append(np.array(A))
+      RB.append(np.array(B))
+    for L in LA:
+      for R in RB:
         #y = L @ R
         y = eval("L @ R",{"L":L,"R":R})
         self.checkarray(y,mtimes(A,B))
@@ -813,6 +837,21 @@ class typemaptests(casadiTestCase):
       solver = nlpsol("mysolver", "ipopt", {"x":x,"f":x**2}, {"ipopt": {"acceptable_tol": SX.sym("x")}})
 
     nlpsol("mysolver", "ipopt", {"x":x,"f":x**2}, {"ipopt": {"acceptable_tol": 1}})
+  
+  def test_to_longlong(self):
+    a = IM(10)
+
+
+    b = a**15
+
+    self.assertEqual(int(b),10**15)
+
+  def test_buglonglong(self):
+    x = SX.sym("x")
+
+    jacobian(x/1.458151064450277e-12,x)
+
+
 
 if __name__ == '__main__':
     unittest.main()

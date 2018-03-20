@@ -24,7 +24,7 @@
 
 
 #include "clang_compiler.hpp"
-#include "casadi/core/std_vector_tools.hpp"
+#include "casadi/core/casadi_misc.hpp"
 #include "casadi/core/casadi_meta.hpp"
 #include <fstream>
 
@@ -46,7 +46,8 @@ namespace casadi {
     plugin->creator = ClangCompiler::creator;
     plugin->name = "clang";
     plugin->doc = ClangCompiler::meta_doc.c_str();
-    plugin->version = 31;
+    plugin->version = CASADI_VERSION;
+    plugin->options = &ClangCompiler::options_;
     return 0;
   }
 
@@ -144,7 +145,7 @@ namespace casadi {
 
     // The compiler invocation needs a DiagnosticsEngine so it can report problems
     clang::DiagnosticOptions* diagOpts = new clang::DiagnosticOptions();
-    myerr_ = new llvm::raw_os_ostream(userOut<true>());
+    myerr_ = new llvm::raw_os_ostream(uerr());
     clang::TextDiagnosticPrinter *diagClient = new clang::TextDiagnosticPrinter(*myerr_, diagOpts);
 
     clang::DiagnosticIDs* diagID = new clang::DiagnosticIDs();
@@ -152,7 +153,11 @@ namespace casadi {
     clang::DiagnosticsEngine diags(diagID, diagOpts, diagClient);
 
     // Create the compiler invocation
+    #if LLVM_VERSION_MAJOR>=4
+    std::shared_ptr<clang::CompilerInvocation> compInv(new clang::CompilerInvocation());
+    #else
     clang::CompilerInvocation* compInv = new clang::CompilerInvocation();
+    #endif
     clang::CompilerInvocation::CreateFromArgs(*compInv, &args[0],
                                               &args[0] + args.size(), diags);
     compInst.setInvocation(compInv);
@@ -210,7 +215,7 @@ namespace casadi {
       casadi_error("Cannot execute action");
 
     // Grab the module built by the EmitLLVMOnlyAction
-    #if LLVM_VERSION_MAJOR>=3 && LLVM_VERSION_MINOR>=5
+    #if LLVM_VERSION_MAJOR>=4 || (LLVM_VERSION_MAJOR==3 && LLVM_VERSION_MINOR>=5)
     std::unique_ptr<llvm::Module> module = act_->takeModule();
     module_ = module.get();
     #else
@@ -227,7 +232,7 @@ namespace casadi {
       llvm::EngineBuilder(std::move(module)).setEngineKind(llvm::EngineKind::JIT)
       .setErrorStr(&ErrStr).create();
     if (!executionEngine_) {
-      casadi_error("Could not create ExecutionEngine: " << ErrStr);
+      casadi_error("Could not create ExecutionEngine: " + ErrStr);
     }
 
     executionEngine_->finalizeObject();

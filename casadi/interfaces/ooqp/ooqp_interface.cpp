@@ -24,7 +24,7 @@
 
 
 #include "ooqp_interface.hpp"
-#include "casadi/core/std_vector_tools.hpp"
+#include "casadi/core/casadi_misc.hpp"
 
 // OOQP headers
 #include <cQpGenSparse.h>
@@ -33,7 +33,7 @@
 
 // A variable that controls the printlevel of OOQP
 // This is the only possible way to access it using the C++ interface
-extern int gOoqpPrintLevel;
+extern casadi_int gOoqpPrintLevel;
 
 using namespace std;
 namespace casadi {
@@ -44,7 +44,8 @@ namespace casadi {
     plugin->creator = OoqpInterface::creator;
     plugin->name = "ooqp";
     plugin->doc = OoqpInterface::meta_doc.c_str();
-    plugin->version = 31;
+    plugin->version = CASADI_VERSION;
+    plugin->options = &OoqpInterface::options_;
     return 0;
   }
 
@@ -96,10 +97,10 @@ namespace casadi {
     }
 
     // Allocate memory for problem
-    nQ_ = sparsity_in(CONIC_H).nnz_upper();
+    nQ_ = H_.nnz_upper();
     nA_ = nnz_in(CONIC_A);
     nH_ = nnz_in(CONIC_H);
-    spAT_ = sparsity_in(CONIC_A).T();
+    spAT_ = A_.T();
 
     // Allocate work vectors
     alloc_w(nx_, true); // g
@@ -142,10 +143,13 @@ namespace casadi {
     alloc_iw(na_); // casadi_trans
   }
 
-  void OoqpInterface::
-  eval(void* mem, const double** arg, double** res, int* iw, double* w) const {
+  int OoqpInterface::
+  eval(const double** arg, double** res, casadi_int* iw, double* w, void* mem) const {
+
+    return_status_ = -1;
+    success_ = false;
     if (inputs_check_) {
-      checkInputs(arg[CONIC_LBX], arg[CONIC_UBX], arg[CONIC_LBA], arg[CONIC_UBA]);
+      check_inputs(arg[CONIC_LBX], arg[CONIC_UBX], arg[CONIC_LBA], arg[CONIC_UBA]);
     }
 
     // Get problem data
@@ -185,14 +189,14 @@ namespace casadi {
     double* dQ_ = w; w += nQ_;
     double* dA_ = w; w += nA_;
     double* dC_ = w; w += nA_;
-    int* irowQ_ = iw; iw += nQ_;
-    int* jcolQ_ = iw; iw += nQ_;
-    int* irowA_ = iw; iw += nA_;
-    int* jcolA_ = iw; iw += nA_;
-    int* irowC_ = iw; iw += nA_;
-    int* jcolC_ = iw; iw += nA_;
-    int* x_index_ = iw; iw += nx_;
-    int* c_index_ = iw; iw += na_;
+    int* irowQ_ = reinterpret_cast<int*>(iw); iw += nQ_;
+    int* jcolQ_ = reinterpret_cast<int*>(iw); iw += nQ_;
+    int* irowA_ = reinterpret_cast<int*>(iw); iw += nA_;
+    int* jcolA_ = reinterpret_cast<int*>(iw); iw += nA_;
+    int* irowC_ = reinterpret_cast<int*>(iw); iw += nA_;
+    int* jcolC_ = reinterpret_cast<int*>(iw); iw += nA_;
+    int* x_index_ = reinterpret_cast<int*>(iw); iw += nx_;
+    int* c_index_ = reinterpret_cast<int*>(iw); iw += na_;
     double* p_ = w; w += nx_;
     double* AT = w; w += nA_;
 
@@ -200,8 +204,8 @@ namespace casadi {
     double objParam = 0;
 
     // Get the number of free variables and their types
-    int nx = 0, np=0;
-    for (int i=0; i<nx_; ++i) {
+    casadi_int nx = 0, np=0;
+    for (casadi_int i=0; i<nx_; ++i) {
       if (lbx[i]==ubx[i]) {
         // Save parameter
         p_[np] = lbx[i];
@@ -234,22 +238,22 @@ namespace casadi {
     }
 
     // Get quadratic term
-    const int* H_colind = sparsity_in(CONIC_H).colind();
-    const int* H_row = sparsity_in(CONIC_H).row();
-    int nnzQ = 0;
+    const casadi_int* H_colind = H_.colind();
+    const casadi_int* H_row = H_.row();
+    casadi_int nnzQ = 0;
     // Loop over the columns of the quadratic term
-    for (int cc=0; cc<nx_; ++cc) {
+    for (casadi_int cc=0; cc<nx_; ++cc) {
 
       // Loop over nonzero elements of the column
-      for (int el=H_colind[cc]; el<H_colind[cc+1]; ++el) {
+      for (casadi_int el=H_colind[cc]; el<H_colind[cc+1]; ++el) {
 
         // Only upper triangular part
-        int rr=H_row[el];
+        casadi_int rr=H_row[el];
         if (rr>cc) break;
 
         // Get variable types
-        int icc=x_index_[cc];
-        int irr=x_index_[rr];
+        casadi_int icc=x_index_[cc];
+        casadi_int irr=x_index_[rr];
 
         if (icc<0) {
           if (irr<0) {
@@ -274,15 +278,15 @@ namespace casadi {
     }
 
     // Get the transpose of the sparsity pattern to be able to loop over the constraints
-    casadi_trans(A, sparsity_in(CONIC_A), AT, spAT_, iw);
+    casadi_trans(A, A_, AT, spAT_, iw);
 
     // Loop over constraints
-    const int* A_colind = sparsity_in(CONIC_A).colind();
-    const int* A_row = sparsity_in(CONIC_A).row();
-    const int* AT_colind = spAT_.colind();
-    const int* AT_row = spAT_.row();
-    int nA=0, nC=0, /*mz=0, */ nnzA=0, nnzC=0;
-    for (int j=0; j<na_; ++j) {
+    const casadi_int* A_colind = A_.colind();
+    const casadi_int* A_row = A_.row();
+    const casadi_int* AT_colind = spAT_.colind();
+    const casadi_int* AT_row = spAT_.row();
+    casadi_int nA=0, nC=0, /*mz=0, */ nnzA=0, nnzC=0;
+    for (casadi_int j=0; j<na_; ++j) {
       if (lba[j] == -numeric_limits<double>::infinity() &&
           uba[j] ==  numeric_limits<double>::infinity()) {
         // Redundant constraint
@@ -292,8 +296,8 @@ namespace casadi {
         bA_[nA] = lba[j];
 
         // Add to A
-        for (int el=AT_colind[j]; el<AT_colind[j+1]; ++el) {
-          int i=AT_row[el];
+        for (casadi_int el=AT_colind[j]; el<AT_colind[j+1]; ++el) {
+          casadi_int i=AT_row[el];
           if (x_index_[i]<0) {
             // Parameter
             bA_[nA] -= AT[el]*p_[-x_index_[i]-1];
@@ -323,8 +327,8 @@ namespace casadi {
         }
 
         // Add to C
-        for (int el=AT_colind[j]; el<AT_colind[j+1]; ++el) {
-          int i=AT_row[el];
+        for (casadi_int el=AT_colind[j]; el<AT_colind[j+1]; ++el) {
+          casadi_int i=AT_row[el];
           if (x_index_[i]<0) {
             // Parameter
             if (iclow_[nC]==1) clow_[nC] -= AT[el]*p_[-x_index_[i]-1];
@@ -377,7 +381,7 @@ namespace casadi {
       std::vector<int> krowA(nA+1);
       std::vector<int> krowC(nC+1);
 
-      //int status_code = 0;
+      //casadi_int status_code = 0;
       makehb(irowQ_, nnzQ, get_ptr(krowQ), nx, &ierr);
       if (ierr == 0) makehb(irowA_, nnzA, get_ptr(krowA), nA, &ierr);
       if (ierr == 0) makehb(irowC_, nnzC, get_ptr(krowC), nC, &ierr);
@@ -407,15 +411,17 @@ namespace casadi {
       }
     }
 
+    return_status_ = ierr;
+    success_ = ierr==SUCCESSFUL_TERMINATION;
     if (ierr>0) {
-      casadi_warning("Unable to solve problem: " << errFlag(ierr));
+      casadi_warning("Unable to solve problem: " + str(errFlag(ierr)));
     } else if (ierr<0) {
-      casadi_error("Fatal error: " << errFlag(ierr));
+      casadi_error("Fatal error: " + str(errFlag(ierr)));
     }
 
     // Retrieve eliminated decision variables
-    for (int i=nx_-1; i>=0; --i) {
-      int ii = x_index_[i];
+    for (casadi_int i=nx_-1; i>=0; --i) {
+      casadi_int ii = x_index_[i];
       if (ii<0) {
         x_[i] = p_[-1-ii];
       } else {
@@ -424,8 +430,8 @@ namespace casadi {
     }
 
     // Retreive eliminated dual variables (linear bounds)
-    for (int j=na_-1; j>=0; --j) {
-      int jj = c_index_[j];
+    for (casadi_int j=na_-1; j>=0; --j) {
+      casadi_int jj = c_index_[j];
       if (jj==0) {
         lambda_[j] = 0;
       } else if (jj<0) {
@@ -436,17 +442,17 @@ namespace casadi {
     }
 
     // Retreive eliminated dual variables (simple bounds)
-    for (int i=nx_-1; i>=0; --i) {
-      int ii = x_index_[i];
+    for (casadi_int i=nx_-1; i>=0; --i) {
+      casadi_int ii = x_index_[i];
       if (ii<0) {
         // The dual solution for the fixed parameters follows from the KKT conditions
         gamma_[i] = -g[i];
-        for (int el=H_colind[i]; el<H_colind[i+1]; ++el) {
-          int j=H_row[el];
+        for (casadi_int el=H_colind[i]; el<H_colind[i+1]; ++el) {
+          casadi_int j=H_row[el];
           gamma_[i] -= H[el]*x_[j];
         }
-        for (int el=A_colind[i]; el<A_colind[i+1]; ++el) {
-          int j=A_row[el];
+        for (casadi_int el=A_colind[i]; el<A_colind[i+1]; ++el) {
+          casadi_int j=A_row[el];
           gamma_[i] -= A[el]*lambda_[j];
         }
       } else {
@@ -465,6 +471,7 @@ namespace casadi {
 
     // Save dual solution (simple bounds)
     casadi_copy(gamma_, nx_, res[CONIC_LAM_X]);
+    return 0;
   }
 
   const char* OoqpInterface::errFlag(int flag) {
@@ -480,11 +487,18 @@ namespace casadi {
     }
   }
 
+  Dict OoqpInterface::get_stats(void* mem) const {
+    Dict stats = Conic::get_stats(mem);
+    stats["return_status"] = return_status_;
+    stats["success"] = success_;
+    return stats;
+  }
+
   std::string OoqpInterface::printBounds(const std::vector<double>& b,
-                                        const std::vector<char>& ib, int n, const char *sign) {
+                                      const std::vector<char>& ib, casadi_int n, const char *sign) {
     stringstream ss;
     ss << "[";
-    for (int i=0; i<n; ++i) {
+    for (casadi_int i=0; i<n; ++i) {
       if (i!=0) ss << ", ";
       if (ib[i]==0) {
         ss << sign << "inf";

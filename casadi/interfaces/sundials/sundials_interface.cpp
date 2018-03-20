@@ -25,7 +25,7 @@
 
 #include "sundials_interface.hpp"
 
-#include "casadi/core/std_vector_tools.hpp"
+#include "casadi/core/casadi_misc.hpp"
 
 INPUTSCHEME(IntegratorInput)
 OUTPUTSCHEME(IntegratorOutput)
@@ -86,13 +86,22 @@ namespace casadi {
         "Type of interpolation for the adjoint sensitivities"}},
       {"linear_solver",
        {OT_STRING,
-        "A custom linear solver creator function [default: csparse]"}},
+        "A custom linear solver creator function [default: qr]"}},
       {"linear_solver_options",
        {OT_DICT,
         "Options to be passed to the linear solver"}},
       {"second_order_correction",
        {OT_BOOL,
-        "Second order correction in the augmented system Jacobian [true]"}}
+        "Second order correction in the augmented system Jacobian [true]"}},
+      {"step0",
+       {OT_DOUBLE,
+        "initial step size [default: 0/estimated]"}},
+      {"max_order",
+       {OT_DOUBLE,
+        "Maximum order"}},
+      {"nonlin_conv_coeff",
+       {OT_DOUBLE,
+        "Coefficient in the nonlinear convergence test"}}
      }
   };
 
@@ -101,7 +110,7 @@ namespace casadi {
     Integrator::init(opts);
 
     // If sensitivity equations, make sure derivative_of_ is available
-    casadi_assert_message(ns_==0 || !derivative_of_.is_null(),
+    casadi_assert(ns_==0 || !derivative_of_.is_null(),
       "Not implemented.");
 
     // Default options
@@ -111,7 +120,7 @@ namespace casadi {
     stop_at_end_ = true;
     use_precon_ = true;
     max_krylov_ = 10;
-    linear_solver_ = "csparse";
+    linear_solver_ = "qr";
     string newton_scheme = "direct";
     quad_err_con_ = false;
     string interpolation_type = "hermite";
@@ -119,6 +128,9 @@ namespace casadi {
     disable_internal_warnings_ = false;
     max_multistep_order_ = 5;
     second_order_correction_ = true;
+    step0_ = 0;
+    max_order_ = 0;
+    nonlin_conv_coeff_ = 0;
 
     // Read options
     for (auto&& op : opts) {
@@ -152,6 +164,12 @@ namespace casadi {
         max_multistep_order_ = op.second;
       } else if (op.first=="second_order_correction") {
         second_order_correction_ = op.second;
+      } else if (op.first=="step0") {
+        step0_ = op.second;
+      } else if (op.first=="max_order") {
+        max_order_ = op.second;
+      } else if (op.first=="nonlin_conv_coeff") {
+        nonlin_conv_coeff_ = op.second;
       }
     }
 
@@ -188,14 +206,14 @@ namespace casadi {
         J = getJ(backward);
       } else {
         SundialsInterface* d = derivative_of_.get<SundialsInterface>();
-        casadi_assert(d!=0);
+        casadi_assert_dev(d!=0);
         if (d->ns_==0) {
           J = d->get_function(backward ? "jacB" : "jacF");
         } else {
           J = d->getJ(backward);
         }
       }
-      set_function(J);
+      set_function(J, J.name(), true);
       alloc_w(J.nnz_out(0), true);
     }
 
@@ -205,14 +223,16 @@ namespace casadi {
     alloc_w(2*max(nx_+nz_, nrx_+nrz_), true); // v1, v2
 
     // Allocate linear solvers
-    linsolF_ = Linsol("linsolF", linear_solver_, linear_solver_options_);
+    linsolF_ = Linsol("linsolF", linear_solver_,
+      get_function("jacF").sparsity_out(0), linear_solver_options_);
     if (nrx_>0) {
-      linsolB_ = Linsol("linsolB", linear_solver_, linear_solver_options_);
+      linsolB_ = Linsol("linsolB", linear_solver_,
+        get_function("jacB").sparsity_out(0), linear_solver_options_);
     }
   }
 
-  void SundialsInterface::init_memory(void* mem) const {
-    Integrator::init_memory(mem);
+  int SundialsInterface::init_mem(void* mem) const {
+    if (Integrator::init_mem(mem)) return 1;
     auto m = static_cast<SundialsMemory*>(mem);
 
     // Allocate n-vectors
@@ -221,11 +241,7 @@ namespace casadi {
     m->rxz = N_VNew_Serial(nrx_+nrz_);
     m->rq = N_VNew_Serial(nrq_);
 
-    // Reset linear solvers
-    linsolF_.reset(get_function("jacF").sparsity_out(0));
-    if (nrx_>0) {
-      linsolB_.reset(get_function("jacB").sparsity_out(0));
-    }
+    return 0;
   }
 
   void SundialsInterface::reset(IntegratorMemory* mem, double t, const double* x,
@@ -283,65 +299,70 @@ namespace casadi {
     auto m = static_cast<SundialsMemory*>(mem);
 
     // Counters, forward problem
-    stats["nsteps"] = static_cast<int>(m->nsteps);
-    stats["nfevals"] = static_cast<int>(m->nfevals);
-    stats["nlinsetups"] = static_cast<int>(m->nlinsetups);
-    stats["netfails"] = static_cast<int>(m->netfails);
+    stats["nsteps"] = static_cast<casadi_int>(m->nsteps);
+    stats["nfevals"] = static_cast<casadi_int>(m->nfevals);
+    stats["nlinsetups"] = static_cast<casadi_int>(m->nlinsetups);
+    stats["netfails"] = static_cast<casadi_int>(m->netfails);
     stats["qlast"] = m->qlast;
     stats["qcur"] = m->qcur;
     stats["hinused"] = m->hinused;
     stats["hlast"] = m->hlast;
     stats["hcur"] = m->hcur;
     stats["tcur"] = m->tcur;
+    stats["nniters"] = static_cast<casadi_int>(m->nniters);
+    stats["nncfails"] = static_cast<casadi_int>(m->nncfails);
 
     // Counters, backward problem
-    stats["nstepsB"] = static_cast<int>(m->nstepsB);
-    stats["nfevalsB"] = static_cast<int>(m->nfevalsB);
-    stats["nlinsetupsB"] = static_cast<int>(m->nlinsetupsB);
-    stats["netfailsB"] = static_cast<int>(m->netfailsB);
+    stats["nstepsB"] = static_cast<casadi_int>(m->nstepsB);
+    stats["nfevalsB"] = static_cast<casadi_int>(m->nfevalsB);
+    stats["nlinsetupsB"] = static_cast<casadi_int>(m->nlinsetupsB);
+    stats["netfailsB"] = static_cast<casadi_int>(m->netfailsB);
     stats["qlastB"] = m->qlastB;
     stats["qcurB"] = m->qcurB;
     stats["hinusedB"] = m->hinusedB;
     stats["hlastB"] = m->hlastB;
     stats["hcurB"] = m->hcurB;
     stats["tcurB"] = m->tcurB;
+    stats["nnitersB"] = static_cast<casadi_int>(m->nnitersB);
+    stats["nncfailsB"] = static_cast<casadi_int>(m->nncfailsB);
     return stats;
   }
 
-  void SundialsInterface::print_stats(IntegratorMemory* mem, ostream &stream) const {
+  void SundialsInterface::print_stats(IntegratorMemory* mem) const {
     auto m = to_mem(mem);
-    stream << "FORWARD INTEGRATION:" << endl;
-    stream << "Number of steps taken by SUNDIALS: " << m->nsteps << endl;
-    stream << "Number of calls to the user’s f function: " << m->nfevals << endl;
-    stream << "Number of calls made to the linear solver setup function: "
-           << m->nlinsetups << endl;
-    stream << "Number of error test failures: " << m->netfails << endl;
-    stream << "Method order used on the last internal step: "  << m->qlast << endl;
-    stream << "Method order to be used on the next internal step: " << m->qcur << endl;
-    stream << "Actual value of initial step size: " << m->hinused << endl;
-    stream << "Step size taken on the last internal step: " << m->hlast << endl;
-    stream << "Step size to be attempted on the next internal step: " << m->hcur << endl;
-    stream << "Current internal time reached: " << m->tcur << endl;
-    stream << "Number of checkpoints stored: " << m->ncheck << endl;
+    print("FORWARD INTEGRATION:\n");
+    print("Number of steps taken by SUNDIALS: %ld\n", m->nsteps);
+    print("Number of calls to the user’s f function: %ld\n", m->nfevals);
+    print("Number of calls made to the linear solver setup function: %ld\n", m->nlinsetups);
+    print("Number of error test failures: %ld\n", m->netfails);
+    print("Method order used on the last internal step: %d\n", m->qlast);
+    print("Method order to be used on the next internal step: %d\n", m->qcur);
+    print("Actual value of initial step size: %g\n", m->hinused);
+    print("Step size taken on the last internal step: %g\n", m->hlast);
+    print("Step size to be attempted on the next internal step: %g\n", m->hcur);
+    print("Current internal time reached: %g\n");
+    print("Number of nonlinear iterations performed: %ld\n", m->nniters);
+    print("Number of nonlinear convergence failures: %ld\n", m->nncfails);
     if (nrx_>0) {
-      stream << "BACKWARD INTEGRATION:" << endl;
-      stream << "Number of steps taken by SUNDIALS: " << m->nstepsB << endl;
-      stream << "Number of calls to the user’s f function: " << m->nfevalsB << endl;
-      stream << "Number of calls made to the linear solver setup function: "
-             << m->nlinsetupsB << endl;
-      stream << "Number of error test failures: " << m->netfailsB << endl;
-      stream << "Method order used on the last internal step: "  << m->qlastB << endl;
-      stream << "Method order to be used on the next internal step: " << m->qcurB << endl;
-      stream << "Actual value of initial step size: " << m->hinusedB << endl;
-      stream << "Step size taken on the last internal step: " << m->hlastB << endl;
-      stream << "Step size to be attempted on the next internal step: " << m->hcurB << endl;
-      stream << "Current internal time reached: " << m->tcurB << endl;
+      print("BACKWARD INTEGRATION:\n");
+      print("Number of steps taken by SUNDIALS: %ld\n", m->nstepsB);
+      print("Number of calls to the user’s f function: %ld\n", m->nfevalsB);
+      print("Number of calls made to the linear solver setup function: %ld\n", m->nlinsetupsB);
+      print("Number of error test failures: %ld\n", m->netfailsB);
+      print("Method order used on the last internal step: %d\n" , m->qlastB);
+      print("Method order to be used on the next internal step: %d\n", m->qcurB);
+      print("Actual value of initial step size: %g\n", m->hinusedB);
+      print("Step size taken on the last internal step: %g\n", m->hlastB);
+      print("Step size to be attempted on the next internal step: %g\n", m->hcurB);
+      print("Current internal time reached: %g\n", m->tcurB);
+      print("Number of nonlinear iterations performed: %ld\n", m->nnitersB);
+      print("Number of nonlinear convergence failures: %ld\n", m->nncfailsB);
     }
-    stream << endl;
+    print("\n");
   }
 
   void SundialsInterface::set_work(void* mem, const double**& arg, double**& res,
-                                int*& iw, double*& w) const {
+                                casadi_int*& iw, double*& w) const {
     auto m = static_cast<SundialsMemory*>(mem);
 
     // Set work in base classes

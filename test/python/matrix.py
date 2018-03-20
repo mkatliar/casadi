@@ -403,7 +403,7 @@ class Matrixtests(casadiTestCase):
     s_ = DM.ones(sp)
     s_[:,:int(n/2)+1] = 1
 
-    I_ = DM.ones(inv(x).sparsity())
+    I_ = DM.ones(inv_minor(x).sparsity())
 
     s_ = densify(s_)
     T_ = densify(I_)
@@ -865,7 +865,6 @@ class Matrixtests(casadiTestCase):
         #  print("ref:")
         #  c_ref.sparsity().spy()
         #  c_ref.print_dense()
-        #  a.sparsity().sanity_check()
         #  a.print_dense()
         #  raise e
 
@@ -888,7 +887,7 @@ class Matrixtests(casadiTestCase):
 
     f = Function("f", [vec(P.T),A,B],[vec(mtimes([A,P,B]).T)])
 
-    J = f.jacobian()
+    J = f.jacobian_old(0, 0)
     J_in = []
     J_in.append(numpy.random.rand(*vec(P.T).shape))
     J_in.append(numpy.random.rand(*A.shape))
@@ -993,6 +992,38 @@ class Matrixtests(casadiTestCase):
       DM([DM([1,2]),DM([1,2])])
     a = DM([DM([1]),DM([2])])
     self.checkarray(a,DM([1,2]))
+
+  def test_sparsity_operation(self):
+    L = [DM(1), DM(Sparsity(1,1),1), DM(Sparsity(2,1),1), DM(Sparsity.dense(2,1),1)]
+
+    for a in L:
+      for b in L:
+        c = a*b
+
+        if a.nnz()==0 or b.nnz()==0:
+          self.assertTrue(c.nnz()==0)
+        else:
+          self.assertTrue(c.nnz()>0)
+
+    self.assertTrue(sum2(IM(Sparsity(1,1),1)).nnz()==0)
+
+  def test_matlab_operations(self):
+
+    data = [ np.array([[1,3],[11,17]]) , np.array([[1,3]]) ,np.array([[1],[3]]), np.array([[3]])]
+
+    for A in data:
+      B = reshape(DM(A),A.shape)
+      #self.checkarray(np.cumsum(A),cumsum(B))
+      self.checkarray(np.cumsum(A,0),cumsum(B,0))
+      self.checkarray(np.cumsum(A,1),cumsum(B,1))
+
+      #self.checkarray(np.diff(A),diff(B))
+
+      #self.checkarray(np.diff(A,1),diff(B,1))
+      #self.checkarray(np.diff(A,2),diff(B,2))
+
+      self.checkarray(np.diff(A,1,0),diff(B,1,0))
+      #self.checkarray(np.diff(A,1,1),diff(B,1,1))
 
 if __name__ == '__main__':
     unittest.main()

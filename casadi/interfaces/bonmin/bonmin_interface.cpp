@@ -26,7 +26,7 @@
 
 #include "bonmin_interface.hpp"
 #include "bonmin_nlp.hpp"
-#include "casadi/core/std_vector_tools.hpp"
+#include "casadi/core/casadi_misc.hpp"
 #include "../../core/global_options.hpp"
 #include "../../core/casadi_interrupt.hpp"
 
@@ -45,7 +45,8 @@ namespace casadi {
     plugin->creator = BonminInterface::creator;
     plugin->name = "bonmin";
     plugin->doc = BonminInterface::meta_doc.c_str();
-    plugin->version = 31;
+    plugin->version = CASADI_VERSION;
+    plugin->options = &BonminInterface::options_;
     return 0;
   }
 
@@ -59,7 +60,7 @@ namespace casadi {
   }
 
   BonminInterface::~BonminInterface() {
-    clear_memory();
+    clear_mem();
   }
 
   Options BonminInterface::options_
@@ -67,6 +68,9 @@ namespace casadi {
      {{"pass_nonlinear_variables",
        {OT_BOOL,
         "Pass list of variables entering nonlinearly to BONMIN"}},
+      {"pass_nonlinear_constraints",
+       {OT_BOOL,
+        "Pass list of constraints entering nonlinearly to BONMIN"}},
       {"bonmin",
        {OT_DICT,
         "Options to be passed to BONMIN"}},
@@ -122,7 +126,8 @@ namespace casadi {
     Nlpsol::init(opts);
 
     // Default options
-    pass_nonlinear_variables_ = false;
+    pass_nonlinear_variables_ = true;
+    pass_nonlinear_constraints_ = true;
     Dict hess_lag_options, jac_g_options, grad_f_options;
 
     // Read user options
@@ -131,7 +136,9 @@ namespace casadi {
         opts_ = op.second;
       } else if (op.first=="pass_nonlinear_variables") {
         pass_nonlinear_variables_ = op.second;
-      } else if (op.first=="var_string_md") {
+      } else if (op.first=="pass_nonlinear_constraints") {
+        pass_nonlinear_constraints_ = op.second;
+      }  else if (op.first=="var_string_md") {
         var_string_md_ = op.second;
       } else if (op.first=="var_integer_md") {
         var_integer_md_ = op.second;
@@ -151,18 +158,18 @@ namespace casadi {
         grad_f_options = op.second;
       } else if (op.first=="hess_lag") {
         Function f = op.second;
-        casadi_assert(f.n_in()==4);
-        casadi_assert(f.n_out()==1);
+        casadi_assert_dev(f.n_in()==4);
+        casadi_assert_dev(f.n_out()==1);
         set_function(f, "nlp_hess_l");
       } else if (op.first=="jac_g") {
         Function f = op.second;
-        casadi_assert(f.n_in()==2);
-        casadi_assert(f.n_out()==2);
+        casadi_assert_dev(f.n_in()==2);
+        casadi_assert_dev(f.n_out()==2);
         set_function(f, "nlp_jac_g");
       } else if (op.first=="grad_f") {
         Function f = op.second;
-        casadi_assert(f.n_in()==2);
-        casadi_assert(f.n_out()==2);
+        casadi_assert_dev(f.n_in()==2);
+        casadi_assert_dev(f.n_out()==2);
         set_function(f, "nlp_grad_f");
       }
     }
@@ -173,6 +180,7 @@ namespace casadi {
     if (hessian_approximation!=opts_.end()) {
       exact_hessian_ = hessian_approximation->second == "exact";
     }
+
 
     // Setup NLP functions
     create_function("nlp_f", {"x", "p"}, {"f"});
@@ -185,6 +193,10 @@ namespace casadi {
     }
     jacg_sp_ = get_function("nlp_jac_g").sparsity_out(1);
 
+    // By default, assume all nonlinear
+    nl_ex_.resize(nx_, true);
+    nl_g_.resize(ng_, true);
+
     // Allocate temporary work vectors
     if (exact_hessian_) {
       if (!has_function("nlp_hess_l")) {
@@ -192,13 +204,20 @@ namespace casadi {
                         {"hess:gamma:x:x"}, {{"gamma", {"f", "g"}}});
       }
       hesslag_sp_ = get_function("nlp_hess_l").sparsity_out(0);
-    } else if (pass_nonlinear_variables_) {
-      nl_ex_ = oracle_.which_depends("x", {"f", "g"}, 2, false);
+
+      if (pass_nonlinear_variables_) {
+        const casadi_int* col = hesslag_sp_.colind();
+        for (casadi_int i=0;i<nx_;++i) nl_ex_[i] = col[i+1]-col[i];
+      }
+    } else {
+      if (pass_nonlinear_variables_)
+        nl_ex_ = oracle_.which_depends("x", {"f", "g"}, 2, false);
     }
+    if (pass_nonlinear_constraints_)
+      nl_g_ = oracle_.which_depends("x", {"g"}, 2, true);
 
     // Allocate work vectors
     alloc_w(nx_, true); // xk_
-    alloc_w(ng_, true); // lam_gk_
     alloc_w(nx_, true); // lam_xk_
     alloc_w(ng_, true); // gk_
     alloc_w(nx_, true); // grad_fk_
@@ -208,22 +227,18 @@ namespace casadi {
     }
   }
 
-  void BonminInterface::init_memory(void* mem) const {
-    Nlpsol::init_memory(mem);
-    //auto m = static_cast<BonminMemory*>(mem);
+  int BonminInterface::init_mem(void* mem) const {
+    return Nlpsol::init_mem(mem);
   }
 
   void BonminInterface::set_work(void* mem, const double**& arg, double**& res,
-                                int*& iw, double*& w) const {
+                                casadi_int*& iw, double*& w) const {
     auto m = static_cast<BonminMemory*>(mem);
 
     // Set work in base classes
     Nlpsol::set_work(mem, arg, res, iw, w);
 
     // Work vectors
-    m->xk = w; w += nx_;
-    m->lam_gk = w; w += ng_;
-    m->lam_xk = w; w += nx_;
     m->gk = w; w += ng_;
     m->grad_fk = w; w += nx_;
     m->jac_gk = w; w += jacg_sp_.nnz();
@@ -232,52 +247,39 @@ namespace casadi {
     }
   }
 
-  inline const char* return_status_string(Ipopt::ApplicationReturnStatus status) {
+  inline const char* return_status_string(Bonmin::TMINLP::SolverReturn status) {
     switch (status) {
-    case Solve_Succeeded:
-      return "Solve_Succeeded";
-    case Solved_To_Acceptable_Level:
-      return "Solved_To_Acceptable_Level";
-    case Infeasible_Problem_Detected:
-      return "Infeasible_Problem_Detected";
-    case Search_Direction_Becomes_Too_Small:
-      return "Search_Direction_Becomes_Too_Small";
-    case Diverging_Iterates:
-      return "Diverging_Iterates";
-    case User_Requested_Stop:
-      return "User_Requested_Stop";
-    case Maximum_Iterations_Exceeded:
-      return "Maximum_Iterations_Exceeded";
-    case Restoration_Failed:
-      return "Restoration_Failed";
-    case Error_In_Step_Computation:
-      return "Error_In_Step_Computation";
-    case Not_Enough_Degrees_Of_Freedom:
-      return "Not_Enough_Degrees_Of_Freedom";
-    case Invalid_Problem_Definition:
-      return "Invalid_Problem_Definition";
-    case Invalid_Option:
-      return "Invalid_Option";
-    case Invalid_Number_Detected:
-      return "Invalid_Number_Detected";
-    case Unrecoverable_Exception:
-      return "Unrecoverable_Exception";
-    case NonIpopt_Exception_Thrown:
-      return "NonIpopt_Exception_Thrown";
-    case Insufficient_Memory:
-      return "Insufficient_Memory";
-    case Internal_Error:
-      return "Internal_Error";
-    case Maximum_CpuTime_Exceeded:
-      return "Maximum_CpuTime_Exceeded";
-    case Feasible_Point_Found:
-      return "Feasible_Point_Found";
+    case Bonmin::TMINLP::MINLP_ERROR:
+      return "MINLP_ERROR";
+    case Bonmin::TMINLP::SUCCESS:
+      return "SUCCESS";
+    case Bonmin::TMINLP::INFEASIBLE:
+      return "INFEASIBLE";
+    case Bonmin::TMINLP::CONTINUOUS_UNBOUNDED:
+      return "CONTINUOUS_UNBOUNDED";
+    case Bonmin::TMINLP::LIMIT_EXCEEDED:
+      return "LIMIT_EXCEEDED";
+    case Bonmin::TMINLP::USER_INTERRUPT:
+      return "USER_INTERRUPT";
     }
     return "Unknown";
   }
 
+  inline std::string to_str(const CoinError& e) {
+    std::stringstream ss;
+    if (e.lineNumber()<0) {
+      ss << e.message()<< " in "<< e.className()<< "::" << e.methodName();
+    } else {
+      ss << e.fileName() << ":" << e.lineNumber() << " method " << e.methodName()
+         << " : assertion \'" << e.message() <<"\' failed.";
+      if (e.className()!="")
+        ss <<"Possible reason: "<< e.className();
+    }
+    return ss.str();
+  }
 
-  /** \brief Helper class to direct messages to userOut()
+
+  /** \brief Helper class to direct messages to uout()
   *
   * IPOPT has the concept of a Jorunal/Journalist
   * BOONMIN and CBC do not.
@@ -286,27 +288,24 @@ namespace casadi {
   public:
     BonMinMessageHandler(): CoinMessageHandler() { }
     /// Core of the class: the method that directs the messages
-    virtual int print() {
-      userOut() << messageBuffer_ << std::endl;
+    int print() override {
+      uout() << messageBuffer_ << std::endl;
       return 0;
     }
-    virtual ~BonMinMessageHandler() { }
+    ~BonMinMessageHandler() override { }
     BonMinMessageHandler(const BonMinMessageHandler &other): CoinMessageHandler(other) {}
     BonMinMessageHandler(const CoinMessageHandler &other): CoinMessageHandler(other) {}
     BonMinMessageHandler & operator=(const BonMinMessageHandler &rhs) {
       BonMinMessageHandler::operator=(rhs);
       return *this;
     }
-    virtual CoinMessageHandler* clone() const {
+    CoinMessageHandler* clone() const override {
       return new BonMinMessageHandler(*this);
     }
   };
 
-  void BonminInterface::solve(void* mem) const {
+  int BonminInterface::solve(void* mem) const {
     auto m = static_cast<BonminMemory*>(mem);
-
-    // Check the provided inputs
-    checkInputs(mem);
 
     // Reset statistics
     m->inf_pr.clear();
@@ -319,11 +318,11 @@ namespace casadi {
     m->obj.clear();
     m->ls_trials.clear();
 
+    // Problem has not been solved at this point
+    m->success = false;
+
     // Reset number of iterations
     m->n_iter = 0;
-
-    // Statistics
-    for (auto&& s : m->fstats) s.second.reset();
 
     // MINLP instance
     SmartPtr<BonminUserClass> tminlp = new BonminUserClass(*this, m);
@@ -338,9 +337,9 @@ namespace casadi {
     SmartPtr<Bonmin::RegisteredOptions> roptions = new Bonmin::RegisteredOptions();
 
     {
-      // Direct output through casadi::userOut()
+      // Direct output through casadi::uout()
       StreamJournal* jrnl_raw = new StreamJournal("console", J_ITERSUMMARY);
-      jrnl_raw->SetOutputStream(&casadi::userOut());
+      jrnl_raw->SetOutputStream(&casadi::uout());
       jrnl_raw->SetPrintLevel(J_DBG, J_NONE);
       SmartPtr<Journal> jrnl = jrnl_raw;
       journalist->AddJournal(jrnl);
@@ -350,28 +349,56 @@ namespace casadi {
     options->SetRegisteredOptions(roptions);
     bonmin.setOptionsAndJournalist(roptions, options, journalist);
     bonmin.registerOptions();
+    // Get all options available in BONMIN
+    auto regops = bonmin.roptions()->RegisteredOptionsList();
+
+    // Pass all the options to BONMIN
+    for (auto&& op : opts_) {
+      // Find the option
+      auto regops_it = regops.find(op.first);
+      if (regops_it==regops.end()) {
+        casadi_error("No such BONMIN option: " + op.first);
+      }
+
+      // Get the type
+      Ipopt::RegisteredOptionType ipopt_type = regops_it->second->Type();
+
+      // Pass to BONMIN
+      bool ret;
+      switch (ipopt_type) {
+      case Ipopt::OT_Number:
+        ret = bonmin.options()->SetNumericValue(op.first, op.second.to_double(), false);
+        break;
+      case Ipopt::OT_Integer:
+        ret = bonmin.options()->SetIntegerValue(op.first, op.second.to_int(), false);
+        break;
+      case Ipopt::OT_String:
+        ret = bonmin.options()->SetStringValue(op.first, op.second.to_string(), false);
+        break;
+      case Ipopt::OT_Unknown:
+      default:
+        casadi_warning("Cannot handle option \"" + op.first + "\", ignored");
+        continue;
+      }
+      if (!ret) casadi_error("Invalid options were detected by BONMIN.");
+    }
 
     // Initialize
     bonmin.initialize(GetRawPtr(tminlp));
 
-    m->fstats.at("mainloop").tic();
-
     if (true) {
       // Branch-and-bound
-      Bab bb;
-      bb(bonmin);
+      try {
+        Bab bb;
+        bb(bonmin);
+      } catch (CoinError& e) {
+        casadi_error("CoinError occured: " + to_str(e));
+      }
     }
 
-    //m->return_status = return_status_string(status);
-    m->fstats.at("mainloop").toc();
-
     // Save results to outputs
-    casadi_copy(&m->fk, 1, m->f);
-    casadi_copy(m->xk, nx_, m->x);
-    casadi_copy(m->lam_gk, ng_, m->lam_g);
-    casadi_copy(m->lam_xk, nx_, m->lam_x);
     casadi_copy(m->gk, ng_, m->g);
-
+    return 0;
   }
 
   bool BonminInterface::
@@ -382,7 +409,7 @@ namespace casadi {
                         int ls_trials, bool full_callback) const {
     m->n_iter += 1;
     try {
-      log("intermediate_callback started");
+      if (verbose_) casadi_message("intermediate_callback started");
       m->inf_pr.push_back(inf_pr);
       m->inf_du.push_back(inf_du);
       m->mu.push_back(mu);
@@ -395,15 +422,15 @@ namespace casadi {
       if (!fcallback_.is_null()) {
         m->fstats.at("callback_fun").tic();
         if (full_callback) {
-          casadi_copy(x, nx_, m->xk);
-          for (int i=0; i<nx_; ++i) {
-            m->lam_xk[i] = z_U[i]-z_L[i];
+          casadi_copy(x, nx_, m->x);
+          for (casadi_int i=0; i<nx_; ++i) {
+            m->lam_x[i] = z_U[i]-z_L[i];
           }
-          casadi_copy(lambda, ng_, m->lam_gk);
+          casadi_copy(lambda, ng_, m->lam_g);
           casadi_copy(g, ng_, m->gk);
         } else {
           if (iter==0) {
-            userOut<true, PL_WARN>()
+            uerr()
               << "Warning: intermediate_callback is disfunctional in your installation. "
               "You will only be able to use stats(). "
               "See https://github.com/casadi/casadi/wiki/enableBonminCallback to enable it."
@@ -420,8 +447,8 @@ namespace casadi {
           m->arg[NLPSOL_F] = &obj_value;
           m->arg[NLPSOL_G] = g;
           m->arg[NLPSOL_LAM_P] = 0;
-          m->arg[NLPSOL_LAM_X] = m->lam_xk;
-          m->arg[NLPSOL_LAM_G] = m->lam_gk;
+          m->arg[NLPSOL_LAM_X] = m->lam_x;
+          m->arg[NLPSOL_LAM_G] = m->lam_g;
         }
 
         // Outputs
@@ -437,34 +464,30 @@ namespace casadi {
       } else {
         return 1;
       }
+    } catch(KeyboardInterruptException& ex) {
+      return 0;
     } catch(exception& ex) {
       if (iteration_callback_ignore_errors_) {
-        userOut<true, PL_WARN>() << "intermediate_callback: " << ex.what() << endl;
-      } else {
-        throw ex;
+        uerr() << "intermediate_callback: " << ex.what() << endl;
+        return 1;
       }
-      return 1;
+      return 0;
     }
   }
 
   void BonminInterface::
-  finalize_solution(BonminMemory* m, const double* x, double obj_value) const {
+  finalize_solution(BonminMemory* m, TMINLP::SolverReturn status,
+      const double* x, double obj_value) const {
     try {
       // Get primal solution
-      casadi_copy(x, nx_, m->xk);
+      casadi_copy(x, nx_, m->x);
 
       // Get optimal cost
-      m->fk = obj_value;
+      m->f = obj_value;
 
-      // Get dual solution (simple bounds)
-      if (m->lam_xk) {
-        for (int i=0; i<nx_; ++i) {
-          m->lam_xk[i] = casadi::nan;
-        }
-      }
-
-      // Get dual solution (nonlinear bounds)
-      casadi_fill(m->lam_gk, ng_, nan);
+      // Dual solution not calculated
+      casadi_fill(m->lam_x, nx_, nan);
+      casadi_fill(m->lam_g, ng_, nan);
 
       // Get the constraints
       casadi_fill(m->gk, ng_, nan);
@@ -472,8 +495,12 @@ namespace casadi {
       // Get statistics
       m->iter_count = 0;
 
+      // Interpret return code
+      m->return_status = return_status_string(status);
+      m->success = status==Bonmin::TMINLP::SUCCESS;
+
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "finalize_solution failed: " << ex.what() << endl;
+      uerr() << "finalize_solution failed: " << ex.what() << endl;
     }
   }
 
@@ -487,7 +514,7 @@ namespace casadi {
       casadi_copy(m->ubg, ng_, g_u);
       return true;
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "get_bounds_info failed: " << ex.what() << endl;
+      uerr() << "get_bounds_info failed: " << ex.what() << endl;
       return false;
     }
   }
@@ -499,30 +526,25 @@ namespace casadi {
     try {
       // Initialize primal variables
       if (init_x) {
-        casadi_copy(m->x0, nx_, x);
+        casadi_copy(m->x, nx_, x);
       }
 
       // Initialize dual variables (simple bounds)
       if (init_z) {
-        if (m->lam_x0) {
-          for (int i=0; i<nx_; ++i) {
-            z_L[i] = max(0., -m->lam_x0[i]);
-            z_U[i] = max(0., m->lam_x0[i]);
-          }
-        } else {
-          casadi_fill(z_L, nx_, 0.);
-          casadi_fill(z_U, nx_, 0.);
+        for (casadi_int i=0; i<nx_; ++i) {
+          z_L[i] = max(0., -m->lam_x[i]);
+          z_U[i] = max(0., m->lam_x[i]);
         }
       }
 
       // Initialize dual variables (nonlinear bounds)
       if (init_lambda) {
-        casadi_copy(m->lam_g0, ng_, lambda);
+        casadi_copy(m->lam_g, ng_, lambda);
       }
 
       return true;
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "get_starting_point failed: " << ex.what() << endl;
+      uerr() << "get_starting_point failed: " << ex.what() << endl;
       return false;
     }
   }
@@ -543,7 +565,7 @@ namespace casadi {
       nnz_h_lag = exact_hessian_ ? hesslag_sp_.nnz() : 0;
 
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "get_nlp_info failed: " << ex.what() << endl;
+      uerr() << "get_nlp_info failed: " << ex.what() << endl;
     }
   }
 
@@ -559,7 +581,7 @@ namespace casadi {
         return nv;
       }
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "get_number_of_nonlinear_variables failed: " << ex.what() << endl;
+      uerr() << "get_number_of_nonlinear_variables failed: " << ex.what() << endl;
       return -1;
     }
   }
@@ -567,12 +589,12 @@ namespace casadi {
   bool BonminInterface::
   get_list_of_nonlinear_variables(int num_nonlin_vars, int* pos_nonlin_vars) const {
     try {
-      for (int i=0; i<nl_ex_.size(); ++i) {
+      for (casadi_int i=0; i<nl_ex_.size(); ++i) {
         if (nl_ex_[i]) *pos_nonlin_vars++ = i;
       }
       return true;
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "get_list_of_nonlinear_variables failed: " << ex.what() << endl;
+      uerr() << "get_list_of_nonlinear_variables failed: " << ex.what() << endl;
       return false;
     }
   }
@@ -589,6 +611,7 @@ namespace casadi {
     auto m = static_cast<BonminMemory*>(mem);
     stats["return_status"] = m->return_status;
     stats["iter_count"] = m->iter_count;
+    stats["success"] = m->success;
     return stats;
   }
 

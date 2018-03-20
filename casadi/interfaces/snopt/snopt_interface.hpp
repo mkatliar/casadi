@@ -26,7 +26,7 @@
 #ifndef CASADI_SNOPT_INTERFACE_HPP
 #define CASADI_SNOPT_INTERFACE_HPP
 
-#include "casadi/core/function/nlpsol_impl.hpp"
+#include "casadi/core/nlpsol_impl.hpp"
 #include "casadi/interfaces/snopt/casadi_nlpsol_snopt_export.h"
 extern "C" {
 #include "snopt_cwrap.h" // NOLINT(build/include)
@@ -52,15 +52,22 @@ namespace casadi {
     double *xk2, *lam_gk, *lam_xk;
 
     // Current calculated quantities
-    double fk, *gk, *jac_fk, *jac_gk;
+    double *gk, *jac_fk, *jac_gk;
 
-    int n_iter; // number of major iterations
+    std::vector<double> bl, bu, xx;
 
-    std::vector<double> A_data;
+    std::vector<int> hs, locJ, indJ;
+
+    casadi_int n_iter; // number of major iterations
+
+    std::vector<double> A_data, valJ, rc, pi;
 
     // Memory pool
     static std::vector<SnoptMemory*> mempool;
     int memind;
+
+    bool success;
+    int return_status;
 
     /// Constructor
     SnoptMemory(const SnoptInterface& self);
@@ -88,10 +95,13 @@ namespace casadi {
     explicit SnoptInterface(const std::string& name, const Function& nlp);
 
     // Destructor
-    virtual ~SnoptInterface();
+    ~SnoptInterface() override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "snopt";}
+    const char* plugin_name() const override { return "snopt";}
+
+    // Get name of the class
+    std::string class_name() const override { return "SnoptInterface";}
 
     /** \brief  Create a new NLP Solver */
     static Nlpsol* creator(const std::string& name, const Function& nlp) {
@@ -101,47 +111,52 @@ namespace casadi {
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     // Initialize the solver
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new SnoptMemory(*this);}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<SnoptMemory*>(mem);}
+    void* alloc_mem() const override { return new SnoptMemory(*this);}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
+
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<SnoptMemory*>(mem);}
 
     /** \brief Set the (persistent) work vectors */
-    virtual void set_work(void* mem, const double**& arg, double**& res,
-                          int*& iw, double*& w) const;
+    void set_work(void* mem, const double**& arg, double**& res,
+                          casadi_int*& iw, double*& w) const override;
 
     // Solve the NLP
-    virtual void solve(void* mem) const;
+    int solve(void* mem) const override;
+
+    /// Get all statistics
+    Dict get_stats(void* mem) const override;
 
     /// Exact Hessian?
     bool exact_hessian_;
 
-    std::map<int, std::string> status_;
+    static std::map<int, std::string> status_;
+    static std::map<int, std::string> secondary_status_;
 
     std::string formatStatus(int status) const;
+    std::string formatSecondaryStatus(int status) const;
 
     void userfun(SnoptMemory* m, int* mode, int nnObj, int nnCon, int nnJac, int nnL, int neJac,
                  double* x, double* fObj, double*gObj, double* fCon, double* gCon,
                  int nState, char* cu, int lencu, int* iu, int leniu, double* ru, int lenru) const;
 
-    int nnJac_;
-    int nnObj_;
-    int nnCon_;
+    casadi_int nnJac_;
+    casadi_int nnObj_;
+    casadi_int nnCon_;
 
     IM A_structure_;
 
-    int m_;
-    int iObj_;
+    casadi_int m_;
+    casadi_int iObj_;
 
     static void userfunPtr(int * mode, int* nnObj, int * nnCon, int *nJac, int *nnL, int * neJac,
                            double *x, double *fObj, double *gObj, double * fCon, double* gCon,
@@ -157,7 +172,9 @@ namespace casadi {
     static const std::string meta_doc;
 
     /// Warm-start settings
-    int Cold_;
+    casadi_int Cold_;
+
+    double inf_;
 
   private:
       // options

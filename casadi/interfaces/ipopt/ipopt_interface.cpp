@@ -26,7 +26,7 @@
 
 #include "ipopt_interface.hpp"
 #include "ipopt_nlp.hpp"
-#include "casadi/core/std_vector_tools.hpp"
+#include "casadi/core/casadi_misc.hpp"
 #include "../../core/global_options.hpp"
 #include "../../core/casadi_interrupt.hpp"
 
@@ -46,7 +46,8 @@ namespace casadi {
     plugin->creator = IpoptInterface::creator;
     plugin->name = "ipopt";
     plugin->doc = IpoptInterface::meta_doc.c_str();
-    plugin->version = 31;
+    plugin->version = CASADI_VERSION;
+    plugin->options = &IpoptInterface::options_;
     return 0;
   }
 
@@ -60,7 +61,7 @@ namespace casadi {
   }
 
   IpoptInterface::~IpoptInterface() {
-    clear_memory();
+    clear_mem();
   }
 
   Options IpoptInterface::options_
@@ -136,18 +137,18 @@ namespace casadi {
         con_numeric_md_ = op.second;
       } else if (op.first=="hess_lag") {
         Function f = op.second;
-        casadi_assert(f.n_in()==4);
-        casadi_assert(f.n_out()==1);
+        casadi_assert_dev(f.n_in()==4);
+        casadi_assert_dev(f.n_out()==1);
         set_function(f, "nlp_hess_l");
       } else if (op.first=="jac_g") {
         Function f = op.second;
-        casadi_assert(f.n_in()==2);
-        casadi_assert(f.n_out()==2);
+        casadi_assert_dev(f.n_in()==2);
+        casadi_assert_dev(f.n_out()==2);
         set_function(f, "nlp_jac_g");
       } else if (op.first=="grad_f") {
         Function f = op.second;
-        casadi_assert(f.n_in()==2);
-        casadi_assert(f.n_out()==2);
+        casadi_assert_dev(f.n_in()==2);
+        casadi_assert_dev(f.n_out()==2);
         set_function(f, "nlp_grad_f");
       }
     }
@@ -182,9 +183,6 @@ namespace casadi {
     }
 
     // Allocate work vectors
-    alloc_w(nx_, true); // xk_
-    alloc_w(ng_, true); // lam_gk_
-    alloc_w(nx_, true); // lam_xk_
     alloc_w(ng_, true); // gk_
     alloc_w(nx_, true); // grad_fk_
     alloc_w(jacg_sp_.nnz(), true); // jac_gk_
@@ -193,8 +191,8 @@ namespace casadi {
     }
   }
 
-  void IpoptInterface::init_memory(void* mem) const {
-    Nlpsol::init_memory(mem);
+  int IpoptInterface::init_mem(void* mem) const {
+    if (Nlpsol::init_mem(mem)) return 1;
     auto m = static_cast<IpoptMemory*>(mem);
 
     // Start an IPOPT application
@@ -202,9 +200,9 @@ namespace casadi {
     m->app = static_cast<void*>(app);
     *app = new Ipopt::IpoptApplication(false);
 
-    // Direct output through casadi::userOut()
+    // Direct output through casadi::uout()
     StreamJournal* jrnl_raw = new StreamJournal("console", J_ITERSUMMARY);
-    jrnl_raw->SetOutputStream(&casadi::userOut());
+    jrnl_raw->SetOutputStream(&casadi::uout());
     jrnl_raw->SetPrintLevel(J_DBG, J_NONE);
     SmartPtr<Journal> jrnl = jrnl_raw;
     (*app)->Jnlst()->AddJournal(jrnl);
@@ -215,9 +213,9 @@ namespace casadi {
     *userclass = new IpoptUserClass(*this, m);
 
     if (verbose_) {
-      userOut() << "There are " << nx_ << " variables and " << ng_ << " constraints." << endl;
-      if (exact_hessian_) userOut() << "Using exact Hessian" << endl;
-      else             userOut() << "Using limited memory Hessian approximation" << endl;
+      uout() << "There are " << nx_ << " variables and " << ng_ << " constraints." << endl;
+      if (exact_hessian_) uout() << "Using exact Hessian" << endl;
+      else             uout() << "Using limited memory Hessian approximation" << endl;
     }
 
     // Get all options available in (s)IPOPT
@@ -259,26 +257,24 @@ namespace casadi {
       char * default_solver = getenv("IPOPT_DEFAULT_LINEAR_SOLVER");
       if (default_solver) {
         bool ret = (*app)->Options()->SetStringValue("linear_solver", default_solver, false);
-        casadi_assert_message(ret, "Corrupted IPOPT_DEFAULT_LINEAR_SOLVER environmental variable");
+        casadi_assert(ret, "Corrupted IPOPT_DEFAULT_LINEAR_SOLVER environmental variable");
       }
     }
 
     // Intialize the IpoptApplication and process the options
     Ipopt::ApplicationReturnStatus status = (*app)->Initialize();
-    casadi_assert_message(status == Solve_Succeeded, "Error during IPOPT initialization");
+    casadi_assert(status == Solve_Succeeded, "Error during IPOPT initialization");
+    return 0;
   }
 
   void IpoptInterface::set_work(void* mem, const double**& arg, double**& res,
-                                int*& iw, double*& w) const {
+                                casadi_int*& iw, double*& w) const {
     auto m = static_cast<IpoptMemory*>(mem);
 
     // Set work in base classes
     Nlpsol::set_work(mem, arg, res, iw, w);
 
     // Work vectors
-    m->xk = w; w += nx_;
-    m->lam_gk = w; w += ng_;
-    m->lam_xk = w; w += nx_;
     m->gk = w; w += ng_;
     m->grad_fk = w; w += nx_;
     m->jac_gk = w; w += jacg_sp_.nnz();
@@ -331,11 +327,8 @@ namespace casadi {
     return "Unknown";
   }
 
-  void IpoptInterface::solve(void* mem) const {
+  int IpoptInterface::solve(void* mem) const {
     auto m = static_cast<IpoptMemory*>(mem);
-
-    // Check the provided inputs
-    checkInputs(mem);
 
     // Reset statistics
     m->inf_pr.clear();
@@ -348,11 +341,10 @@ namespace casadi {
     m->obj.clear();
     m->ls_trials.clear();
 
+    // Problem has not been solved at this point
+    m->success = false;
     // Reset number of iterations
     m->n_iter = 0;
-
-    // Statistics
-    for (auto&& s : m->fstats) s.second.reset();
 
     // Get back the smart pointers
     Ipopt::SmartPtr<Ipopt::TNLP> *userclass =
@@ -360,20 +352,16 @@ namespace casadi {
     Ipopt::SmartPtr<Ipopt::IpoptApplication> *app =
       static_cast<Ipopt::SmartPtr<Ipopt::IpoptApplication>*>(m->app);
 
-    m->fstats.at("mainloop").tic();
-
     // Ask Ipopt to solve the problem
     Ipopt::ApplicationReturnStatus status = (*app)->OptimizeTNLP(*userclass);
     m->return_status = return_status_string(status);
-    m->fstats.at("mainloop").toc();
+    m->success = status==Solve_Succeeded || status==Solved_To_Acceptable_Level
+                 || status==Feasible_Point_Found;
 
     // Save results to outputs
-    casadi_copy(&m->fk, 1, m->f);
-    casadi_copy(m->xk, nx_, m->x);
-    casadi_copy(m->lam_gk, ng_, m->lam_g);
-    casadi_copy(m->lam_xk, nx_, m->lam_x);
     casadi_copy(m->gk, ng_, m->g);
 
+    return 0;
   }
 
   bool IpoptInterface::
@@ -384,7 +372,6 @@ namespace casadi {
                         int ls_trials, bool full_callback) const {
     m->n_iter += 1;
     try {
-      log("intermediate_callback started");
       m->inf_pr.push_back(inf_pr);
       m->inf_du.push_back(inf_du);
       m->mu.push_back(mu);
@@ -397,15 +384,15 @@ namespace casadi {
       if (!fcallback_.is_null()) {
         m->fstats.at("callback_fun").tic();
         if (full_callback) {
-          casadi_copy(x, nx_, m->xk);
-          for (int i=0; i<nx_; ++i) {
-            m->lam_xk[i] = z_U[i]-z_L[i];
+          casadi_copy(x, nx_, m->x);
+          for (casadi_int i=0; i<nx_; ++i) {
+            m->lam_x[i] = z_U[i]-z_L[i];
           }
-          casadi_copy(lambda, ng_, m->lam_gk);
+          casadi_copy(lambda, ng_, m->lam_g);
           casadi_copy(g, ng_, m->gk);
         } else {
           if (iter==0) {
-            userOut<true, PL_WARN>()
+            uerr()
               << "Warning: intermediate_callback is disfunctional in your installation. "
               "You will only be able to use stats(). "
               "See https://github.com/casadi/casadi/wiki/enableIpoptCallback to enable it."
@@ -422,8 +409,8 @@ namespace casadi {
           m->arg[NLPSOL_F] = &obj_value;
           m->arg[NLPSOL_G] = g;
           m->arg[NLPSOL_LAM_P] = 0;
-          m->arg[NLPSOL_LAM_X] = m->lam_xk;
-          m->arg[NLPSOL_LAM_G] = m->lam_gk;
+          m->arg[NLPSOL_LAM_X] = m->lam_x;
+          m->arg[NLPSOL_LAM_G] = m->lam_g;
         }
 
         // Outputs
@@ -432,20 +419,20 @@ namespace casadi {
         m->res[0] = &ret_double;
 
         fcallback_(m->arg, m->res, m->iw, m->w, 0);
-        int ret = static_cast<int>(ret_double);
+        casadi_int ret = static_cast<casadi_int>(ret_double);
 
         m->fstats.at("callback_fun").toc();
         return  !ret;
       } else {
         return 1;
       }
+
+    } catch(KeyboardInterruptException& ex) {
+      return 0;
     } catch(exception& ex) {
-      if (iteration_callback_ignore_errors_) {
-        userOut<true, PL_WARN>() << "intermediate_callback: " << ex.what() << endl;
-      } else {
-        throw ex;
-      }
-      return 1;
+      uerr() << "intermediate_callback: " << ex.what() << endl;
+      if (iteration_callback_ignore_errors_) return 1;
+      return 0;
     }
   }
 
@@ -455,20 +442,18 @@ namespace casadi {
                     int iter_count) const {
     try {
       // Get primal solution
-      casadi_copy(x, nx_, m->xk);
+      casadi_copy(x, nx_, m->x);
 
       // Get optimal cost
-      m->fk = obj_value;
+      m->f = obj_value;
 
       // Get dual solution (simple bounds)
-      if (m->lam_xk) {
-        for (int i=0; i<nx_; ++i) {
-          m->lam_xk[i] = z_U[i]-z_L[i];
-        }
+      for (casadi_int i=0; i<nx_; ++i) {
+        m->lam_x[i] = z_U[i]-z_L[i];
       }
 
       // Get dual solution (nonlinear bounds)
-      casadi_copy(lambda, ng_, m->lam_gk);
+      casadi_copy(lambda, ng_, m->lam_g);
 
       // Get the constraints
       casadi_copy(g, ng_, m->gk);
@@ -477,7 +462,7 @@ namespace casadi {
       m->iter_count = iter_count;
 
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "finalize_solution failed: " << ex.what() << endl;
+      uerr() << "finalize_solution failed: " << ex.what() << endl;
     }
   }
 
@@ -491,7 +476,7 @@ namespace casadi {
       casadi_copy(m->ubg, ng_, g_u);
       return true;
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "get_bounds_info failed: " << ex.what() << endl;
+      uerr() << "get_bounds_info failed: " << ex.what() << endl;
       return false;
     }
   }
@@ -503,30 +488,25 @@ namespace casadi {
     try {
       // Initialize primal variables
       if (init_x) {
-        casadi_copy(m->x0, nx_, x);
+        casadi_copy(m->x, nx_, x);
       }
 
       // Initialize dual variables (simple bounds)
       if (init_z) {
-        if (m->lam_x0) {
-          for (int i=0; i<nx_; ++i) {
-            z_L[i] = max(0., -m->lam_x0[i]);
-            z_U[i] = max(0., m->lam_x0[i]);
-          }
-        } else {
-          casadi_fill(z_L, nx_, 0.);
-          casadi_fill(z_U, nx_, 0.);
+        for (casadi_int i=0; i<nx_; ++i) {
+          z_L[i] = max(0., -m->lam_x[i]);
+          z_U[i] = max(0., m->lam_x[i]);
         }
       }
 
       // Initialize dual variables (nonlinear bounds)
       if (init_lambda) {
-        casadi_copy(m->lam_g0, ng_, lambda);
+        casadi_copy(m->lam_g, ng_, lambda);
       }
 
       return true;
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "get_starting_point failed: " << ex.what() << endl;
+      uerr() << "get_starting_point failed: " << ex.what() << endl;
       return false;
     }
   }
@@ -547,7 +527,7 @@ namespace casadi {
       nnz_h_lag = exact_hessian_ ? hesslag_sp_.nnz() : 0;
 
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "get_nlp_info failed: " << ex.what() << endl;
+      uerr() << "get_nlp_info failed: " << ex.what() << endl;
     }
   }
 
@@ -563,7 +543,7 @@ namespace casadi {
         return nv;
       }
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "get_number_of_nonlinear_variables failed: " << ex.what() << endl;
+      uerr() << "get_number_of_nonlinear_variables failed: " << ex.what() << endl;
       return -1;
     }
   }
@@ -576,7 +556,7 @@ namespace casadi {
       }
       return true;
     } catch(exception& ex) {
-      userOut<true, PL_WARN>() << "get_list_of_nonlinear_variables failed: " << ex.what() << endl;
+      uerr() << "get_list_of_nonlinear_variables failed: " << ex.what() << endl;
       return false;
     }
   }
@@ -620,6 +600,19 @@ namespace casadi {
     auto m = static_cast<IpoptMemory*>(mem);
     stats["return_status"] = m->return_status;
     stats["iter_count"] = m->iter_count;
+    stats["success"] = m->success;
+    if (m->inf_pr.size()>0) {
+      Dict iterations;
+      iterations["inf_pr"] = m->inf_pr;
+      iterations["inf_du"] = m->inf_du;
+      iterations["mu"] = m->mu;
+      iterations["d_norm"] = m->d_norm;
+      iterations["regularization_size"] = m->regularization_size;
+      iterations["obj"] = m->obj;
+      iterations["alpha_pr"] = m->alpha_pr;
+      iterations["alpha_du"] = m->alpha_du;
+      stats["iterations"] = iterations;
+    }
     return stats;
   }
 

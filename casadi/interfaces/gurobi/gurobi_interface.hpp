@@ -26,7 +26,7 @@
 #ifndef CASADI_GUROBI_INTERFACE_HPP
 #define CASADI_GUROBI_INTERFACE_HPP
 
-#include "casadi/core/function/conic_impl.hpp"
+#include "casadi/core/conic_impl.hpp"
 #include <casadi/interfaces/gurobi/casadi_conic_gurobi_export.h>
 
 // GUROBI header
@@ -43,9 +43,12 @@ extern "C" {
 /// \cond INTERNAL
 namespace casadi {
 
-  struct CASADI_CONIC_GUROBI_EXPORT GurobiMemory {
+  struct CASADI_CONIC_GUROBI_EXPORT GurobiMemory : public ConicMemory {
     // Gurobi environment
     GRBenv *env;
+
+    int return_status;
+    bool success;
 
     /// Constructor
     GurobiMemory();
@@ -73,44 +76,52 @@ namespace casadi {
     }
 
     /** \brief  Destructor */
-    virtual ~GurobiInterface();
+    ~GurobiInterface() override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "gurobi";}
+    const char* plugin_name() const override { return "gurobi";}
+
+    // Get name of the class
+    std::string class_name() const override { return "GurobiInterface";}
 
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     /** \brief  Initialize */
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new GurobiMemory();}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<GurobiMemory*>(mem);}
+    void* alloc_mem() const override { return new GurobiMemory();}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
+
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<GurobiMemory*>(mem);}
 
     /// Solve the QP
-    virtual void eval(void* mem, const double** arg, double** res, int* iw, double* w) const;
+    int eval(const double** arg, double** res, casadi_int* iw, double* w, void* mem) const override;
 
     /// Can discrete variables be treated
-    virtual bool integer_support() const { return true;}
+    bool integer_support() const override { return true;}
 
     /// A documentation string
     static const std::string meta_doc;
 
+    /// Get all statistics
+    Dict get_stats(void* mem) const override;
+
     // Variable types
     std::vector<char> vtype_;
+
+    /// Gurobi options
+    Dict opts_;
   };
 
 } // namespace casadi
 
 /// \endcond
 #endif // CASADI_GUROBI_INTERFACE_HPP
-

@@ -31,6 +31,9 @@
 #include <casadi/core/casadi_interrupt.hpp>
 %}
 
+// casadi_int type
+%include <casadi/core/casadi_types.hpp>
+
   /// Data structure in the target language holding data
 #ifdef SWIGPYTHON
 #define GUESTOBJECT PyObject
@@ -41,6 +44,7 @@
 #endif
 
 // Define printing routine
+
 #ifdef SWIGPYTHON
 %{
   namespace casadi {
@@ -57,16 +61,32 @@
       return PyErr_CheckSignals();
     }
 
-
+    void handle_director_exception() {
+	    std::string msg = "Exception in SWIG director ";
+      SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+      if (PyErr_ExceptionMatches(PyExc_KeyboardInterrupt)) {
+        PyErr_Clear();
+        SWIG_PYTHON_THREAD_END_BLOCK;
+        throw casadi::KeyboardInterruptException();
+      }
+      PyObject *ptype, *pvalue, *ptraceback;
+      PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+      PyObject* msg_py = PyObject_Str(pvalue);
+      char *msg_char = SWIG_Python_str_AsChar(msg_py);
+      msg = msg_char;
+      SWIG_Python_str_DelForPy3(msg_char);
+      Py_DECREF(msg_py);
+      PyErr_Restore(ptype, pvalue, ptraceback);
+      PyErr_Print();
+      SWIG_PYTHON_THREAD_END_BLOCK;
+      casadi_error(msg.c_str());
+	  }
   }
 
 %}
 %init %{
   // Set logger functions
-  casadi::Logger::writeWarn = casadi::pythonlogger;
-  casadi::Logger::writeProg = casadi::pythonlogger;
-  casadi::Logger::writeDebug = casadi::pythonlogger;
-  casadi::Logger::writeAll = casadi::pythonlogger;
+  casadi::Logger::writeFun = casadi::pythonlogger;
 
   // @jgillis: please document
   casadi::InterruptHandler::checkInterrupted = casadi::pythoncheckinterrupted;
@@ -76,7 +96,7 @@
   namespace casadi {
     // Redirect printout to mexPrintf
     static void mexlogger(const char* s, std::streamsize num, bool error) {
-      mexPrintf("%.*s", static_cast<int>(num), s);
+      mexPrintf("%.*s", static_cast<casadi_int>(num), s);
     }
 
 #ifdef HAVE_OCTAVE
@@ -123,8 +143,16 @@
   // Truncate at separator
   path = path.substr(0, path.rfind(sep));
 
+  // Octave-on-Windows seems to pick up superfluous +casadi
+  // Make sure we exclude it
+  if (path.rfind(sep)!=std::string::npos && path.substr(path.rfind(sep)+1)=="+casadi")
+    path = path.substr(0, path.rfind(sep));
+
   // Set library path
   casadi::GlobalOptions::setCasadiPath(path);
+
+  // Matlab is index-one based
+  casadi::GlobalOptions::start_index = 1;
 
   // @jgillis: please document
   mxArray *warning_rhs[] = {mxCreateString("error"),
@@ -136,10 +164,7 @@
 
 
   // Set logger functions
-  casadi::Logger::writeWarn = casadi::mexlogger;
-  casadi::Logger::writeProg = casadi::mexlogger;
-  casadi::Logger::writeDebug = casadi::mexlogger;
-  casadi::Logger::writeAll = casadi::mexlogger;
+  casadi::Logger::writeFun = casadi::mexlogger;
   casadi::Logger::flush = casadi::mexflush;
 
   // @jgillis: please document
@@ -166,34 +191,11 @@
 
 %ignore *::operator->;
 
-#ifdef SWIGMATLAB
-%rename(disp) repr;
-#else
-%ignore print;
-%ignore repr;
-#endif
+%rename(str) get_str;
 
 %begin %{
 #define SWIG_PYTHON_OUTPUT_TUPLE
 %}
-
-// Print representation
-#ifdef SWIGMATLAB
-#define SWIG_REPR disp
-#else
-#define SWIG_REPR __repr__
-#endif
-
-// Print description
-#ifdef SWIGMATLAB
-#define SWIG_STR print
-#else
-#define SWIG_STR __str__
-#endif
-
-
-//#endif // SWIGPYTHON
-
 
 #ifdef SWIGPYTHON
 %pythoncode %{
@@ -211,10 +213,64 @@ _object = _copyableObject
 
 _swig_repr_default = _swig_repr
 def _swig_repr(self):
-  if hasattr(self,'getRepresentation'):
-    return self.getRepresentation()
+  if hasattr(self,'repr'):
+    return self.repr()
   else:
     return _swig_repr_default(self)
+
+def DM_from_array(m, check_only=True):
+  import numpy as np
+  if isinstance(m, np.ndarray):
+    if len(m.shape)>2:
+      return False
+    try:
+      m = m.astype(float,casting="same_kind",copy=False)
+    except:
+      return False
+    if check_only:
+      return True
+    else:
+      shape = m.shape + (1, 1)
+      nrow, ncol = shape[0], shape[1]
+      return (nrow,ncol,m.flat)
+  return False
+
+def IM_from_array(m, check_only=True):
+  import numpy as np
+  if isinstance(m, np.ndarray):
+    if len(m.shape)>2:
+      return False
+    try:
+      m = m.astype(int,casting="same_kind",copy=False)
+    except:
+      return False
+    if check_only:
+      return True
+    else:
+      shape = m.shape + (1, 1)
+      nrow, ncol = shape[0], shape[1]
+      return (nrow,ncol,m.flat)
+  return False
+
+def SX_from_array(m, check_only=True):
+  import numpy as np
+  if isinstance(m, np.ndarray):
+    if len(m.shape)>2:
+      return False
+    if m.dtype!=np.object: return None
+    shape = m.shape + (1, 1)
+    nrow, ncol = shape[0], shape[1]
+    return (nrow,ncol,m.flat)
+  return False
+
+def DM_from_csc(m, check_only=True):
+  if hasattr(m,"tocsc"):
+    m = m.tocsc()
+  if m.__class__.__name__ == "csc_matrix":
+    if len(m.shape)!=2: return False
+    if check_only: return True
+    return m.shape + (m.indptr.flat,m.indices.flat,m.data.flat)
+  return False
 
 %}
 #endif // WITH_SWIGPYTHON
@@ -397,22 +453,7 @@ namespace std {
 
 #ifdef SWIGPYTHON
 %feature("director:except") {
-	if ($error != NULL) {
-	  std::string msg;
-    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
-    PyObject *ptype, *pvalue, *ptraceback;
-    PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-    PyObject* msg_py = PyObject_Str(pvalue);
-    char *msg_char = SWIG_Python_str_AsChar(msg_py);
-    msg = msg_char;
-    SWIG_Python_str_DelForPy3(msg_char);
-    Py_DECREF(msg_py);
-    PyErr_Restore(ptype, pvalue, ptraceback);
-    PyErr_Print();
-    SWIG_PYTHON_THREAD_END_BLOCK;
-
-		Swig::DirectorMethodException::raise(msg.c_str());
-	}
+	if ($error != NULL) casadi::handle_director_exception();
 }
 #endif //SWIGPYTHON
 
@@ -421,11 +462,6 @@ namespace std {
 
 %{
 #define SWIG_FILE_WITH_INIT
-#include "casadi_numpy.hpp"
-%}
-
-%init %{
-import_array();
 %}
 
 #endif // SWIGPYTHON
@@ -461,8 +497,8 @@ import_array();
     // Basic types
     bool to_ptr(GUESTOBJECT *p, bool** m);
     GUESTOBJECT* from_ptr(const bool *a);
-    bool to_ptr(GUESTOBJECT *p, int** m);
-    GUESTOBJECT* from_ptr(const int *a);
+    bool to_ptr(GUESTOBJECT *p, casadi_int** m);
+    GUESTOBJECT* from_ptr(const casadi_int *a);
     bool to_ptr(GUESTOBJECT *p, double** m);
     GUESTOBJECT* from_ptr(const double *a);
     bool to_ptr(GUESTOBJECT *p, std::string** m);
@@ -472,18 +508,20 @@ import_array();
 #ifdef SWIGMATLAB
     bool to_ptr(GUESTOBJECT *p, std::vector<double> **m);
     GUESTOBJECT* from_ptr(const std::vector<double> *a);
-    bool to_ptr(GUESTOBJECT *p, std::vector<int>** m);
-    GUESTOBJECT* from_ptr(const std::vector<int> *a);
+    bool to_ptr(GUESTOBJECT *p, std::vector<casadi_int>** m);
+    GUESTOBJECT* from_ptr(const std::vector<casadi_int> *a);
+    GUESTOBJECT* from_ptr(const std::vector<bool> *a);
     bool to_ptr(GUESTOBJECT *p, std::vector<std::string>** m);
     GUESTOBJECT* from_ptr(const std::vector<std::string> *a);
 #endif // SWIGMATLAB
     template<typename M> bool to_ptr(GUESTOBJECT *p, std::vector<M>** m);
+    template<typename M> bool to_ptr(GUESTOBJECT *p, std::vector< std::vector<M> >** m);
     template<typename M> GUESTOBJECT* from_ptr(const std::vector<M> *a);
 
     // std::pair
 #ifdef SWIGMATLAB
-    bool to_ptr(GUESTOBJECT *p, std::pair<int, int>** m);
-    GUESTOBJECT* from_ptr(const std::pair<int, int>* a);
+    bool to_ptr(GUESTOBJECT *p, std::pair<casadi_int, casadi_int>** m);
+    GUESTOBJECT* from_ptr(const std::pair<casadi_int, casadi_int>* a);
 #endif // SWIGMATLAB
     template<typename M1, typename M2> bool to_ptr(GUESTOBJECT *p, std::pair<M1, M2>** m);
     template<typename M1, typename M2> GUESTOBJECT* from_ptr(const std::pair<M1, M2>* a);
@@ -530,9 +568,6 @@ import_array();
     // Check if conversion is possible
     template<typename M> bool can_convert(GUESTOBJECT *p) { return to_ptr(p, static_cast<M**>(0));}
 
-    // Assign to a vector, if conversion is allowed
-    template<typename E, typename M> bool assign_vector(E* d, int sz, std::vector<M>** m);
-
     // Same as the above, but with reference instead of pointer
     template<typename M> GUESTOBJECT* from_ref(const M& m) { return from_ptr(&m);}
 
@@ -551,6 +586,207 @@ import_array();
     // Number of nonzeros
     size_t getNNZ(const mxArray* p);
 #endif // SWIGMATLAB
+
+
+    GUESTOBJECT* full(const IM& m) {
+#ifdef SWIGPYTHON
+      PyObject *p = from_ptr(&m);
+      PyObject *cr = PyObject_CallMethod(p, (char*) "toarray", 0);
+      Py_DECREF(p);
+      if (cr) return cr;
+      return Py_None;
+#elif defined(SWIGMATLAB)
+      mxArray *p  = mxCreateDoubleMatrix(m.size1(), m.size2(), mxREAL);
+      std::vector<double> nz = m.get_nonzeros<double>();
+      double* d = static_cast<double*>(mxGetData(p));
+      if (!nz.empty()) casadi_densify(&nz[0], m.sparsity(), d, false); // Column-major
+      return p;
+#else
+      return 0;
+#endif
+    }
+
+
+    // Convert to a sparse matrix
+    GUESTOBJECT* sparse(const IM& m) {
+#ifdef SWIGPYTHON
+      PyObject *p = from_ptr(&m);
+      PyObject *cr = PyObject_CallMethod(p, (char*) "tocsc", 0);
+      Py_DECREF(p);
+      if (cr) return cr;
+      return Py_None;
+#elif defined(SWIGMATLAB)
+      mxArray *p  = mxCreateSparse(m.size1(), m.size2(), m.nnz(), mxREAL);
+      std::vector<double> nz = m.get_nonzeros<double>();
+      if (!nz.empty()) casadi::casadi_copy(&nz[0], m.nnz(), static_cast<double*>(mxGetData(p)));
+      std::copy(m.colind(), m.colind()+m.size2()+1, mxGetJc(p));
+      std::copy(m.row(), m.row()+m.nnz(), mxGetIr(p));
+      return p;
+#else
+      return 0;
+#endif
+
+    }
+
+
+
+
+    GUESTOBJECT* full(const DM& m, bool simplify=false) {
+#ifdef SWIGPYTHON
+      PyObject *p = from_ptr(&m);
+      PyObject *method_name = PyString_FromString("toarray");
+      PyObject *cr = PyObject_CallMethodObjArgs(p, method_name, (simplify? Py_True: Py_False), 0);
+      Py_DECREF(method_name);
+      Py_DECREF(p);
+      if (cr) return cr;
+      return Py_None;
+#elif defined(SWIGMATLAB)
+      mxArray *p  = mxCreateDoubleMatrix(m.size1(), m.size2(), mxREAL);
+      double* d = static_cast<double*>(mxGetData(p));
+      casadi_densify(m.ptr(), m.sparsity(), d, false); // Column-major
+      return p;
+#else
+      return 0;
+#endif
+    }
+
+
+    // Convert to a sparse matrix
+    GUESTOBJECT* sparse(const DM& m) {
+#ifdef SWIGPYTHON
+      PyObject *p = from_ptr(&m);
+      PyObject *cr = PyObject_CallMethod(p, (char*) "tocsc", 0);
+      Py_DECREF(p);
+      if (cr) return cr;
+      return Py_None;
+#elif defined(SWIGMATLAB)
+      mxArray *p  = mxCreateSparse(m.size1(), m.size2(), m.nnz(), mxREAL);
+      casadi::casadi_copy(m.ptr(), m.nnz(), static_cast<double*>(mxGetData(p)));
+      std::copy(m.colind(), m.colind()+m.size2()+1, mxGetJc(p));
+      std::copy(m.row(), m.row()+m.nnz(), mxGetIr(p));
+      return p;
+#else
+      return 0;
+#endif
+
+    }
+
+    GUESTOBJECT* full_or_sparse(const DM& m, bool simplify=false) {
+      if (m.is_dense()) {
+        return full(m, simplify);
+      } else {
+        GUESTOBJECT* p = sparse(m);
+        if (is_null(p)) return from_ptr(&m);
+        return p;
+      }
+    }
+#ifdef SWIGPYTHON
+
+
+    PyObject* get_Python_helper(const std::string& name) {
+      PyObject* module = PyImport_AddModule("casadi");
+      PyObject* dict = PyModule_GetDict(module);
+      return PyDict_GetItemString(dict, (char*) name.c_str());
+    }
+
+    template<class T>
+    bool casadi_object_from_fun(GUESTOBJECT *p, T** m, const std::string& fun, const std::function<bool(PyObject*, T**)> & conv) {
+      PyObject* dm = get_Python_helper(fun);
+      if (!dm) return false;
+      PyObject *check_only = m? Py_False : Py_True;
+      PyObject *cr = PyObject_CallFunctionObjArgs(dm, p, check_only, NULL);
+      if (!cr) return false;
+      bool ret;
+      if (PyBool_Check(cr)) {
+        ret = PyObject_IsTrue(cr);
+      } else {
+        ret = conv(cr, m);
+      }
+      Py_DECREF(cr);
+      return ret;
+    }
+
+    bool SX_from_array_conv(GUESTOBJECT *p, casadi::SX** m) {
+      std::vector<SXElem> data;
+      if (!to_val(PyTuple_GetItem(p, 2), &data)) return false;
+      casadi_int nrow; to_val(PyTuple_GetItem(p, 0), &nrow);
+      casadi_int ncol; to_val(PyTuple_GetItem(p, 1), &ncol);
+      if (m) {
+        **m = casadi::SX::zeros(nrow, ncol);
+        casadi_densify(get_ptr(data), (**m).sparsity().T(), (**m).ptr(), true);
+      }
+      return true;
+    }
+
+    bool IM_from_array_conv(GUESTOBJECT *p, casadi::IM** m) {
+      if (!m) return true;
+      std::vector<casadi_int> data;
+      if (!to_val(PyTuple_GetItem(p, 2), &data)) return false;
+      casadi_int nrow; to_val(PyTuple_GetItem(p, 0), &nrow);
+      casadi_int ncol; to_val(PyTuple_GetItem(p, 1), &ncol);
+      **m = IM::zeros(nrow, ncol);
+      casadi_densify(get_ptr(data), (**m).sparsity().T(), (**m).ptr(), true);
+      return true;
+    }
+
+    bool DM_from_array_conv(GUESTOBJECT *p, casadi::DM** m) {
+      if (!m) return true;
+      std::vector<double> data;
+      if (!to_val(PyTuple_GetItem(p, 2), &data)) return false;
+      casadi_int nrow; to_val(PyTuple_GetItem(p, 0), &nrow);
+      casadi_int ncol; to_val(PyTuple_GetItem(p, 1), &ncol);
+      **m = DM::zeros(nrow, ncol);
+      casadi_densify(get_ptr(data), (**m).sparsity().T(), (**m).ptr(), true);
+      return true;
+    }
+
+    bool DM_from_csc_conv(GUESTOBJECT *p, casadi::DM** m) {
+      std::vector<double> data;
+      std::vector<casadi_int> colind, row;
+      if (!to_val(PyTuple_GetItem(p, 4), &data)) return false;
+      if (!to_val(PyTuple_GetItem(p, 3), &row)) return false;
+      if (!to_val(PyTuple_GetItem(p, 2), &colind)) return false;
+      casadi_int nrow; to_val(PyTuple_GetItem(p, 0), &nrow);
+      casadi_int ncol; to_val(PyTuple_GetItem(p, 1), &ncol);
+      **m = casadi::Matrix<double>(casadi::Sparsity(nrow,ncol,colind,row), data, false);
+      return true;
+    }
+
+    bool SX_from_array(GUESTOBJECT *p, casadi::SX** m) {
+      return casadi_object_from_fun<casadi::SX>(p, m, "SX_from_array", SX_from_array_conv);
+    }
+
+    bool IM_from_array(GUESTOBJECT *p, casadi::IM** m) {
+      return casadi_object_from_fun<casadi::IM>(p, m, "IM_from_array", IM_from_array_conv);
+    }
+
+    bool DM_from_array(GUESTOBJECT *p, casadi::DM** m) {
+      return casadi_object_from_fun<casadi::DM>(p, m, "DM_from_array", DM_from_array_conv);
+    }
+
+    bool DM_from_csc(GUESTOBJECT *p, casadi::DM** m) {
+      return casadi_object_from_fun<casadi::DM>(p, m, "DM_from_csc", DM_from_csc_conv);
+    }
+
+    bool is_scalar_np_array(GUESTOBJECT *p) {
+      if (PyObject_HasAttrString(p, "__array__")) {
+        PyObject *cr = PyObject_GetAttrString(p, (char*) "size");
+        if (cr) {
+          casadi_int size;
+          casadi_int res = to_val(cr, &size);
+          Py_DECREF(cr);
+          if (!res) return false;
+          return size==1;
+        } else {
+          PyErr_Clear();
+          return false;
+        }
+      }
+      return false;
+   }
+
+#endif
+
 
   } // namespace CasADi
  }
@@ -580,67 +816,14 @@ import_array();
       }
     }
 
-    // Check if int
+    // Check if casadi_int
     template<typename T> struct is_int {
       static inline bool check() {return false;}
     };
 
-    template<> struct is_int<int> {
+    template<> struct is_int<casadi_int> {
       static inline bool check() {return true;}
     };
-
-    // Traits for assign vector
-    template<typename E, typename M> struct traits_assign_vector {
-      inline static bool assign(E* d, int sz, std::vector<M>** m) {
-        // Not allowed by default
-        return false;
-      }
-    };
-
-    // int-to-int
-    template<> struct traits_assign_vector<int, int> {
-      inline static bool assign(int* d, int sz, std::vector<int>** m) {
-        if (m) **m = std::vector<int>(d, d+sz);
-        return true;
-      }
-    };
-
-    // long-to-int
-    template<> struct traits_assign_vector<long, int> {
-      inline static bool assign(long* d, int sz, std::vector<int>** m) {
-        if (m) **m = std::vector<int>(d, d+sz);
-        return true;
-      }
-    };
-
-    // long-to-double
-    template<> struct traits_assign_vector<long, double> {
-      inline static bool assign(long* d, int sz, std::vector<double>** m) {
-        if (m) **m = std::vector<double>(d, d+sz);
-        return true;
-      }
-    };
-
-    // int-to-double
-    template<> struct traits_assign_vector<int, double> {
-      inline static bool assign(int* d, int sz, std::vector<double>** m) {
-        if (m) **m = std::vector<double>(d, d+sz);
-        return true;
-      }
-    };
-
-    // double-to-double
-    template<> struct traits_assign_vector<double, double> {
-      inline static bool assign(double* d, int sz, std::vector<double>** m) {
-        if (m) **m = std::vector<double>(d, d+sz);
-        return true;
-      }
-    };
-
-    // Assign to a vector, if conversion is allowed
-    template<typename E, typename M> bool assign_vector(E* d, int sz, std::vector<M>** m) {
-      return traits_assign_vector<E, M>::assign(d, sz, m);
-    }
 
     bool is_null(GUESTOBJECT *p) {
 #ifdef SWIGPYTHON
@@ -664,9 +847,9 @@ import_array();
         mwIndex *Ir = mxGetIr(p);
 
         // Store in vectors
-        std::vector<int> colind(ncol+1);
+        std::vector<casadi_int> colind(ncol+1);
         std::copy(Jc, Jc+colind.size(), colind.begin());
-        std::vector<int> row(colind.back());
+        std::vector<casadi_int> row(colind.back());
         std::copy(Ir, Ir+row.size(), row.begin());
 
         // Create pattern and return
@@ -692,6 +875,7 @@ import_array();
   } // namespace casadi
  }
 
+
 %fragment("casadi_bool", "header", fragment="casadi_aux", fragment=SWIG_AsVal_frag(bool)) {
   namespace casadi {
     bool to_ptr(GUESTOBJECT *p, bool** m) {
@@ -707,7 +891,7 @@ import_array();
         return true;
       }
 #endif
-      
+
       // No match
       return false;
     }
@@ -724,46 +908,56 @@ import_array();
   } // namespace casadi
  }
 
-%fragment("casadi_int", "header", fragment="casadi_aux", fragment=SWIG_AsVal_frag(int), fragment=SWIG_AsVal_frag(long)) {
+%fragment("casadi_int", "header", fragment="casadi_aux", fragment=SWIG_AsVal_frag(int), fragment=SWIG_AsVal_frag(long), fragment=SWIG_AsVal_frag(long long)) {
   namespace casadi {
-    bool to_ptr(GUESTOBJECT *p, int** m) {
+    bool to_ptr(GUESTOBJECT *p, casadi_int** m) {
       // Treat Null
       if (is_null(p)) return false;
 
-      // Standard typemaps
-      if (SWIG_IsOK(SWIG_AsVal(int)(p, m ? *m : 0))) return true;
-
-#ifdef SWIGPYTHON
-      // Numpy integer
-      if (PyArray_IsScalar(p, Integer)) {
-        int tmp = PyArray_PyIntAsInt(p);
-        if (!PyErr_Occurred()) {
-          if (m) **m = tmp;
+      // long long
+      {
+        long long tmp;
+        if (SWIG_IsOK(SWIG_AsVal(long long)(p, &tmp))) {
+          if (m) **m = static_cast<casadi_int>(tmp);
           return true;
         }
-        PyErr_Clear();
+      }
+
+#ifdef SWIGPYTHON
+      if (is_scalar_np_array(p)) {
+        PyObject *cr = PyObject_CallMethod(p, (char*) "item", 0);
+        if (cr) {
+          casadi_int res = to_ptr(cr, m);
+          Py_DECREF(cr);
+          if (!res) return false;
+          return true;
+        } else {
+          PyErr_Clear();
+          return false;
+        }
       }
 #endif // SWIGPYTHON
 
-      // long within int bounds
-      {
-        long tmp;
-        if (SWIG_IsOK(SWIG_AsVal(long)(p, &tmp))) {
-          // Check if within bounds
-          if (tmp>=std::numeric_limits<int>::min() && tmp<=std::numeric_limits<int>::max()) {
-            if (m) **m = static_cast<int>(tmp);
-            return true;
-          }
-        }
+      bool tmp;
+      if (to_val(p, m? &tmp : 0)) {
+        if (m) **m = tmp;
+        return true;
       }
 
       // No match
       return false;
     }
 
-    GUESTOBJECT * from_ptr(const int *a) {
+    GUESTOBJECT * from_ptr(const casadi_int *a) {
 #ifdef SWIGPYTHON
+#ifdef WITH_PYTHON3
+      return PyLong_FromLongLong(*a);
+#else
+      // For python on Windows
+      if (*a > PyInt_GetMax() || *a < -(PyInt_GetMax()-1)) return PyLong_FromLongLong(*a);
       return PyInt_FromLong(*a);
+#endif
+
 #elif defined(SWIGMATLAB)
       return mxCreateDoubleScalar(static_cast<double>(*a));
 #else
@@ -781,6 +975,27 @@ import_array();
 
       // Standard typemaps
       if (SWIG_IsOK(SWIG_AsVal(double)(p, m ? *m : 0))) return true;
+
+#ifdef SWIGPYTHON
+      if (is_scalar_np_array(p)) {
+        PyObject *cr = PyObject_CallMethod(p, (char*) "item", 0);
+        if (cr) {
+          casadi_int res = to_ptr(cr, m);
+          Py_DECREF(cr);
+          if (!res) return false;
+          return true;
+        } else {
+          PyErr_Clear();
+          return false;
+        }
+      }
+#endif // SWIGPYTHON
+
+      casadi_int tmp;
+      if (to_val(p, m? &tmp: 0)) {
+        if (m) **m = tmp;
+        return true;
+      }
 
       // No match
       return false;
@@ -808,19 +1023,20 @@ import_array();
     template<typename M> bool to_ptr_cell(GUESTOBJECT *p, std::vector<M>** m) {
       // Cell arrays (only row vectors)
       if (mxGetClassID(p)==mxCELL_CLASS) {
-        int nrow = mxGetM(p), ncol = mxGetN(p);
-        if (nrow==1 || (nrow==0 && ncol==0)) {
+        casadi_int nrow = mxGetM(p), ncol = mxGetN(p);
+        if (nrow==1 || (nrow==0 && ncol==0) || ncol==1) {
+          casadi_int n = (nrow==0 || ncol==0) ? 0 : std::max(nrow, ncol);
           // Allocate elements
           if (m) {
             (**m).clear();
-            (**m).reserve(ncol);
+            (**m).reserve(n);
           }
 
           // Temporary
           M tmp;
 
           // Loop over elements
-          for (int i=0; i<ncol; ++i) {
+          for (casadi_int i=0; i<n; ++i) {
             // Get element
             mxArray* pe = mxGetCell(p, i);
             if (pe==0) return false;
@@ -847,7 +1063,7 @@ import_array();
           && (mxGetM(p)<=1 || mxGetN(p)<=1)) {
         if (m) {
           double* data = static_cast<double*>(mxGetData(p));
-          int n = mxGetM(p)*mxGetN(p);
+          casadi_int n = mxGetM(p)*mxGetN(p);
           (**m).resize(n);
           std::copy(data, data+n, (**m).begin());
         }
@@ -861,16 +1077,16 @@ import_array();
       return false;
     }
 
-    bool to_ptr(GUESTOBJECT *p, std::vector<int>** m) {
+    bool to_ptr(GUESTOBJECT *p, std::vector<casadi_int>** m) {
       if (mxIsDouble(p) && mxGetNumberOfDimensions(p)==2
           && (mxGetM(p)<=1 || mxGetN(p)<=1)) {
         double* data = static_cast<double*>(mxGetData(p));
-        int n = mxGetM(p)*mxGetN(p);
+        casadi_int n = mxGetM(p)*mxGetN(p);
 
         // Check if all integers
         bool all_integers=true;
-        for (int i=0; all_integers && i<n; ++i) {
-          if (data[i]!=static_cast<int>(data[i])) {
+        for (casadi_int i=0; all_integers && i<n; ++i) {
+          if (data[i]!=static_cast<casadi_int>(data[i])) {
             all_integers = false;
             break;
           }
@@ -888,7 +1104,7 @@ import_array();
 
       if (mxIsLogical(p) && !mxIsLogicalScalar(p) &&mxGetNumberOfDimensions(p)==2
           && (mxGetM(p)<=1 || mxGetN(p)<=1) ) {
-        int n = mxGetM(p)*mxGetN(p);
+        casadi_int n = mxGetM(p)*mxGetN(p);
         mxLogical* data = static_cast<mxLogical*>(mxGetData(p));
         if (m) {
           (**m).resize(n);
@@ -955,93 +1171,48 @@ import_array();
       // Treat Null
       if (is_null(p)) return false;
 #ifdef SWIGPYTHON
-      // 1D numpy array
-      if (is_array(p) && array_numdims(p)==1 && array_type(p)!=NPY_OBJECT && array_is_native(p)) {
-        int sz = array_size(p,0);
 
-        // Make sure we have a contigous array with int datatype
-        int array_is_new_object;
-        PyArrayObject* array;
+      // Some built-in types are iterable
+      if (PyDict_Check(p) || PyString_Check(p) || PySet_Check(p) || PyUnicode_Check(p)) return false;
 
-        // Trying NPY_INT
-        if (assign_vector<int, M>(0, 0, 0)) {
-          array = obj_to_array_contiguous_allow_conversion(p, NPY_INT, &array_is_new_object);
-          if (array) {
-            int *d = reinterpret_cast<int*>(array_data(array));
-            int flag = assign_vector(d, sz, m);
-            if (array_is_new_object) Py_DECREF(array);
-            return flag;
-          }
+      // Make sure shape is 1D, if defined.
+      if (PyObject_HasAttrString(p, "shape")) {
+        PyObject * shape = PyObject_GetAttrString(p, "shape");
+        if(!PyTuple_Check(shape) || PyTuple_Size(shape)!=1) {
+          Py_DECREF(shape);
+          return false;
         }
+      }
 
-        // Trying NPY_LONG
-        if (assign_vector<long, M>(0, 0, 0)) {
-          array = obj_to_array_contiguous_allow_conversion(p, NPY_LONG, &array_is_new_object);
-          if (array) {
-            long* d= reinterpret_cast<long*>(array_data(array));
-            int flag = assign_vector(d, sz, m);
-            if (array_is_new_object) Py_DECREF(array);
-            return flag;
-          }
-        }
-
-        // Trying NPY_DOUBLE
-        if (assign_vector<double, M>(0, 0, 0)) {
-          array = obj_to_array_contiguous_allow_conversion(p, NPY_DOUBLE, &array_is_new_object);
-          if (array) {
-            double* d= reinterpret_cast<double*>(array_data(array));
-            int flag = assign_vector(d, sz, m);
-            if (array_is_new_object) Py_DECREF(array);
-            return flag;
-          }
-        }
-
-        // No match
+      // Iterator to the sequence
+      PyObject *it = PyObject_GetIter(p);
+      if (!it) {
+        PyErr_Clear();
         return false;
       }
-      // Python sequence
-      if (PyList_Check(p) || PyTuple_Check(p)) {
 
-        // Iterator to the sequence
-        PyObject *it = PyObject_GetIter(p);
-        if (!it) {
-          PyErr_Clear();
-          return false;
-        }
+      // Allocate elements
+      if (m) (**m).clear();
 
-        // Get size
-        Py_ssize_t sz = PySequence_Size(p);
-        if (sz==-1) {
-          PyErr_Clear();
-          return false;
-        }
+      // Temporary
+      M tmp;
 
-        // Allocate elements
-        if (m) {
-          (**m).clear();
-          (**m).reserve(sz);
-        }
-
-        // Temporary
-        M tmp;
-
-        // Iterate over sequence
-        for (Py_ssize_t i=0; i!=sz; ++i) {
-          PyObject *pe=PyIter_Next(it);
-          // Convert element
-          M *m_i = m ? &tmp : 0;
-          if (!to_ptr(pe, m_i ? &m_i : 0)) {
-            // Failure
-            Py_DECREF(pe);
-            Py_DECREF(it);
-            return false;
-          }
-          if (m) (**m).push_back(*m_i);
+      PyObject *pe;
+      // Iterate over sequence
+      while ((pe=PyIter_Next(it))) {
+        // Convert element
+        M *m_i = m ? &tmp : 0;
+        if (!to_ptr(pe, m_i ? &m_i : 0)) {
+          // Failure
           Py_DECREF(pe);
+          Py_DECREF(it);
+          return false;
         }
-        Py_DECREF(it);
-        return true;
+        if (m) (**m).push_back(*m_i);
+        Py_DECREF(pe);
       }
+      Py_DECREF(it);
+      return true;
 #endif // SWIGPYTHON
 #ifdef SWIGMATLAB
       // Cell array
@@ -1057,9 +1228,14 @@ import_array();
       std::copy(a->begin(), a->end(), static_cast<double*>(mxGetData(ret)));
       return ret;
     }
-    GUESTOBJECT* from_ptr(const std::vector<int> *a) {
+    GUESTOBJECT* from_ptr(const std::vector<casadi_int> *a) {
       mxArray* ret = mxCreateDoubleMatrix(1, a->size(), mxREAL);
       std::copy(a->begin(), a->end(), static_cast<double*>(mxGetData(ret)));
+      return ret;
+    }
+    GUESTOBJECT* from_ptr(const std::vector<bool> *a) {
+      mxArray* ret = mxCreateLogicalMatrix(1, a->size());
+      std::copy(a->begin(), a->end(), static_cast<bool*>(mxGetData(ret)));
       return ret;
     }
     GUESTOBJECT* from_ptr(const std::vector<std::string> *a) {
@@ -1077,7 +1253,7 @@ import_array();
       // std::vector maps to Python list
       PyObject* ret = PyList_New(a->size());
       if (!ret) return 0;
-      for (int k=0; k<a->size(); ++k) {
+      for (casadi_int k=0; k<a->size(); ++k) {
         PyObject* el = from_ref(a->at(k));
         if (!el) {
           Py_DECREF(ret);
@@ -1090,7 +1266,7 @@ import_array();
       // std::vector maps to MATLAB cell array
       mxArray* ret = mxCreateCellMatrix(1, a->size());
       if (!ret) return 0;
-      for (int k=0; k<a->size(); ++k) {
+      for (casadi_int k=0; k<a->size(); ++k) {
         mxArray* el = from_ref(a->at(k));
         if (!el) return 0;
         mxSetCell(ret, k, el);
@@ -1103,13 +1279,73 @@ import_array();
   } // namespace casadi
 }
 
+
+%fragment("casadi_vectorvector", "header", fragment="casadi_aux") {
+  namespace casadi {
+
+#ifdef SWIGMATLAB
+
+    // Cell array
+    template<typename M> bool to_ptr_cell2(GUESTOBJECT *p, std::vector< std::vector<M> >** m) {
+      // Cell arrays (only row vectors)
+      if (mxGetClassID(p)==mxCELL_CLASS) {
+        casadi_int nrow = mxGetM(p), ncol = mxGetN(p);
+        if (true) {
+          // Allocate elements
+          if (m) {
+            (**m).clear();
+            (**m).resize(nrow, std::vector<M>(ncol));
+          }
+
+          // Temporary
+          M tmp;
+
+          // Loop over elements
+          for (casadi_int i=0; i<nrow*ncol; ++i) {
+            // Get element
+            mxArray* pe = mxGetCell(p, i);
+            if (pe==0) return false;
+
+            // Convert element
+            M *m_i = m ? &tmp : 0;
+            if (!to_ptr(pe, m_i ? &m_i : 0)) {
+              return false;
+            }
+
+            if (m) (**m)[i % nrow][i / nrow] = tmp;
+          }
+          return true;
+        }
+      }
+      return false;
+    }
+
+#endif // SWIGMATLAB
+
+    template<typename M> bool to_ptr(GUESTOBJECT *p, std::vector< std::vector<M> >** m) {
+      // Treat Null
+      if (is_null(p)) return false;
+
+      // Pass on to to_ptr(GUESTOBJECT *p, std::vector<M>** m)
+      if (to_ptr< std::vector<M> >(p, m)) return true;
+
+#ifdef SWIGMATLAB
+      // Cell array
+      if (to_ptr_cell2(p, m)) return true;
+#endif // SWIGMATLAB
+      return false;
+    }
+
+  } // namespace casadi
+}
+
 %fragment("casadi_function", "header", fragment="casadi_aux") {
   namespace casadi {
     bool to_ptr(GUESTOBJECT *p, Function** m) {
       // Treat Null
       if (is_null(p)) return false;
 
-      // GenericType already?
+      // Function already?
       if (SWIG_IsOK(SWIG_ConvertPtr(p, reinterpret_cast<void**>(m),
                                     $descriptor(casadi::Function*), 0))) {
         return true;
@@ -1145,15 +1381,16 @@ import_array();
       }
 
       // Try to convert to different types
-      if (to_generic<int>(p, m)
+      if (to_generic<casadi_int>(p, m)
           || to_generic<double>(p, m)
           || to_generic<std::string>(p, m)
-          || to_generic<std::vector<int> >(p, m)
+          || to_generic<std::vector<casadi_int> >(p, m)
           || to_generic<std::vector<double> >(p, m)
           || to_generic<std::vector<bool> >(p, m)
           || to_generic<std::vector<std::string> >(p, m)
-          || to_generic<std::vector<std::vector<int> > >(p, m)
+          || to_generic<std::vector<std::vector<casadi_int> > >(p, m)
           || to_generic<casadi::Function>(p, m)
+          || to_generic<std::vector<casadi::Function> >(p, m)
           || to_generic<casadi::GenericType::Dict>(p, m)) {
         return true;
       }
@@ -1178,6 +1415,7 @@ import_array();
       case OT_STRINGVECTOR: return from_tmp(a->as_string_vector());
       case OT_DICT: return from_tmp(a->as_dict());
       case OT_FUNCTION: return from_tmp(a->as_function());
+      case OT_FUNCTIONVECTOR: return from_tmp(a->as_function_vector());
 #ifdef SWIGPYTHON
       case OT_NULL: return Py_None;
 #endif // SWIGPYTHON
@@ -1250,12 +1488,12 @@ import_array();
 
 #ifdef SWIGPYTHON
 
-      // Python int
+      // Python casadi_int
       if (PyInt_Check(p)) {
         if (m) {
           (**m).start = PyInt_AsLong(p);
           (**m).stop = (**m).start+1;
-          if ((**m).stop==0) (**m).stop = std::numeric_limits<int>::max();
+          if ((**m).stop==0) (**m).stop = std::numeric_limits<casadi_int>::max();
         }
         return true;
       }
@@ -1264,9 +1502,9 @@ import_array();
         PySliceObject *r = (PySliceObject*)(p);
         if (m) {
           (**m).start = (r->start == Py_None || PyNumber_AsSsize_t(r->start, NULL) <= std::numeric_limits<int>::min())
-            ? std::numeric_limits<int>::min() : PyInt_AsLong(r->start);
+            ? std::numeric_limits<casadi_int>::min() : PyInt_AsLong(r->start);
           (**m).stop  = (r->stop ==Py_None || PyNumber_AsSsize_t(r->stop, NULL)>= std::numeric_limits<int>::max())
-            ? std::numeric_limits<int>::max() : PyInt_AsLong(r->stop);
+            ? std::numeric_limits<casadi_int>::max() : PyInt_AsLong(r->stop);
           if(r->step !=Py_None) (**m).step  = PyInt_AsLong(r->step);
         }
         return true;
@@ -1307,8 +1545,8 @@ import_array();
       }
 #elif defined(SWIGMATLAB)
       if (mxIsStruct(p) && mxGetM(p)==1 && mxGetN(p)==1) {
-	int len = mxGetNumberOfFields(p);
-	for (int k=0; k<len; ++k) {
+	casadi_int len = mxGetNumberOfFields(p);
+	for (casadi_int k=0; k<len; ++k) {
 	  mxArray *value = mxGetFieldByNumber(p, 0, k);
           if (m) {
 	    M *v=&(**m)[std::string(mxGetFieldNameByNumber(p, k))], *v2=v;
@@ -1346,7 +1584,7 @@ import_array();
 	mxArray* f = from_ptr(&it->second);
 	if (!f) {
 	  // Deallocate elements created up to now
-	  for (int k=0; k<fields.size(); ++k) mxDestroyArray(fields[k]);
+	  for (casadi_int k=0; k<fields.size(); ++k) mxDestroyArray(fields[k]);
 	  return 0;
 	}
 	fields.push_back(f);
@@ -1355,7 +1593,7 @@ import_array();
       // Create return object
       mxArray *p = mxCreateStructMatrix(1, 1, fields.size(),
 					fieldnames.empty() ? 0 : &fieldnames[0]);
-      for (int k=0; k<fields.size(); ++k) mxSetFieldByNumber(p, 0, k, fields[k]);
+      for (casadi_int k=0; k<fields.size(); ++k) mxSetFieldByNumber(p, 0, k, fields[k]);
       return p;
 #else
       return 0;
@@ -1367,13 +1605,13 @@ import_array();
 %fragment("casadi_pair", "header", fragment="casadi_aux") {
   namespace casadi {
 #ifdef SWIGMATLAB
-    bool to_ptr(GUESTOBJECT *p, std::pair<int, int>** m) {
-      // (int,int) mapped to 2-by-1 double matrix
+    bool to_ptr(GUESTOBJECT *p, std::pair<casadi_int, casadi_int>** m) {
+      // (casadi_int,casadi_int) mapped to 2-by-1 double matrix
       if (mxIsDouble(p) && mxGetNumberOfDimensions(p)==2 && !mxIsSparse(p)
           && mxGetM(p)==1 && mxGetN(p)==2) {
         double* data = static_cast<double*>(mxGetData(p));
-        int first = static_cast<int>(data[0]);
-        int second = static_cast<int>(data[1]);
+        casadi_int first = static_cast<casadi_int>(data[0]);
+        casadi_int second = static_cast<casadi_int>(data[1]);
         if (data[0]==first && data[1]==second) {
           if (m) **m = std::make_pair(first, second);
           return true;
@@ -1409,8 +1647,8 @@ import_array();
     }
 
 #ifdef SWIGMATLAB
-    GUESTOBJECT* from_ptr(const std::pair<int, int>* a) {
-      // (int,int) mapped to 2-by-1 double matrix
+    GUESTOBJECT* from_ptr(const std::pair<casadi_int, casadi_int>* a) {
+      // (casadi_int,casadi_int) mapped to 2-by-1 double matrix
       mxArray* ret = mxCreateDoubleMatrix(1, 2, mxREAL);
       double* data = static_cast<double*>(mxGetData(ret));
       data[0] = a->first;
@@ -1450,98 +1688,23 @@ import_array();
         return true;
       }
 
-      // Object is an DM
-      {
-        // Pointer to object
-        DM *m2;
-        if (SWIG_IsOK(SWIG_ConvertPtr(p, reinterpret_cast<void**>(&m2),
-                                      $descriptor(casadi::Matrix<double>*), 0))) {
-          if (m) **m=*m2;
-          return true;
-        }
-      }
-
-      // Object is an IM
-      {
-        // Pointer to object
-        IM *m2;
-        if (SWIG_IsOK(SWIG_ConvertPtr(p, reinterpret_cast<void**>(&m2),
-                                      $descriptor(casadi::Matrix<int>*), 0))) {
-          if (m) **m=*m2;
-          return true;
-        }
-      }
-
-      // Object is a sparsity pattern
-      {
-        Sparsity *m2;
-        if (SWIG_IsOK(SWIG_ConvertPtr(p, reinterpret_cast<void**>(&m2),
-                                      $descriptor(casadi::Sparsity*), 0))) {
-          if (m) **m=SX::ones(*m2);
-          return true;
-        }
-      }
-
-      // Double scalar
-      {
-        double tmp;
-        if (to_val(p, &tmp)) {
-          if (m) **m=tmp;
-          return true;
-        }
-      }
-
-      // Integer scalar
-      {
-        int tmp;
-        if (to_val(p, &tmp)) {
-          if (m) **m=tmp;
-          return true;
-        }
-      }
-
       // Try first converting to a temporary DM
       {
-        DM tmp, *mt=&tmp;
-        if(casadi::to_ptr(p, m ? &mt : 0)) {
-          if (m) **m = *mt;
+        DM tmp;
+        if(to_val(p, m? &tmp: 0)) {
+          if (m) **m = tmp;
           return true;
         }
       }
 
 #ifdef SWIGPYTHON
       // Numpy arrays will be cast to dense SX
-      if (is_array(p)) {
-        if (array_type(p) != NPY_OBJECT) return false;
-        if (array_numdims(p)>2 || array_numdims(p)<1) return false;
-        int nrows = array_size(p,0); // 1D array is cast into column vector
-        int ncols  = array_numdims(p)==2 ? array_size(p,1) : 1;
-        PyArrayIterObject* it = (PyArrayIterObject*)PyArray_IterNew(p);
-        casadi::SX mT;
-        if (m) mT = casadi::SX::zeros(ncols, nrows);
-        int k=0;
-        casadi::SX tmp, *tmp2;
-        PyObject *pe;
-        while (it->index < it->size) {
-          pe = *((PyObject**) PyArray_ITER_DATA(it));
-          tmp2=&tmp;
-          if (!to_ptr(pe, &tmp2) || !tmp2->is_scalar()) {
-            Py_DECREF(it);
-            return false;
-          }
-          if (m) mT(k++) = *tmp2;
-          PyArray_ITER_NEXT(it);
-        }
-        Py_DECREF(it);
-        if (m) **m = mT.T();
-        return true;
-      }
+      if (SX_from_array(p, m)) return true;
       // Object has __SX__ method
       if (PyObject_HasAttrString(p,"__SX__")) {
-        char cmd[] = "__SX__";
-        PyObject *cr = PyObject_CallMethod(p, cmd, 0);
+        PyObject *cr = PyObject_CallMethod(p, (char*) "__SX__", 0);
         if (!cr) return false;
-        int flag = to_ptr(cr, m);
+        casadi_int flag = to_ptr(cr, m);
         Py_DECREF(cr);
         return flag;
       }
@@ -1595,42 +1758,20 @@ import_array();
         return true;
       }
 
-      // Object is an DM
-      {
-        // Pointer to object
-        DM *m2;
-        if (SWIG_IsOK(SWIG_ConvertPtr(p, reinterpret_cast<void**>(&m2),
-                                      $descriptor(casadi::Matrix<double>*), 0))) {
-          if (m) **m=*m2;
-          return true;
-        }
-      }
-
-      // Object is a sparsity pattern
-      {
-        Sparsity *m2;
-        if (SWIG_IsOK(SWIG_ConvertPtr(p, reinterpret_cast<void**>(&m2),
-                                      $descriptor(casadi::Sparsity*), 0))) {
-          if (m) **m=MX::ones(*m2);
-          return true;
-        }
-      }
-
       // Try first converting to a temporary DM
       {
-        DM tmp, *mt=&tmp;
-        if(casadi::to_ptr(p, m ? &mt : 0)) {
-          if (m) **m = *mt;
+        DM tmp;
+        if(to_val(p, m ? &tmp : 0)) {
+          if (m) **m = tmp;
           return true;
         }
       }
 
 #ifdef SWIGPYTHON
       if (PyObject_HasAttrString(p,"__MX__")) {
-        char cmd[] = "__MX__";
-        PyObject *cr = PyObject_CallMethod(p, cmd, 0);
+        PyObject *cr = PyObject_CallMethod(p, (char*) "__MX__", 0);
         if (!cr) return false;
-        int flag = to_ptr(cr, m);
+        casadi_int flag = to_ptr(cr, m);
         Py_DECREF(cr);
         return flag;
       }
@@ -1678,7 +1819,7 @@ import_array();
         // Pointer to object
         IM *m2;
         if (SWIG_IsOK(SWIG_ConvertPtr(p, reinterpret_cast<void**>(&m2),
-                                      $descriptor(casadi::Matrix<int>*), 0))) {
+                                      $descriptor(casadi::Matrix<casadi_int>*), 0))) {
           if (m) **m=*m2;
           return true;
         }
@@ -1697,16 +1838,7 @@ import_array();
       // Double scalar
       {
         double tmp;
-        if (to_val(p, &tmp)) {
-          if (m) **m=tmp;
-          return true;
-        }
-      }
-
-      // Integer scalar
-      {
-        int tmp;
-        if (to_val(p, &tmp)) {
+        if (to_val(p, m? &tmp: 0)) {
           if (m) **m=tmp;
           return true;
         }
@@ -1718,135 +1850,18 @@ import_array();
         char name[] = "__DM__";
         PyObject *cr = PyObject_CallMethod(p, name, 0);
         if (!cr) return false;
-        int result = to_val(cr, m ? *m : 0);
+        casadi_int result = to_val(cr, m ? *m : 0);
         Py_DECREF(cr);
         return result;
       }
-      // Numpy arrays will be cast to dense Matrix<double>
-      if (is_array(p)) {
-        int array_is_new_object;
-        PyArrayObject* array = obj_to_array_contiguous_allow_conversion(p, NPY_DOUBLE, &array_is_new_object);
-        if (!array) return false;
-        int nrow, ncol;
-        switch (array_numdims(p)) {
-        case 0:
-          // Scalar
-          nrow=ncol=1;
-          break;
-        case 1:
-          // Vector
-          nrow=array_size(p, 0);
-          ncol=1;
-          break;
-        case 2:
-          // Matrix
-          nrow=array_size(p, 0);
-          ncol=array_size(p, 1);
-          break;
-        default:
-          // More than two dimension unsupported
-          if (array_is_new_object) Py_DECREF(array);
-          return false;
-        }
-        if (m) {
-          **m = casadi::Matrix<double>::zeros(nrow, ncol);
-          auto it=(**m)->begin();
-          double* d = reinterpret_cast<double*>(array_data(array));
-          for (int cc=0; cc<ncol; ++cc) {
-            for (int rr=0; rr<nrow; ++rr) {
-              *it++ = d[cc+rr*ncol];
-            }
-          }
-        }
 
-        // Free memory
-        if (array_is_new_object) Py_DECREF(array);
-        return true;
-      }
+      if (DM_from_array(p, m)) return true;
 
-      // scipy's csc_matrix will be cast to sparse DM
-      if(PyObjectHasClassName(p, "csc_matrix")) {
-
-        // Get the dimensions of the csc_matrix
-        PyObject * shape = PyObject_GetAttrString( p, "shape"); // need's to be decref'ed
-        if (!shape) return false;
-        if(!PyTuple_Check(shape) || PyTuple_Size(shape)!=2) {
-          Py_DECREF(shape);
-          return false;
-        }
-        int nrows=PyInt_AsLong(PyTuple_GetItem(shape,0));
-        int ncols=PyInt_AsLong(PyTuple_GetItem(shape,1));
-        Py_DECREF(shape);
-
-        bool ret= false;
-
-        PyObject * narray=0;
-        PyObject * row=0;
-        PyObject * colind=0;
-        PyArrayObject* array=0;
-        PyArrayObject* array_row=0;
-        PyArrayObject* array_colind=0;
-
-        int array_is_new_object=0;
-        int row_is_new_object=0;
-        int colind_is_new_object=0;
-
-        // Fetch data
-        narray=PyObject_GetAttrString( p, "data"); // need's to be decref'ed
-        if (!narray || !is_array(narray) || array_numdims(narray)!=1) goto cleanup;
-        array = obj_to_array_contiguous_allow_conversion(narray,NPY_DOUBLE,&array_is_new_object);
-        if (!array) goto cleanup;
-
-        // Construct the 'row' vector needed for initialising the correct sparsity
-        row = PyObject_GetAttrString(p,"indices"); // need's to be decref'ed
-        if (!row || !is_array(row) || array_numdims(row)!=1) goto cleanup;
-        array_row = obj_to_array_contiguous_allow_conversion(row,NPY_INT,&row_is_new_object);
-        if (!array_row) goto cleanup;
-
-        // Construct the 'colind' vector needed for initialising the correct sparsity
-        colind = PyObject_GetAttrString(p,"indptr"); // need's to be decref'ed
-        if (!colind || !is_array(colind) || array_numdims(colind)!=1) goto cleanup;
-        array_colind = obj_to_array_contiguous_allow_conversion(colind,NPY_INT,&colind_is_new_object);
-        if (!array_colind) goto cleanup;
-        {
-          int size=array_size(array,0); // number on non-zeros
-          double* d=(double*) array_data(array);
-          std::vector<double> v(d,d+size);
-
-          int* rowd=(int*) array_data(array_row);
-          std::vector<int> rowv(rowd,rowd+size);
-
-          int* colindd=(int*) array_data(array_colind);
-          std::vector<int> colindv(colindd,colindd+(ncols+1));
-
-          if (m) **m = casadi::Matrix<double>(casadi::Sparsity(nrows,ncols,colindv,rowv), v, false);
-
-          ret = true;
-        }
-
-      cleanup: // yes that's right; goto.
-        // Rather that than a pyramid of conditional memory-deallocation
-        // TODO(jaeandersson): Create a helper struct and put the below in the destructor
-        if (array_is_new_object && array) Py_DECREF(array);
-        if (narray) Py_DECREF(narray);
-        if (row_is_new_object && array_row) Py_DECREF(array_row);
-        if (row) Py_DECREF(row);
-        if (colind_is_new_object && array_colind) Py_DECREF(array_colind);
-        if (colind) Py_DECREF(colind);
-        return ret;
-      }
-      if(PyObject_HasAttrString(p,"tocsc")) {
-        char name[] = "tocsc";
-        PyObject *cr = PyObject_CallMethod(p, name,0);
-        if (!cr) return false;
-        int result = to_val(cr, m ? *m : 0);
-        Py_DECREF(cr);
-        return result;
-      }
+      if (DM_from_csc(p,m)) return true;
 
       {
         std::vector <double> t;
-        int res = to_val(p, &t);
+        casadi_int res = to_val(p, &t);
         if (t.size()>0) {
           if (m) **m = casadi::Matrix<double>(t);
         } else {
@@ -1916,7 +1931,7 @@ import_array();
 
       // IM already?
       if (SWIG_IsOK(SWIG_ConvertPtr(p, reinterpret_cast<void**>(m),
-                                    $descriptor(casadi::Matrix<int>*), 0))) {
+                                    $descriptor(casadi::Matrix<casadi_int>*), 0))) {
         return true;
       }
 
@@ -1932,85 +1947,29 @@ import_array();
 
       // First convert to integer
       {
-        int tmp;
-        if (to_val(p, &tmp)) {
+        casadi_int tmp;
+        if (to_val(p, m? &tmp: 0)) {
           if (m) **m=tmp;
           return true;
         }
       }
 
 #ifdef SWIGPYTHON
-      // Numpy arrays will be cast to dense Matrix<int>
-      if (is_array(p)) {
-        int array_is_new_object;
-        bool is_long=false;
-        PyArrayObject* array = obj_to_array_contiguous_allow_conversion(p, NPY_INT, &array_is_new_object);
-        if (!array) {
-          // Trying NPY_LONG
-          is_long=true;
-          PyErr_Clear();
-          array = obj_to_array_contiguous_allow_conversion(p, NPY_LONG, &array_is_new_object);
-        }
-        if (!array) return false;
-        int nrow, ncol;
-        switch (array_numdims(p)) {
-        case 0:
-          // Scalar
-          nrow=ncol=1;
-          break;
-        case 1:
-          // Vector
-          nrow=array_size(p, 0);
-          ncol=1;
-          break;
-        case 2:
-          // Matrix
-          nrow=array_size(p, 0);
-          ncol=array_size(p, 1);
-          break;
-        default:
-          // More than two dimension unsupported
-          if (array_is_new_object) Py_DECREF(array);
-          return false;
-        }
-        if (m) {
-          **m = casadi::Matrix<int>::zeros(nrow, ncol);
-          auto it=(**m)->begin();
-          if (is_long) {
-            long* d = reinterpret_cast<long*>(array_data(array));
-            for (int cc=0; cc<ncol; ++cc) {
-              for (int rr=0; rr<nrow; ++rr) {
-                *it++ = d[cc+rr*ncol];
-              }
-            }
-          } else {
-            int* d = reinterpret_cast<int*>(array_data(array));
-            for (int cc=0; cc<ncol; ++cc) {
-              for (int rr=0; rr<nrow; ++rr) {
-                *it++ = d[cc+rr*ncol];
-              }
-            }
-          }
-        }
-
-        // Free memory
-        if (array_is_new_object) Py_DECREF(array);
-        return true;
-      }
+      // Numpy arrays will be cast to dense Matrix<casadi_int>
+      if (IM_from_array(p, m)) return true;
 
       if (PyObject_HasAttrString(p,"__IM__")) {
-        char cmd[] = "__IM__";
-        PyObject *cr = PyObject_CallMethod(p, cmd, 0);
+        PyObject *cr = PyObject_CallMethod(p, (char*) "__IM__", 0);
         if (!cr) return false;
-        int result = to_val(cr, m ? *m : 0);
+        casadi_int result = to_val(cr, m ? *m : 0);
         Py_DECREF(cr);
         return result;
       }
 
       {
-        std::vector <int> t;
-        int res = to_val(p, &t);
-        if (m) **m = casadi::Matrix<int>(t);
+        std::vector <casadi_int> t;
+        casadi_int res = to_val(p, &t);
+        if (m) **m = casadi::Matrix<casadi_int>(t);
         return res;
       }
       return true;
@@ -2024,7 +1983,7 @@ import_array();
         bool all_integers=true;
         size_t sz = getNNZ(p);
         for (size_t i=0; i<sz; ++i) {
-          if (data[i] != int(data[i])) {
+          if (data[i] != casadi_int(data[i])) {
             all_integers = false;
             break;
           }
@@ -2035,7 +1994,7 @@ import_array();
           if (m) {
             **m = casadi::IM(get_sparsity(p));
             for (size_t i=0; i<sz; ++i) {
-              (**m)->at(i) = int(data[i]);
+              (**m)->at(i) = casadi_int(data[i]);
             }
           }
           return true;
@@ -2048,7 +2007,7 @@ import_array();
     }
 
     GUESTOBJECT* from_ptr(const IM *a) {
-      return SWIG_NewPointerObj(new IM(*a), $descriptor(casadi::Matrix<int>*), SWIG_POINTER_OWN);
+      return SWIG_NewPointerObj(new IM(*a), $descriptor(casadi::Matrix<casadi_int>*), SWIG_POINTER_OWN);
     }
   } // namespace casadi
  }
@@ -2057,7 +2016,7 @@ import_array();
 %fragment("casadi_extra", "header") {}
 
 // Collect all fragments
-%fragment("casadi_all", "header", fragment="casadi_aux,casadi_extra,casadi_bool,casadi_int,casadi_double,casadi_vector,casadi_function,casadi_generictype,casadi_string,casadi_slice,casadi_map,casadi_pair,casadi_sx,casadi_sxelem,casadi_mx,casadi_dmatrix,casadi_sparsity,casadi_imatrix") { }
+%fragment("casadi_all", "header", fragment="casadi_aux,casadi_extra,casadi_bool,casadi_int,casadi_double,casadi_vector,casadi_vectorvector,casadi_function,casadi_generictype,casadi_string,casadi_slice,casadi_map,casadi_pair,casadi_sx,casadi_sxelem,casadi_mx,casadi_dmatrix,casadi_sparsity,casadi_imatrix") { }
 
 #endif // SWIGXML
 
@@ -2216,10 +2175,17 @@ import_array();
 
 #ifndef SWIGXML
 
- // std::ostream & is not typemapped to anything useful and should be ignored
- // (or possibly turned into a string output)
-%typemap(in, noblock=1, numinputs=0) std::ostream &stream ""
+// std::ostream & is redirected to casadi::uout()
+%typemap(in, noblock=1, numinputs=0) std::ostream &stream {
+  $1 = &casadi::uout();
+}
 
+// Add trailing newline in MATLAB and Octave
+#if defined(SWIGMATLAB) || defined(SWIGOCTAVE)
+%typemap(argout, noblock=1) std::ostream &stream {
+  *$1 << "\n" << std::flush;
+}
+#endif
 
 #define L_INT "int"
 #define L_BOOL "bool"
@@ -2243,7 +2209,7 @@ import_array();
 #endif
 
 %casadi_typemaps(L_STR, PREC_STRING, std::string)
-%casadi_template("[" L_STR "]", PREC_STRING, std::vector<std::string>)
+%casadi_template(LL L_STR LR, PREC_VECTOR, std::vector<std::string>)
 %casadi_typemaps("Sparsity", PREC_SPARSITY, casadi::Sparsity)
 %casadi_template(LL "Sparsity" LR, PREC_SPARSITY, std::vector< casadi::Sparsity>)
 %casadi_template(LL LL "Sparsity"  LR  LR, PREC_SPARSITY, std::vector<std::vector< casadi::Sparsity> >)
@@ -2253,37 +2219,38 @@ import_array();
 %casadi_typemaps(L_BOOL, SWIG_TYPECHECK_BOOL, bool)
 %casadi_template("[" L_BOOL "]", SWIG_TYPECHECK_BOOL, std::vector<bool>)
 %casadi_template("[[" L_BOOL "]]", SWIG_TYPECHECK_BOOL, std::vector<std::vector<bool> >)
-%casadi_typemaps( L_INT , SWIG_TYPECHECK_INTEGER, int)
+%casadi_typemaps( L_INT , SWIG_TYPECHECK_INTEGER, casadi_int)
 
 #ifdef MATLABSTYLE
 #define LABEL "[int,int]"
 #else
 #define LABEL LPAIR("int","int")
 #endif
-%casadi_template(LABEL, SWIG_TYPECHECK_INTEGER, std::pair<int,int>)
+%casadi_template(LABEL, SWIG_TYPECHECK_INTEGER, std::pair<casadi_int,casadi_int>)
 #undef LABEL
-%casadi_template("[" L_INT "]", PREC_IVector, std::vector<int>)
-%casadi_template("[[" L_INT "]]", PREC_IVectorVector, std::vector<std::vector<int> >)
+%casadi_template("[" L_INT "]", PREC_IVector, std::vector<casadi_int>)
+%casadi_template(LL "[" L_INT "]" LR, PREC_IVectorVector, std::vector<std::vector<casadi_int> >)
 %casadi_typemaps(L_DOUBLE, SWIG_TYPECHECK_DOUBLE, double)
 %casadi_template("[" L_DOUBLE "]", SWIG_TYPECHECK_DOUBLE, std::vector<double>)
-%casadi_template("[[" L_DOUBLE "]]", SWIG_TYPECHECK_DOUBLE, std::vector<std::vector<double> >)
+%casadi_template(LL "[" L_DOUBLE "]" LR, SWIG_TYPECHECK_DOUBLE, std::vector<std::vector<double> >)
 %casadi_typemaps("SXElem", PREC_SX, casadi::SXElem)
 %casadi_template(LL "SXElem" LR, PREC_SXVector, std::vector<casadi::SXElem>)
 %casadi_typemaps("SX", PREC_SX, casadi::Matrix<casadi::SXElem>)
 %casadi_template(LL "SX" LR, PREC_SXVector, std::vector< casadi::Matrix<casadi::SXElem> >)
-%casadi_template(LL "SX" LR LR, PREC_SXVectorVector, std::vector<std::vector< casadi::Matrix<casadi::SXElem> > >)
+%casadi_template(LL LL "SX" LR LR, PREC_SXVectorVector, std::vector<std::vector< casadi::Matrix<casadi::SXElem> > >)
 %casadi_template(LDICT("SX"), PREC_SX, std::map<std::string, casadi::Matrix<casadi::SXElem> >)
 %casadi_typemaps("MX", PREC_MX, casadi::MX)
 %casadi_template(LL "MX" LR, PREC_MXVector, std::vector<casadi::MX>)
 %casadi_template(LL LL "MX" LR LR, PREC_MXVectorVector, std::vector<std::vector<casadi::MX> >)
 %casadi_template(LDICT("MX"), PREC_MX, std::map<std::string, casadi::MX>)
+%casadi_template(LPAIR("MX","MX"), PREC_MXVector, std::pair<casadi::MX, casadi::MX>)
 %casadi_typemaps("DM", PREC_DM, casadi::Matrix<double>)
 %casadi_template(LL "DM" LR, PREC_DMVector, std::vector< casadi::Matrix<double> >)
 %casadi_template(LL LL "DM" LR LR, PREC_DMVectorVector, std::vector<std::vector< casadi::Matrix<double> > >)
 %casadi_template(LDICT("DM"), PREC_DM, std::map<std::string, casadi::Matrix<double> >)
-%casadi_typemaps("IM", PREC_IM, casadi::Matrix<int>)
-%casadi_template(LL "IM" LR, PREC_IMVector, std::vector< casadi::Matrix<int> >)
-%casadi_template(LL "IM" LR LR, PREC_IMVectorVector, std::vector<std::vector< casadi::Matrix<int> > >)
+%casadi_typemaps("IM", PREC_IM, casadi::Matrix<casadi_int>)
+%casadi_template(LL "IM" LR, PREC_IMVector, std::vector< casadi::Matrix<CASADI_INT_TYPE> >)
+%casadi_template(LL LL "IM" LR LR, PREC_IMVectorVector, std::vector<std::vector< casadi::Matrix<CASADI_INT_TYPE> > >)
 %casadi_typemaps("GenericType", PREC_GENERICTYPE, casadi::GenericType)
 %casadi_template(LL "GenericType" LR, PREC_GENERICTYPE, std::vector<casadi::GenericType>)
 %casadi_typemaps("Slice", PREC_SLICE, casadi::Slice)
@@ -2291,6 +2258,7 @@ import_array();
 %casadi_template(LL "Function" LR, PREC_FUNCTION, std::vector<casadi::Function>)
 %casadi_template(LPAIR("Function","Function"), PREC_FUNCTION, std::pair<casadi::Function, casadi::Function>)
 %casadi_template(L_DICT, PREC_DICT, std::map<std::string, casadi::GenericType>)
+%casadi_template(LDICT(LL L_STR LR), PREC_DICT, std::map<std::string, std::vector<std::string> >)
 
 #undef L_INT
 #undef L_BOOL
@@ -2301,6 +2269,15 @@ import_array();
 #undef LR
 #undef L_STR
 #undef MATLABSTYLE
+
+// Matlab is index-1 based
+#ifdef SWIGMATLAB
+%typemap(in, doc="index", noblock=1) casadi_index {
+  if (!casadi::to_val($input, &$1)) SWIG_exception_fail(SWIG_TypeError,"Failed to convert input $argnum to type ' index '.");
+  if ($1==0) SWIG_exception_fail(SWIG_TypeError,"Index starts at 1, got index '0'.");
+  if ($1>=1) $1--;
+}
+#endif
 
 #endif // SWIGXML
 
@@ -2352,7 +2329,7 @@ def swig_typename_convertor_python2cpp(a):
 #ifdef WITH_PYTHON_INTERRUPTS
 %{
 #include <pythonrun.h>
-void SigIntHandler(int) {
+void SigIntHandler(casadi_int) {
   std::cerr << "Keyboard Interrupt" << std::endl;
   signal(SIGINT, SIG_DFL);
   kill(getpid(), SIGINT);
@@ -2380,21 +2357,23 @@ arccosh = lambda x: _casadi.acosh(x)
 %}
 #endif // SWIGPYTHON
 
-// Strip leading casadi_ unless followed by ML
-%rename("%(regex:/casadi_(?!ML)(.*)/\\1/)s") "";
+// Strip leading casadi_ unless followed by ML/int
+%rename("%(regex:/casadi_(?!ML|int\\b)(.*)/\\1/)s") "";
+%rename(casadi_int) "casadi_int";
 
 %rename(row) get_row;
 %rename(colind) get_colind;
 %rename(sparsity) get_sparsity;
 %rename(nonzeros) get_nonzeros;
+%rename(elements) get_elements;
 
-// Explicit conversion to double and int
+// Explicit conversion to double and casadi_int
 #ifdef SWIGPYTHON
 %rename(__float__) operator double;
-%rename(__int__) operator int;
+%rename(__int__) operator casadi_int;
 #else
 %rename(to_double) operator double;
-%rename(to_int) operator int;
+%rename(to_int) operator casadi_int;
 #endif
 %rename(to_DM) operator Matrix<double>;
 
@@ -2407,8 +2386,6 @@ arccosh = lambda x: _casadi.acosh(x)
 %rename(logic_all) casadi_all;
 %rename(logic_any) casadi_any;
 %rename(fabs) casadi_abs;
-%rename(fmin) casadi_min;
-%rename(fmax) casadi_max;
 
 // Concatenations
 %rename(_veccat) casadi_veccat;
@@ -2420,6 +2397,7 @@ def veccat(*args): return _veccat(args)
 def vertcat(*args): return _vertcat(args)
 def horzcat(*args): return _horzcat(args)
 def diagcat(*args): return _diagcat(args)
+def vvcat(args): return _veccat(args)
 def vcat(args): return _vertcat(args)
 def hcat(args): return _horzcat(args)
 def dcat(args): return _diagcat(args)
@@ -2450,6 +2428,7 @@ def dcat(args): return _diagcat(args)
 %rename(uplus) operator+;
 %feature("varargin","1") casadi_vertcat;
 %feature("varargin","1") casadi_horzcat;
+%feature("varargin","1") casadi_diagcat;
 %feature("varargin","1") casadi_veccat;
 %feature("optionalunpack","1") size;
 
@@ -2557,7 +2536,12 @@ class NZproxy:
       if hasattr(self,'__array_custom__'):
         return self.__array_custom__(*args,**kwargs)
       else:
-        return self.full()
+        try:
+          return self.full()
+        except:
+          raise Exception("Implicit conversion of symbolic CasADi type to numeric matrix not supported.\n"
+                     + "This may occur when you pass a CasADi object to a numpy function.\n"
+                     + "Use an equivalent CasADi function instead of that numpy function.")
 
 %}
 %enddef
@@ -2573,7 +2557,7 @@ class NZproxy:
   namespace casadi {
     /// Helper function: Convert ':' to Slice
     inline Slice char2Slice(char ch) {
-      casadi_assert(ch==':');
+      casadi_assert_dev(ch==':');
       return Slice();
     }
   } // namespace casadi
@@ -2582,10 +2566,10 @@ class NZproxy:
 %define %matrix_helpers(Type)
     // Get a submatrix (index-1)
     const Type paren(char rr) const {
-      casadi_assert(rr==':');
+      casadi_assert_dev(rr==':');
       return vec(*$self);
     }
-    const Type paren(const Matrix<int>& rr) const {
+    const Type paren(const Matrix<casadi_int>& rr) const {
       Type m;
       $self->get(m, true, rr);
       return m;
@@ -2600,17 +2584,17 @@ class NZproxy:
       $self->get(m, true, casadi::char2Slice(rr), casadi::char2Slice(cc));
       return m;
     }
-    const Type paren(char rr, const Matrix<int>& cc) const {
+    const Type paren(char rr, const Matrix<casadi_int>& cc) const {
       Type m;
       $self->get(m, true, casadi::char2Slice(rr), cc);
       return m;
     }
-    const Type paren(const Matrix<int>& rr, char cc) const {
+    const Type paren(const Matrix<casadi_int>& rr, char cc) const {
       Type m;
       $self->get(m, true, rr, casadi::char2Slice(cc));
       return m;
     }
-    const Type paren(const Matrix<int>& rr, const Matrix<int>& cc) const {
+    const Type paren(const Matrix<casadi_int>& rr, const Matrix<casadi_int>& cc) const {
       Type m;
       $self->get(m, true, rr, cc);
       return m;
@@ -2618,25 +2602,48 @@ class NZproxy:
 
     // Set a submatrix (index-1)
     void paren_asgn(const Type& m, char rr) { $self->set(m, true, casadi::char2Slice(rr));}
-    void paren_asgn(const Type& m, const Matrix<int>& rr) { $self->set(m, true, rr);}
+    void paren_asgn(const Type& m, const Matrix<casadi_int>& rr) { $self->set(m, true, rr);}
     void paren_asgn(const Type& m, const Sparsity& sp) { $self->set(m, true, sp);}
     void paren_asgn(const Type& m, char rr, char cc) { $self->set(m, true, casadi::char2Slice(rr), casadi::char2Slice(cc));}
-    void paren_asgn(const Type& m, char rr, const Matrix<int>& cc) { $self->set(m, true, casadi::char2Slice(rr), cc);}
-    void paren_asgn(const Type& m, const Matrix<int>& rr, char cc) { $self->set(m, true, rr, casadi::char2Slice(cc));}
-    void paren_asgn(const Type& m, const Matrix<int>& rr, const Matrix<int>& cc) { $self->set(m, true, rr, cc);}
+    void paren_asgn(const Type& m, char rr, const Matrix<casadi_int>& cc) { $self->set(m, true, casadi::char2Slice(rr), cc);}
+    void paren_asgn(const Type& m, const Matrix<casadi_int>& rr, char cc) { $self->set(m, true, rr, casadi::char2Slice(cc));}
+    void paren_asgn(const Type& m, const Matrix<casadi_int>& rr, const Matrix<casadi_int>& cc) { $self->set(m, true, rr, cc);}
 
     // Get nonzeros (index-1)
     const Type brace(char rr) const { Type m; $self->get_nz(m, true, casadi::char2Slice(rr)); return m;}
-    const Type brace(const Matrix<int>& rr) const { Type m; $self->get_nz(m, true, rr); return m;}
+    const Type brace(const Matrix<casadi_int>& rr) const { Type m; $self->get_nz(m, true, rr); return m;}
 
     // Set nonzeros (index-1)
     void setbrace(const Type& m, char rr) { $self->set_nz(m, true, casadi::char2Slice(rr));}
-    void setbrace(const Type& m, const Matrix<int>& rr) { $self->set_nz(m, true, rr);}
+    void setbrace(const Type& m, const Matrix<casadi_int>& rr) { $self->set_nz(m, true, rr);}
 
     // 'end' function (needed for end syntax in MATLAB)
-    inline int end(int i, int n) const {
+    inline casadi_int end(casadi_int i, casadi_int n) const {
       return n==1 ? $self->numel() : i==1 ? $self->size1() : $self->size2();
     }
+
+
+    // Needed for brace syntax to access nonzeros
+    casadi_int numel(casadi_int k) const {
+      return 1;
+    }
+
+    // Needed for brace syntax to access nonzeros
+    casadi_int numel(char rr) const {
+      casadi_assert_dev(rr==':');
+      return 1;
+    }
+
+    // Needed for brace syntax to access nonzeros
+    casadi_int numel(const std::vector<casadi_int> &k) const {
+      return 1;
+    }
+
+    // Needed because original numel call gets hidden by the above extend overloads
+    casadi_int numel() const {
+      return $self->numel();
+    }
+
 
     // Transpose using the A' syntax in addition to A.'
     Type ctranspose() const { return $self->T();}
@@ -2644,30 +2651,32 @@ class NZproxy:
 %enddef
 #endif
 
-%include <casadi/core/printable_object.hpp>
+%include <casadi/core/printable.hpp>
 
+namespace casadi{
+%extend PrintableCommon {
 #ifdef SWIGPYTHON
-%rename(SWIG_STR) getDescription;
+  %pythoncode %{
+    def __str__(self): return self.str()
+    def repr(self): return self.type_name() + '(' + self.str() + ')'
+  %}
 #endif // SWIGPYTHON
-
-%template(PrintSharedObject) casadi::PrintableObject<casadi::SharedObject>;
-%template(PrintSlice)        casadi::PrintableObject<casadi::Slice>;
-%template(PrintIM)      casadi::PrintableObject<casadi::Matrix<int> >;
-%template(PrintDM)      casadi::PrintableObject<casadi::Matrix<double> >;
-//%template(PrintSX)           casadi::PrintableObject<casadi::Matrix<casadi::SXElem> >;
-%template(PrintNlpBuilder)     casadi::PrintableObject<casadi::NlpBuilder>;
-%template(PrintVariable)        casadi::PrintableObject<casadi::Variable>;
-%template(PrintDaeBuilder)     casadi::PrintableObject<casadi::DaeBuilder>;
+#ifdef SWIGMATLAB
+  %matlabcode %{
+    function s = repr(self)
+      s = [s.type_name() '(' self.str() ')'];
+    end
+  %}
+#endif // SWIGMATLAB
+}
+} // namespace casadi
 
 %include <casadi/core/shared_object.hpp>
-%include <casadi/core/std_vector_tools.hpp>
-%include <casadi/core/weak_ref.hpp>
-%include <casadi/core/casadi_types.hpp>
+%include <casadi/core/casadi_misc.hpp>
+%include <casadi/core/casadi_common.hpp>
 %include <casadi/core/generic_type.hpp>
 %include <casadi/core/calculus.hpp>
 %include <casadi/core/sparsity_interface.hpp>
-
-%template(SpSparsity) casadi::SparsityInterface<casadi::Sparsity>;
 %include <casadi/core/sparsity.hpp>
 
 // Logic for pickling
@@ -2676,14 +2685,10 @@ namespace casadi{
 %extend Sparsity {
   %pythoncode %{
     def __setstate__(self, state):
-        if state:
-          self.__init__(state["nrow"],state["ncol"],state["colind"],state["row"])
-        else:
-          self.__init__()
+        self.__init__(Sparsity.from_info(state))
 
     def __getstate__(self):
-        if self.is_null(): return {}
-        return {"nrow": self.size1(), "ncol": self.size2(), "colind": numpy.array(self.colind(),dtype=int), "row": numpy.array(self.row(),dtype=int)}
+        return self.info()
   %}
 }
 
@@ -2696,24 +2701,15 @@ namespace casadi{
 %include <casadi/core/slice.hpp>
  //#endif
 
-%template(SpIM)        casadi::SparsityInterface<casadi::Matrix<int> >;
-%template(SpDM)        casadi::SparsityInterface<casadi::Matrix<double> >;
-%template(SpSX)             casadi::SparsityInterface<casadi::Matrix<casadi::SXElem> >;
-%template(SpMX)             casadi::SparsityInterface<casadi::MX>;
 
 %include <casadi/core/generic_matrix.hpp>
 
-%template(GenIM)        casadi::GenericMatrix<casadi::Matrix<int> >;
+%template(GenIM)        casadi::GenericMatrix<casadi::Matrix<casadi_int> >;
 %template(GenDM)        casadi::GenericMatrix<casadi::Matrix<double> >;
 %template(GenSX)             casadi::GenericMatrix<casadi::Matrix<casadi::SXElem> >;
 %template(GenMX)             casadi::GenericMatrix<casadi::MX>;
 
 %include <casadi/core/generic_expression.hpp>
-
-%template(ExpIM)        casadi::GenericExpression<casadi::Matrix<int> >;
-%template(ExpDM)        casadi::GenericExpression<casadi::Matrix<double> >;
-%template(ExpSX)             casadi::GenericExpression<casadi::Matrix<casadi::SXElem> >;
-%template(ExpMX)             casadi::GenericExpression<casadi::MX>;
 
 // Flags to allow differentiating the wrapping by type
 #define IS_GLOBAL   0x1
@@ -2735,56 +2731,53 @@ namespace casadi{
  return vertcat(v);
  }
  DECL std::vector< M >
- casadi_horzsplit(const M& v, const std::vector<int>& offset) {
+ casadi_horzsplit(const M& v, const std::vector<casadi_int>& offset) {
  return horzsplit(v, offset);
  }
- DECL std::vector< M > casadi_horzsplit(const M& v, int incr=1) {
+ DECL std::vector< M > casadi_horzsplit(const M& v, casadi_int incr=1) {
  return horzsplit(v, incr);
  }
  DECL std::vector< M >
- casadi_vertsplit(const M& v, const std::vector<int>& offset) {
+ casadi_vertsplit(const M& v, const std::vector<casadi_int>& offset) {
  return vertsplit(v, offset);
  }
- DECL std::vector<int >
+ DECL std::vector<casadi_int >
  casadi_offset(const std::vector< M > &v, bool vert=true) {
  return offset(v, vert);
  }
  DECL std::vector< M >
- casadi_vertsplit(const M& v, int incr=1) {
+ casadi_vertsplit(const M& v, casadi_int incr=1) {
  return vertsplit(v, incr);
- }
- DECL M casadi_blockcat(const std::vector< std::vector< M > > &v) {
- return blockcat(v);
  }
  DECL M casadi_blockcat(const M& A, const M& B, const M& C, const M& D) {
  return vertcat(horzcat(A, B), horzcat(C, D));
  }
  DECL std::vector< std::vector< M > >
- casadi_blocksplit(const M& x, const std::vector<int>& vert_offset,
- const std::vector<int>& horz_offset) {
+ casadi_blocksplit(const M& x, const std::vector<casadi_int>& vert_offset,
+ const std::vector<casadi_int>& horz_offset) {
  return blocksplit(x, vert_offset, horz_offset);
  }
  DECL std::vector< std::vector< M > >
- casadi_blocksplit(const M& x, int vert_incr=1, int horz_incr=1) {
+ casadi_blocksplit(const M& x, casadi_int vert_incr=1, casadi_int horz_incr=1) {
  return blocksplit(x, vert_incr, horz_incr);
  }
  DECL M casadi_diagcat(const std::vector< M > &A) {
  return diagcat(A);
  }
  DECL std::vector< M >
- casadi_diagsplit(const M& x, const std::vector<int>& output_offset1,
- const std::vector<int>& output_offset2) {
+ casadi_diagsplit(const M& x, const std::vector<casadi_int>& output_offset1,
+ const std::vector<casadi_int>& output_offset2) {
  return diagsplit(x, output_offset1, output_offset2);
  }
  DECL std::vector< M >
- casadi_diagsplit(const M& x, const std::vector<int>& output_offset) {
+ casadi_diagsplit(const M& x, const std::vector<casadi_int>& output_offset) {
  return diagsplit(x, output_offset);
  }
- DECL std::vector< M > casadi_diagsplit(const M& x, int incr=1) {
+ DECL std::vector< M > casadi_diagsplit(const M& x, casadi_int incr=1) {
  return diagsplit(x, incr);
  }
  DECL std::vector< M >
- casadi_diagsplit(const M& x, int incr1, int incr2) {
+ casadi_diagsplit(const M& x, casadi_int incr1, casadi_int incr2) {
  return diagsplit(x, incr1, incr2);
  }
  DECL M casadi_veccat(const std::vector< M >& x) {
@@ -2805,19 +2798,19 @@ namespace casadi{
  DECL M casadi_vec(const M& a) {
  return vec(a);
  }
- DECL M casadi_reshape(const M& a, int nrow, int ncol) {
+ DECL M casadi_reshape(const M& a, casadi_int nrow, casadi_int ncol) {
  return reshape(a, nrow, ncol);
  }
- DECL M casadi_reshape(const M& a, std::pair<int, int> rc) {
+ DECL M casadi_reshape(const M& a, std::pair<casadi_int, casadi_int> rc) {
  return reshape(a, rc.first, rc.second);
  }
  DECL M casadi_reshape(const M& a, const Sparsity& sp) {
  return reshape(a, sp);
  }
- DECL int casadi_sprank(const M& A) {
+ DECL casadi_int casadi_sprank(const M& A) {
  return sprank(A);
  }
- DECL int casadi_norm_0_mul(const M& x, const M& y) {
+ DECL casadi_int casadi_norm_0_mul(const M& x, const M& y) {
  return norm_0_mul(x, y);
  }
  DECL M casadi_triu(const M& a, bool includeDiagonal=true) {
@@ -2829,10 +2822,10 @@ namespace casadi{
  DECL M casadi_kron(const M& a, const M& b) {
  return kron(a, b);
  }
- DECL M casadi_repmat(const M& A, int n, int m=1) {
+ DECL M casadi_repmat(const M& A, casadi_int n, casadi_int m=1) {
  return repmat(A, n, m);
  }
- DECL M casadi_repmat(const M& A, const std::pair<int, int>& rc) {
+ DECL M casadi_repmat(const M& A, const std::pair<casadi_int, casadi_int>& rc) {
  return repmat(A, rc.first, rc.second);
  }
 #endif
@@ -2841,7 +2834,7 @@ namespace casadi{
 %define SPARSITY_INTERFACE_ALL(DECL, FLAG)
 SPARSITY_INTERFACE_FUN(DECL, (FLAG | IS_SPARSITY), Sparsity)
 SPARSITY_INTERFACE_FUN(DECL, (FLAG | IS_MX), MX)
-SPARSITY_INTERFACE_FUN(DECL, (FLAG | IS_IMATRIX), Matrix<int>)
+SPARSITY_INTERFACE_FUN(DECL, (FLAG | IS_IMATRIX), Matrix<casadi_int>)
 SPARSITY_INTERFACE_FUN(DECL, (FLAG | IS_DMATRIX), Matrix<double>)
 SPARSITY_INTERFACE_FUN(DECL, (FLAG | IS_SX), Matrix<SXElem>)
 %enddef
@@ -2850,7 +2843,7 @@ SPARSITY_INTERFACE_FUN(DECL, (FLAG | IS_SX), Matrix<SXElem>)
   %define SPARSITY_INTERFACE_FUN(DECL, FLAG, M)
     SPARSITY_INTERFACE_FUN_BASE(DECL, FLAG, M)
     #if FLAG & IS_MEMBER
-     DECL int casadi_length(const M &v) {
+     DECL casadi_int casadi_length(const M &v) {
       return std::max(v.size1(), v.size2());
      }
     #endif
@@ -2862,11 +2855,6 @@ SPARSITY_INTERFACE_FUN(DECL, (FLAG | IS_SX), Matrix<SXElem>)
 #endif
 
 %define GENERIC_MATRIX_FUN(DECL, FLAG, M)
-#if defined(WITH_DEPRECATED_FEATURES) & FLAG & IS_MEMBER
-DECL std::vector<bool> casadi_nl_var(const M& expr, const M& var) {
-  return nl_var(expr, var);
-}
-#endif
 #if FLAG & IS_MEMBER
 DECL M casadi_mpower(const M& x, const M& n) {
   return mpower(x, n);
@@ -2892,15 +2880,20 @@ DECL M casadi_rank1(const M& A, const M& alpha, const M& x, const M& y) {
   return rank1(A, alpha, x, y);
 }
 
-DECL M casadi_sum_square(const M& X) {
-  return sum_square(X);
+DECL M casadi_sumsqr(const M& X) {
+  return sumsqr(X);
 }
 
-DECL M casadi_linspace(const M& a, const M& b, int nsteps) {
+DECL M casadi_linspace(const M& a, const M& b, casadi_int nsteps) {
   return linspace(a, b, nsteps);
 }
 
-DECL M casadi_cross(const M& a, const M& b, int dim = -1) {
+DECL M casadi_interp1d(const std::vector<double>& x, const M&v,
+        const std::vector<double>& xq, const std::string& mode="linear", bool equidistant=false) {
+  return interp1d(x, v, xq, mode, equidistant);
+}
+
+DECL M casadi_cross(const M& a, const M& b, casadi_int dim = -1) {
   return cross(a, b, dim);
 }
 
@@ -2916,8 +2909,17 @@ DECL M casadi_det(const M& A) {
   return det(A);
 }
 
+DECL M casadi_inv_minor(const M& A) {
+  return inv_minor(A);
+}
+
 DECL M casadi_inv(const M& A) {
   return inv(A);
+}
+
+DECL M casadi_inv(const M& A, const std::string& lsolver,
+                      const casadi::Dict& opts = casadi::Dict()) {
+  return inv(A, lsolver, opts);
 }
 
 DECL M casadi_trace(const M& a) {
@@ -2934,10 +2936,6 @@ DECL M casadi_triu2symm(const M& a) {
 
 DECL M casadi_norm_fro(const M& x) {
   return norm_fro(x);
-}
-
-DECL M casadi_norm_F(const M& x) {
-  return norm_F(x);
 }
 
 DECL M casadi_norm_2(const M& x) {
@@ -2989,12 +2987,12 @@ DECL M casadi_project(const M& A, const Sparsity& sp, bool intersect=false) {
 }
 
 DECL M casadi_if_else(const M& cond, const M& if_true,
-                    const M& if_false, bool short_circuit=true) {
+                    const M& if_false, bool short_circuit=false) {
   return if_else(cond, if_true, if_false, short_circuit);
 }
 
 DECL M casadi_conditional(const M& ind, const std::vector< M > &x,
-                        const M& x_default, bool short_circuit=true) {
+                        const M& x_default, bool short_circuit=false) {
   return conditional(ind, x, x_default, short_circuit);
 }
 
@@ -3021,17 +3019,37 @@ DECL M casadi_pinv(const M& A, const std::string& lsolver,
   return pinv(A, lsolver, opts);
 }
 
-DECL M casadi_jacobian(const M &ex, const M &arg) {
-  return jacobian(ex, arg);
+DECL M casadi_expm_const(const M& A, const M& t) {
+  return expm_const(A, t);
+}
+
+DECL M casadi_expm(const M& A) {
+  return expm(A);
+}
+
+DECL M casadi_jacobian(const M &ex, const M &arg, const Dict& opts=Dict()) {
+  return jacobian(ex, arg, opts);
 }
 
 DECL M casadi_jtimes(const M& ex, const M& arg, const M& v, bool tr=false) {
   return jtimes(ex, arg, v, tr);
 }
 
+DECL M casadi_linearize(const M& f, const M& x, const M& x0) {
+  return linearize(f, x, x0);
+}
+
 DECL std::vector<bool> casadi_which_depends(const M& expr, const M& var,
-                                            int order=1, bool tr=false) {
+                                            casadi_int order=1, bool tr=false) {
   return which_depends(expr, var, order, tr);
+}
+
+DECL bool casadi_is_linear(const M& expr, const M& var) {
+  return is_linear(expr, var);
+}
+
+DECL bool casadi_is_quadratic(const M& expr, const M& var) {
+  return is_quadratic(expr, var);
 }
 
 DECL M casadi_gradient(const M &ex, const M &arg) {
@@ -3046,7 +3064,15 @@ DECL M casadi_hessian(const M& ex, const M& arg, M& OUTPUT1) {
   return hessian(ex, arg, OUTPUT1);
 }
 
-DECL int casadi_n_nodes(const M& A) {
+DECL void casadi_quadratic_coeff(const M& ex, const M& arg, M& OUTPUT1, M& OUTPUT2, M& OUTPUT3) {
+  quadratic_coeff(ex, arg, OUTPUT1, OUTPUT2, OUTPUT3);
+}
+
+DECL void casadi_linear_coeff(const M& ex, const M& arg, M& OUTPUT1, M& OUTPUT2) {
+  linear_coeff(ex, arg, OUTPUT1, OUTPUT2);
+}
+
+DECL casadi_int casadi_n_nodes(const M& A) {
   return n_nodes(A);
 }
 
@@ -3054,10 +3080,30 @@ DECL std::string casadi_print_operator(const M& xb,
                                                   const std::vector<std::string>& args) {
   return print_operator(xb, args);
 }
-DECL M casadi_repsum(const M& A, int n, int m=1) {
+DECL M casadi_repsum(const M& A, casadi_int n, casadi_int m=1) {
   return repsum(A, n, m);
 }
-
+DECL M casadi_diff(const M& A, casadi_int n=1, casadi_index axis=-1) {
+  return diff(A, n, axis);
+}
+DECL M casadi_cumsum(const M& A, casadi_index axis=-1) {
+  return cumsum(A, axis);
+}
+DECL M casadi_einstein(const M& A, const M& B, const M& C,
+  const std::vector<casadi_int>& dim_a, const std::vector<casadi_int>& dim_b, const std::vector<casadi_int>& dim_c,
+  const std::vector<casadi_int>& a, const std::vector<casadi_int>& b, const std::vector<casadi_int>& c) {
+  return einstein(A, B, C, dim_a, dim_b, dim_c, a, b, c);
+}
+DECL M casadi_einstein(const M& A, const M& B,
+  const std::vector<casadi_int>& dim_a, const std::vector<casadi_int>& dim_b, const std::vector<casadi_int>& dim_c,
+  const std::vector<casadi_int>& a, const std::vector<casadi_int>& b, const std::vector<casadi_int>& c) {
+  return einstein(A, B, dim_a, dim_b, dim_c, a, b, c);
+}
+DECL M casadi_mmin(const M& x) { return mmin(x); }
+DECL M casadi_mmax(const M& x) { return mmax(x); }
+DECL casadi::DM casadi_evalf(const M& x) {
+  return evalf(x);
+}
 #endif // FLAG & IS_MEMBER
 
 #if FLAG & IS_GLOBAL
@@ -3100,13 +3146,15 @@ DECL void casadi_shared(const std::vector< M >& ex,
                                const std::string& v_suffix="") {
   shared(ex, OUTPUT1, OUTPUT2, OUTPUT3, v_prefix, v_suffix);
 }
-
+DECL M casadi_blockcat(const std::vector< std::vector< M > > &v) {
+ return blockcat(v);
+}
 #endif // FLAG & IS_GLOBAL
 %enddef
 
 %define GENERIC_MATRIX_ALL(DECL, FLAG)
 GENERIC_MATRIX_FUN(DECL, (FLAG | IS_MX), MX)
-GENERIC_MATRIX_FUN(DECL, (FLAG | IS_IMATRIX), Matrix<int>)
+GENERIC_MATRIX_FUN(DECL, (FLAG | IS_IMATRIX), Matrix<casadi_int>)
 GENERIC_MATRIX_FUN(DECL, (FLAG | IS_DMATRIX), Matrix<double>)
 GENERIC_MATRIX_FUN(DECL, (FLAG | IS_SX), Matrix<SXElem>)
 %enddef
@@ -3152,10 +3200,10 @@ DECL M casadi_sign(const M& x) { using casadi::sign; return sign(x); }
 DECL M casadi_power(const M& x, const M& n) { return pow(x, n); }
 DECL M casadi_mod(const M& x, const M& y) { return fmod(x, y); }
 DECL M casadi_atan2(const M& x, const M& y) { return atan2(x, y); }
-DECL M casadi_min(const M& x, const M& y) { return fmin(x, y); }
-DECL M casadi_max(const M& x, const M& y) { return fmax(x, y); }
+DECL M casadi_fmin(const M& x, const M& y) { return fmin(x, y); }
+DECL M casadi_fmax(const M& x, const M& y) { return fmax(x, y); }
 DECL M casadi_simplify(const M& x) { using casadi::simplify; return simplify(x); }
-DECL bool casadi_is_equal(const M& x, const M& y, int depth=0) { using casadi::is_equal; return is_equal(x, y, depth); }
+DECL bool casadi_is_equal(const M& x, const M& y, casadi_int depth=0) { using casadi::is_equal; return is_equal(x, y, depth); }
 DECL M casadi_copysign(const M& x, const M& y) { return copysign(x, y); }
 DECL M casadi_constpow(const M& x, const M& y) { using casadi::constpow; return constpow(x, y); }
 #endif // FLAG & IS_MEMBER
@@ -3163,7 +3211,7 @@ DECL M casadi_constpow(const M& x, const M& y) { using casadi::constpow; return 
 
 %define GENERIC_EXPRESSION_ALL(DECL, FLAG)
 GENERIC_EXPRESSION_FUN(DECL, (FLAG | IS_MX), MX)
-GENERIC_EXPRESSION_FUN(DECL, (FLAG | IS_IMATRIX), Matrix<int>)
+GENERIC_EXPRESSION_FUN(DECL, (FLAG | IS_IMATRIX), Matrix<casadi_int>)
 GENERIC_EXPRESSION_FUN(DECL, (FLAG | IS_DMATRIX), Matrix<double>)
 GENERIC_EXPRESSION_FUN(DECL, (FLAG | IS_SX), Matrix<SXElem>)
 GENERIC_EXPRESSION_FUN(DECL, (FLAG | IS_DOUBLE), double)
@@ -3183,16 +3231,35 @@ DECL M casadi_adj(const M& A) {
   return adj(A);
 }
 
-DECL M casadi_getMinor(const M& x, int i, int j) {
-  return getMinor(x, i, j);
+DECL M casadi_minor(const M& x, casadi_int i, casadi_int j) {
+  return minor(x, i, j);
 }
 
-DECL M casadi_cofactor(const M& x, int i, int j) {
+DECL M casadi_cofactor(const M& x, casadi_int i, casadi_int j) {
   return cofactor(x, i, j);
 }
 
 DECL void casadi_qr(const M& A, M& OUTPUT1, M& OUTPUT2) {
   return qr(A, OUTPUT1, OUTPUT2);
+}
+
+DECL void casadi_qr_sparse(const M& A, M& OUTPUT1, M& OUTPUT2, M& OUTPUT3,
+          std::vector<casadi_int>& OUTPUT4, std::vector<casadi_int>& OUTPUT5, bool amd=true) {
+  return qr_sparse(A, OUTPUT1, OUTPUT2, OUTPUT3, OUTPUT4, OUTPUT5, amd);
+}
+
+DECL M casadi_qr_solve(const M& b, const M& v, const M& r, const M& beta,
+                       const std::vector<casadi_int>& prinv,
+                       const std::vector<casadi_int>& pc, bool tr=false) {
+  return qr_solve(b, v, r, beta, prinv, pc, tr);
+}
+
+DECL void casadi_ldl(const M& A, M& OUTPUT1, M& OUTPUT2, std::vector<casadi_int>& OUTPUT3, bool amd=true) {
+  return ldl(A, OUTPUT1, OUTPUT2, OUTPUT3, amd);
+}
+
+DECL M casadi_ldl_solve(const M& b, const M& D, const M& LT, const std::vector<casadi_int>& p) {
+  return ldl_solve(b, D, LT, p);
 }
 
 DECL M casadi_chol(const M& A) {
@@ -3237,26 +3304,26 @@ DECL M casadi_ramp(const M& x) {
 
 DECL M casadi_gauss_quadrature(const M& f, const M& x,
                                const M& a, const M& b,
-                               int order=5) {
+                               casadi_int order=5) {
   return gauss_quadrature(f, x, a, b, order);
 }
 
 DECL M casadi_gauss_quadrature(const M& f, const M& x,
                                const M& a, const M& b,
-                               int order, const M& w) {
+                               casadi_int order, const M& w) {
   return gauss_quadrature(f, x, a, b, order, w);
 }
 
-DECL M casadi_taylor(const M& ex, const M& x, const M& a=0, int order=1) {
+DECL M casadi_taylor(const M& ex, const M& x, const M& a=0, casadi_int order=1) {
   return taylor(ex, x, a, order);
 }
 
-DECL M casadi_mtaylor(const M& ex, const M& x, const M& a, int order=1) {
+DECL M casadi_mtaylor(const M& ex, const M& x, const M& a, casadi_int order=1) {
   return mtaylor(ex, x, a, order);
 }
 
-DECL M casadi_mtaylor(const M& ex, const M& x, const M& a, int order,
-                      const std::vector<int>& order_contributions) {
+DECL M casadi_mtaylor(const M& ex, const M& x, const M& a, casadi_int order,
+                      const std::vector<casadi_int>& order_contributions) {
   return mtaylor(ex, x, a, order, order_contributions);
 }
 
@@ -3277,7 +3344,7 @@ DECL M casadi_eig_symbolic(const M& m) {
 %enddef
 
 %define MATRIX_ALL(DECL, FLAG)
-MATRIX_FUN(DECL, (FLAG | IS_IMATRIX), Matrix<int>)
+MATRIX_FUN(DECL, (FLAG | IS_IMATRIX), Matrix<casadi_int>)
 MATRIX_FUN(DECL, (FLAG | IS_DMATRIX), Matrix<double>)
 MATRIX_FUN(DECL, (FLAG | IS_SX), Matrix<SXElem>)
 %enddef
@@ -3286,6 +3353,9 @@ MATRIX_FUN(DECL, (FLAG | IS_SX), Matrix<SXElem>)
 #if FLAG & IS_MEMBER
 DECL M casadi_find(const M& x) {
   return find(x);
+}
+DECL M casadi_inv_node(const M& x) {
+  return inv_node(x);
 }
 #endif // FLAG & IS_MEMBER
 
@@ -3322,18 +3392,17 @@ casadi_graph_substitute(const std::vector< M > &ex,
 MX_FUN(DECL, (FLAG | IS_MX), MX)
 %enddef
 
-%template(PrintSX)           casadi::PrintableObject<casadi::Matrix<casadi::SXElem> >;
-
 %include <casadi/core/matrix.hpp>
 
 %template(DM) casadi::Matrix<double>;
 %extend casadi::Matrix<double> {
-   %template(DM) Matrix<int>;
+   %template(DM) Matrix<casadi_int>;
    %template(DM) Matrix<SXElem>;
 };
 
-%template(IM) casadi::Matrix<int>;
-%extend casadi::Matrix<int> {
+
+%template(IM) casadi::Matrix<casadi_int>;
+%extend casadi::Matrix<casadi_int> {
    %template(IM) Matrix<double>;
    %template(IM) Matrix<SXElem>;
 };
@@ -3344,9 +3413,9 @@ namespace casadi{
     %matrix_helpers(casadi::Matrix<double>)
 
   }
-  %extend Matrix<int> {
-    void assign(const casadi::Matrix<int>&rhs) { (*$self)=rhs; }
-    %matrix_helpers(casadi::Matrix<int>)
+  %extend Matrix<casadi_int> {
+    void assign(const casadi::Matrix<casadi_int>&rhs) { (*$self)=rhs; }
+    %matrix_helpers(casadi::Matrix<casadi_int>)
 
   }
 }
@@ -3356,65 +3425,26 @@ namespace casadi{
   %extend Matrix<double> {
     // Convert to a dense matrix
     GUESTOBJECT* full() const {
-#ifdef SWIGPYTHON
-      npy_intp dims[2] = {$self->size1(), $self->size2()};
-      PyObject* ret = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
-      double* d = static_cast<double*>(array_data(ret));
-      casadi_densify($self->ptr(), $self->sparsity(), d, true); // Row-major
-      return ret;
-#elif defined(SWIGMATLAB)
-      mxArray *p  = mxCreateDoubleMatrix($self->size1(), $self->size2(), mxREAL);
-      double* d = static_cast<double*>(mxGetData(p));
-      casadi_densify($self->ptr(), $self->sparsity(), d, false); // Column-major
-      return p;
-#else
-      return 0;
-#endif
+      return full(*$self);
     }
 
-#ifdef SWIGMATLAB
     // Convert to a sparse matrix
     GUESTOBJECT* sparse() const {
-      mxArray *p  = mxCreateSparse($self->size1(), $self->size2(), $self->nnz(), mxREAL);
-      casadi::casadi_copy($self->ptr(), $self->nnz(), static_cast<double*>(mxGetData(p)));
-      std::copy($self->colind(), $self->colind()+$self->size2()+1, mxGetJc(p));
-      std::copy($self->row(), $self->row()+$self->nnz(), mxGetIr(p));
-      return p;
+      return sparse(*$self);
     }
-#endif
   }
 
-  %extend Matrix<int> {
+  %extend Matrix<casadi_int> {
     // Convert to a dense matrix
     GUESTOBJECT* full() const {
-#ifdef SWIGPYTHON
-      npy_intp dims[2] = {$self->size1(), $self->size2()};
-      PyObject* ret = PyArray_SimpleNew(2, dims, NPY_INT);
-      int* d = static_cast<int*>(array_data(ret));
-      casadi_densify($self->ptr(), $self->sparsity(), d, true); // Row-major
-      return ret;
-#elif defined(SWIGMATLAB)
-      mxArray *p  = mxCreateDoubleMatrix($self->size1(), $self->size2(), mxREAL);
-      std::vector<double> nz = $self->get_nonzeros<double>();
-      double* d = static_cast<double*>(mxGetData(p));
-      if (!nz.empty()) casadi_densify(&nz[0], $self->sparsity(), d, false); // Column-major
-      return p;
-#else
-      return 0;
-#endif
+      return full(*$self);
     }
 
-#ifdef SWIGMATLAB
     // Convert to a sparse matrix
     GUESTOBJECT* sparse() const {
-      mxArray *p  = mxCreateSparse($self->size1(), $self->size2(), $self->nnz(), mxREAL);
-      std::vector<double> nz = $self->get_nonzeros<double>();
-      if (!nz.empty()) casadi::casadi_copy(&nz[0], $self->nnz(), static_cast<double*>(mxGetData(p)));
-      std::copy($self->colind(), $self->colind()+$self->size2()+1, mxGetJc(p));
-      std::copy($self->row(), $self->row()+$self->nnz(), mxGetIr(p));
-      return p;
+      return sparse(*$self);
     }
-#endif
+
   }
 } // namespace casadi
 
@@ -3440,17 +3470,21 @@ namespace casadi{
 %}
 
 %pythoncode %{
-  def sparse(self):
-    import numpy as n
+  def tocsc(self):
+    import numpy as np
     import warnings
     with warnings.catch_warnings():
       warnings.simplefilter("ignore")
       from scipy.sparse import csc_matrix
-    return csc_matrix( (self.nonzeros(),self.row(),self.colind()), shape = self.shape, dtype=n.double )
-
-  def tocsc(self):
-    return self.sparse()
-
+    return csc_matrix( (self.nonzeros(),self.row(),self.colind()), shape = self.shape, dtype=np.double )
+  def toarray(self,simplify=False):
+    import numpy as np
+    if simplify:
+      if self.is_scalar():
+        return float(self)
+      elif self.is_vector():
+        return np.array(self.T.elements())
+    return np.array(self.T.elements()).reshape(self.shape)
 %}
 
 
@@ -3481,7 +3515,7 @@ namespace casadi{
 
 }; // extend Matrix<double>
 
-%extend Matrix<int> {
+%extend Matrix<casadi_int> {
 
   %python_array_wrappers(998.0)
 
@@ -3489,21 +3523,33 @@ namespace casadi{
     def __abs__(self):
       return abs(int(self))
   %}
-} // extend Matrix<int>
+
+  %pythoncode %{
+    def tocsc(self):
+      import numpy as np
+      import warnings
+      with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        from scipy.sparse import csc_matrix
+      return csc_matrix( (self.nonzeros(),self.row(),self.colind()), shape = self.shape, dtype=np.int )
+    def toarray(self):
+      import numpy as np
+      return np.array(self.T.elements()).reshape(self.shape)
+  %}
+
+} // extend Matrix<casadi_int>
 
 
 // Logic for pickling
 
-%extend Matrix<int> {
+%extend Matrix<casadi_int> {
 
   %pythoncode %{
     def __setstate__(self, state):
-        sp = Sparsity.__new__(Sparsity)
-        sp.__setstate__(state["sparsity"])
-        self.__init__(sp,state["data"])
+        self.__init__(self.from_info(state))
 
     def __getstate__(self):
-        return {"sparsity" : self.sparsity().__getstate__(), "data": numpy.array(self.nonzeros(),dtype=int)}
+        return self.info()
   %}
 }
 
@@ -3511,12 +3557,23 @@ namespace casadi{
 
   %pythoncode %{
     def __setstate__(self, state):
-        sp = Sparsity.__new__(Sparsity)
-        sp.__setstate__(state["sparsity"])
-        self.__init__(sp,state["data"])
+        self.__init__(self.from_info(state))
 
     def __getstate__(self):
-        return {"sparsity" : self.sparsity().__getstate__(), "data": numpy.array(self.nonzeros(),dtype=float)}
+        return self.info()
+  %}
+
+}
+
+
+%extend Function {
+
+  %pythoncode %{
+    def __setstate__(self, state):
+        self.__init__(Function.deserialize(state["serialization"]))
+
+    def __getstate__(self):
+        return {"serialization": self.serialize()}
   %}
 
 }
@@ -3525,7 +3582,144 @@ namespace casadi{
 } // namespace casadi
 #endif // SWIGPYTHON
 
-%include <casadi/core/sx/sx_elem.hpp>
+
+#ifdef SWIGMATLAB
+namespace casadi{
+// Logic for pickling
+%extend Matrix<casadi_int> {
+
+  %matlabcode %{
+     function s = saveobj(obj)
+        s = obj.info();
+     end
+  %}
+  %matlabcode_static %{
+     function obj = loadobj(s)
+        if isstruct(s)
+           obj = casadi.IM.from_info(s);
+        else
+           obj = s;
+        end
+     end
+  %}
+}
+
+%extend Matrix<double> {
+
+  %matlabcode %{
+     function s = saveobj(obj)
+        s = obj.info();
+     end
+  %}
+  %matlabcode_static %{
+     function obj = loadobj(s)
+        if isstruct(s)
+           obj = casadi.DM.from_info(s);
+        else
+           obj = s;
+        end
+     end
+  %}
+}
+
+%extend Sparsity {
+  %matlabcode %{
+     function s = saveobj(obj)
+        s = obj.info();
+     end
+  %}
+  %matlabcode_static %{
+     function obj = loadobj(s)
+        if isstruct(s)
+           obj = casadi.Sparsity.from_info(s);
+        else
+           obj = s;
+        end
+     end
+  %}
+}
+
+
+%extend Function {
+
+  %matlabcode %{
+     function s = saveobj(obj)
+       try
+            if is_a(obj,'SXFunction')
+              s = struct;
+              s.serialization = obj.serialize();
+            else
+              s = struct;
+              s.code = obj.export_code('matlab');
+              s.sparsity_in = cell(obj.n_in, 1);
+              s.name_in = cell(obj.n_in, 1);
+              for i=1:obj.n_in
+                s.sparsity_in{i} = obj.sparsity_in(i-1);
+                s.name_in{i} = obj.name_in(i-1);
+              end
+              s.sparsity_out = cell(obj.n_out, 1);
+              s.name_out = cell(obj.n_out, 1);
+              for i=1:obj.n_out
+                s.sparsity_out{i} = obj.sparsity_out(i-1);
+                s.name_out{i} = obj.name_out(i-1);
+              end
+              s.type = obj.class_name();
+              s.name = obj.name;
+              warning('Serializing of CasADi Functions is still experimental');
+            end
+        catch exception
+            warning(['Serializing of CasADi Function failed:' getReport(exception) ]);
+            s = struct;
+        end
+     end
+  %}
+  %matlabcode_static %{
+     function obj = loadobj(s)
+        try
+          if isstruct(s)
+             if isfield(s,'serialization')
+               obj = casadi.Function.deserialize(s.serialization);
+               return;
+             elseif ~isfield(s,'code')
+               warning('Not supported');
+               obj = casadi.Function();
+               return;
+             end
+             warning('Serializing of CasADi Functions is still experimental');
+             args_in = cell(length(s.sparsity_in),1);
+             for i=1:numel(args_in)
+               if strcmp(s.type,'MXFunction')
+                 args_in{i} = casadi.MX.sym(s.name_in{i}, s.sparsity_in{i});
+               else
+                 args_in{i} = casadi.SX.sym(s.name_in{i}, s.sparsity_in{i});
+               end
+             end
+
+             alphabet= 'a':'z';
+             filename = ['temp_' alphabet(randi(length(alphabet),1,20))];
+             f = fopen([filename '.m'],'w');
+             fprintf(f, s.code);
+             fclose(f);
+             clear(filename)
+             [args_out{1:length(s.sparsity_out)}] = feval(filename, args_in{:});
+             delete([filename '.m'])
+             obj = casadi.Function(s.name, args_in, args_out, s.name_in, s.name_out);
+          else
+             obj = s;
+          end
+        catch exception
+            warning(['Serializing of CasADi Function failed:' getReport(exception) ]);
+            s = struct;
+        end
+     end
+  %}
+
+}
+
+} // namespace casadi
+#endif // SWIGMATLAB
+
+%include <casadi/core/sx_elem.hpp>
 
 #ifdef SWIGPYTHON
 %extend casadi::Sparsity{
@@ -3579,11 +3773,11 @@ namespace casadi {
 
 %template(SX) casadi::Matrix<casadi::SXElem>;
 %extend casadi::Matrix<casadi::SXElem> {
-   %template(SX) Matrix<int>;
+   %template(SX) Matrix<casadi_int>;
    %template(SX) Matrix<double>;
 };
 
-%include <casadi/core/mx/mx.hpp>
+%include <casadi/core/mx.hpp>
 
 %extend casadi::MX{
   %matrix_helpers(casadi::MX)
@@ -3645,7 +3839,7 @@ def PyFunction(name, obj, inputs, outputs, opts={}):
 %}
 #endif
 
-%include <casadi/core/function/function.hpp>
+%include <casadi/core/function.hpp>
 #ifdef SWIGPYTHON
 namespace casadi{
 %extend Function {
@@ -3678,6 +3872,8 @@ namespace casadi{
     function varargout = subsref(self,s)
       if numel(s)==1 && strcmp(s.type,'()')
         [varargout{1}] = paren(self, s.subs{:});
+      elseif numel(s)==1 && strcmp(s.type,'{}')
+        [varargout{1}] = brace(self, s.subs{:});
       else
         [varargout{1:nargout}] = builtin('subsref',self,s);
       end
@@ -3685,12 +3881,14 @@ namespace casadi{
     function self = subsasgn(self,s,v)
       if numel(s)==1 && strcmp(s.type,'()')
         paren_asgn(self, v, s.subs{:});
+      elseif numel(s)==1 && strcmp(s.type,'{}')
+        brace_asgn(self, v, s.subs{:});
       else
         self = builtin('subsasgn',self,s,v);
       end
     end
     function out = sum(self,varargin)
-      narginchk(1,2);
+      narginchk(1,3);
       if nargin==1
         if is_vector(self)
           if is_column(self)
@@ -3745,6 +3943,22 @@ namespace casadi{
         end
       end
     end
+    function out = min(varargin)
+      narginchk(1,2);
+      if nargin==1
+        out = mmin(varargin{1});
+      else
+        out = fmin(varargin{1}, varargin{2});
+      end
+    end
+    function out = max(varargin)
+      narginchk(1,2);
+      if nargin==1
+        out = mmax(varargin{1});
+      else
+        out = fmax(varargin{1}, varargin{2});
+      end
+    end
     function b = isrow(self)
       b = is_row(self);
     end
@@ -3793,18 +4007,18 @@ namespace casadi{
  }
 }
 #endif // SWIGMATLAB
-%include <casadi/core/function/external.hpp>
-%include <casadi/core/function/jit.hpp>
-%include <casadi/core/function/integrator.hpp>
-%include <casadi/core/function/conic.hpp>
-%include <casadi/core/function/nlpsol.hpp>
-%include <casadi/core/function/rootfinder.hpp>
-%include <casadi/core/function/linsol.hpp>
-%include <casadi/core/function/dple.hpp>
-%include <casadi/core/function/interpolant.hpp>
+%include <casadi/core/external.hpp>
+%include <casadi/core/integrator.hpp>
+%include <casadi/core/conic.hpp>
+%include <casadi/core/nlpsol.hpp>
+%include <casadi/core/rootfinder.hpp>
+%include <casadi/core/linsol.hpp>
+%include <casadi/core/dple.hpp>
+%include <casadi/core/expm.hpp>
+%include <casadi/core/interpolant.hpp>
 
 %feature("copyctor", "0") casadi::CodeGenerator;
-%include <casadi/core/function/code_generator.hpp>
+%include <casadi/core/code_generator.hpp>
 
 #ifdef SWIGMATLAB
 // Wrap (static) member functions
@@ -3852,13 +4066,16 @@ namespace casadi {
 namespace casadi {
   %extend GenericExpressionCommon {
     %pythoncode %{
-      def __hash__(self): return SharedObject.__hash__(self)
+      def __hash__(self):
+        try:
+          return self.element_hash()
+        except:
+          return SharedObject.__hash__(self)
       def __matmul__(x, y): return _casadi.mtimes(x, y)
       def __rmatmul__(x, y): return _casadi.mtimes(y, x)
     %}
   }
 }
-%rename(__hash__) element_hash;
 #endif
 namespace casadi {
   %extend GenericExpressionCommon {
@@ -3946,15 +4163,203 @@ namespace casadi {
 
 %feature("director") casadi::Callback;
 
-%include <casadi/core/function/importer.hpp>
-%include <casadi/core/function/callback.hpp>
+%include <casadi/core/importer.hpp>
+%include <casadi/core/callback.hpp>
 %include <casadi/core/global_options.hpp>
 %include <casadi/core/casadi_meta.hpp>
-%include <casadi/core/misc/integration_tools.hpp>
-%include <casadi/core/misc/nlp_builder.hpp>
-%include <casadi/core/misc/variable.hpp>
-%include <casadi/core/misc/dae_builder.hpp>
-%include <casadi/core/misc/xml_file.hpp>
+%include <casadi/core/integration_tools.hpp>
+%include <casadi/core/nlp_builder.hpp>
+%include <casadi/core/variable.hpp>
+%include <casadi/core/dae_builder.hpp>
+%include <casadi/core/xml_file.hpp>
+
+%feature("director") casadi::OptiCallback;
+
+// Return-by-value
+%typemap(out, doc="double", noblock=1, fragment="casadi_all") casadi::native_DM {
+  if(!($result = full_or_sparse($1, true))) SWIG_exception_fail(SWIG_TypeError,"Failed to convert output to type 'double'.");
+}
+
+
+%apply casadi_int &OUTPUT { Opti::ConstraintType &OUTPUT };
+
+%typemap(argout, noblock=1,fragment="casadi_all") casadi::Opti::ConstraintType &OUTPUT {
+  %append_output(casadi::from_ptr((casadi_int *) $1));
+}
+
+%typemap(in, doc="Opti.ConstraintType", noblock=1, numinputs=0) casadi::Opti::ConstraintType &OUTPUT (casadi::Opti::ConstraintType m) {
+ $1 = &m;
+}
+
+
+#ifdef SWIGPYTHON
+
+%define make_property(class, name)
+  %rename(_ ## name) class ## :: ## name;
+  %extend class {
+    %pythoncode %{
+      @property
+      def name(self):
+        return self._ ## name()
+    %}
+  }
+%enddef
+
+
+make_property(casadi::Opti, debug);
+make_property(casadi::Opti, advanced);
+make_property(casadi::OptiSol, opti);
+
+%define make_property_opti(name)
+  make_property(casadi::Opti, name);
+%enddef
+
+make_property(casadi::OptiSol, debug);
+make_property_opti(f)
+make_property_opti(g)
+make_property_opti(x)
+make_property_opti(p)
+make_property_opti(lam_g)
+make_property_opti(lbg)
+make_property_opti(ubg)
+make_property_opti(nx)
+make_property_opti(np)
+make_property_opti(ng)
+
+make_property(casadi::Opti, casadi_solver);
+%define opti_metadata_modifiers(class)
+  %rename(_variable) class ## :: variable;
+  %rename(_parameter) class ## :: parameter;
+  %rename(_subject_to) class ## :: subject_to;
+  %extend class {
+    %pythoncode %{
+      def parameter(self,*args):
+        import sys
+        import os
+        frame = sys._getframe(1)
+        meta = {"stacktrace": {"file":os.path.abspath(frame.f_code.co_filename),"line":frame.f_lineno,"name":frame.f_code.co_name}}
+        ret = self._parameter(*args)
+        self.update_user_dict(ret, meta)
+        return ret
+
+      def variable(self,*args):
+        import sys
+        import os
+        frame = sys._getframe(1)
+        meta = {"stacktrace": {"file":os.path.abspath(frame.f_code.co_filename),"line":frame.f_lineno,"name":frame.f_code.co_name}}
+        ret = self._variable(*args)
+        self.update_user_dict(ret, meta)
+        return ret
+
+      def subject_to(self,*args):
+        if len(args)==0:
+          return self._subject_to()
+        import sys
+        import os
+        frame = sys._getframe(1)
+        meta = {"stacktrace": {"file":os.path.abspath(frame.f_code.co_filename),"line":frame.f_lineno,"name":frame.f_code.co_name}}
+        ret = self._subject_to(*args)
+        self.update_user_dict(args, meta)
+        return ret
+    %}
+  }
+%enddef
+
+opti_metadata_modifiers(casadi::Opti);
+
+#endif
+
+
+#ifdef SWIGMATLAB
+%define opti_metadata_modifiers(class)
+  %rename(internal_variable) class ## ::variable;
+  %rename(internal_parameter) class ## ::parameter;
+  %rename(internal_subject_to) class ## ::subject_to;
+  %extend class {
+    %matlabcode %{
+      function out = variable(self, varargin)
+        st = dbstack('-completenames',1);
+        if length(st)>0
+          meta = struct('stacktrace', st(1));
+        else
+          meta = struct;
+        end
+        out = self.internal_variable(varargin{:});
+        self.update_user_dict(out, meta);
+      end
+      function out = parameter(self, varargin)
+        st = dbstack('-completenames',1);
+        if length(st)>0
+          meta = struct('stacktrace', st(1));
+        else
+          meta = struct;
+        end
+        out = self.internal_parameter(varargin{:});
+        self.update_user_dict(out, meta);
+      end
+      function [] = subject_to(self, varargin)
+        if length(varargin)==0
+          self.internal_subject_to();
+          return;
+        end
+        st = dbstack('-completenames',1);
+        if length(st)>0
+          meta = struct('stacktrace', st(1));
+        else
+          meta = struct;
+        end
+        self.internal_subject_to(varargin{:});
+        self.update_user_dict(varargin{1}, meta);
+      end
+    %}
+  }
+%enddef
+
+opti_metadata_modifiers(casadi::Opti)
+#endif
+%include <casadi/core/optistack.hpp>
+
+
+#ifdef SWIGPYTHON
+%extend casadi::Opti {
+  %pythoncode %{
+
+    @staticmethod
+    def _callback(self,fh=None):
+      if fh is None:
+        self.callback_class();
+        return
+      class OptiCallbackHelper(OptiCallback):
+          def __init__(self, callback):
+            OptiCallback.__init__(self)
+            self.callback = callback
+
+          def call(self, i):
+            self.callback(i)
+
+      self._fh = fh
+      self._cb = OptiCallbackHelper(fh);
+      self.callback_class(self._cb);
+
+
+    def callback(self,fh=None):
+      self._callback(self,fh)
+
+
+  %}
+
+}
+#endif
+
+#ifdef SWIGMATLAB
+%extend casadi::Opti {
+  %matlabcode %{
+    function [] = callback(self, varargin)
+      casadi.OptiCallbackHelper.callback_setup(self, varargin{:})
+    end
+  %}
+}
+#endif
 
 // Cleanup for dependent modules
 %exception {

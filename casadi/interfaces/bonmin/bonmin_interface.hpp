@@ -36,7 +36,7 @@
 #include "BonOaNlpOptim.hpp"
 
 #include <casadi/interfaces/bonmin/casadi_nlpsol_bonmin_export.h>
-#include "casadi/core/function/nlpsol_impl.hpp"
+#include "casadi/core/nlpsol_impl.hpp"
 #include "casadi/core/timing.hpp"
 
 
@@ -70,18 +70,16 @@
 namespace casadi {
 
   struct CASADI_NLPSOL_BONMIN_EXPORT BonminMemory : public NlpsolMemory {
-    // Current solution
-    double *xk, lam_fk, *lam_gk, *lam_xk;
-
     // Current calculated quantities
-    double fk, *gk, *grad_fk, *jac_gk, *hess_lk, *grad_lk;
+    double *gk, *grad_fk, *jac_gk, *hess_lk, *grad_lk;
 
     // Stats
     std::vector<double> inf_pr, inf_du, mu, d_norm, regularization_size,
       obj, alpha_pr, alpha_du;
-    std::vector<int> ls_trials;
+    std::vector<casadi_int> ls_trials;
     const char* return_status;
-    int iter_count;
+    bool success;
+    casadi_int iter_count;
 
     /// Constructor
     BonminMemory();
@@ -102,10 +100,13 @@ namespace casadi {
     Sparsity hesslag_sp_;
 
     explicit BonminInterface(const std::string& name, const Function& nlp);
-    virtual ~BonminInterface();
+    ~BonminInterface() override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "bonmin";}
+    const char* plugin_name() const override { return "bonmin";}
+
+    // Get name of the class
+    std::string class_name() const override { return "BonminInterface";}
 
     /** \brief  Create a new NLP Solver */
     static Nlpsol* creator(const std::string& name, const Function& nlp) {
@@ -115,30 +116,30 @@ namespace casadi {
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     // Initialize the solver
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new BonminMemory();}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<BonminMemory*>(mem);}
+    void* alloc_mem() const override { return new BonminMemory();}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
+
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<BonminMemory*>(mem);}
 
     /// Get all statistics
-    virtual Dict get_stats(void* mem) const;
+    Dict get_stats(void* mem) const override;
 
     /** \brief Set the (persistent) work vectors */
-    virtual void set_work(void* mem, const double**& arg, double**& res,
-                          int*& iw, double*& w) const;
+    void set_work(void* mem, const double**& arg, double**& res,
+                          casadi_int*& iw, double*& w) const override;
 
     // Solve the NLP
-    virtual void solve(void* mem) const;
+    int solve(void* mem) const override;
 
     /// Exact Hessian?
     bool exact_hessian_;
@@ -147,7 +148,8 @@ namespace casadi {
     Dict opts_;
 
     // Bonmin callback functions
-    void finalize_solution(BonminMemory* m, const double* x, double obj_value) const;
+    void finalize_solution(BonminMemory* m, Bonmin::TMINLP::SolverReturn status,
+                           const double* x, double obj_value) const;
     bool get_bounds_info(BonminMemory* m, double* x_l, double* x_u,
                          double* g_l, double* g_u) const;
     bool get_starting_point(BonminMemory* m, bool init_x, double* x,
@@ -165,14 +167,16 @@ namespace casadi {
                                int ls_trials, bool full_callback) const;
 
     /// Can discrete variables be treated
-    virtual bool integer_support() const { return true;}
+    bool integer_support() const override { return true;}
 
     /// A documentation string
     static const std::string meta_doc;
 
     // Options
     bool pass_nonlinear_variables_;
+    bool pass_nonlinear_constraints_;
     std::vector<bool> nl_ex_;
+    std::vector<bool> nl_g_;
     Dict var_string_md_, var_integer_md_, var_numeric_md_,
       con_string_md_, con_integer_md_, con_numeric_md_;
   };

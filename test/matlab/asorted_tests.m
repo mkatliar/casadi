@@ -11,8 +11,15 @@ f = cos(x*y)
 y = SX.sym('y',2,1);
 z = MX.sym('z',3);
 
+DM(true)
+SX(true)
 
+r = which_depends([x;y],[x;y])
+assert(islogical(r))
 
+f = Function('f',{}, {0})
+f = Function('f',cell(1,0), {0})
+f = Function('f',cell(0,1), {0})
 
 f = Function('f',{x},{cos(x)})
 r = f(3)
@@ -130,8 +137,8 @@ catch err
 end
 
 % See issue #1483
-%assert(~isempty(strfind(msg,'  Function(char,{SX} ,{SX} ,Dict)')))
-%assert(~isempty(strfind(msg,'You have: char, SX')))
+assert(~isempty(strfind(msg,'  FUNCTION(char,{SX},{SX},struct)')))
+assert(~isempty(strfind(msg,'You have: char, SX')))
 
 % Check mixing DM and MX
 res = (DM(1)+MX(1)) - (MX(1)+DM(1))
@@ -158,9 +165,7 @@ x = SX.sym('x');
 p = SX.sym('p');
 f = x^2;
 g = log(x)-p;
-opts = struct('input_scheme', char('x','p'),...
-              'output_scheme', char('f','g'));
-nlp = Function('nlp', {x,p}, {f,g}, opts);
+nlp = Function('nlp', {x,p}, {f,g}, char('x','p'), char('f','g'));
 
 % Evaluate with numbered inputs and outputs
 [res_vec{1:2}] = nlp(1.1, 3.3);
@@ -263,7 +268,7 @@ if has_nlpsol('bonmin')
   sol = solver('x0',[1 1]);
 
   assert(all(full(sol.x)==[3;4]))
-  
+
   options = struct;
   options.discrete = {true,true};
   solver = nlpsol('solver', 'bonmin', nlp,options);
@@ -272,24 +277,43 @@ if has_nlpsol('bonmin')
   assert(all(full(sol.x)==[3;4]))
 end
 
-data = { [1 3;11 17] , [1 3] , [1;3] 3};
+data = { [1 3 2;11 17 4], [1 3;11 17] , [1 3] , [1;3] 3};
 
 for i=1:numel(data)
   A = data{i};
-  B = reshape(DM(A),size(A));
-  assert(all(sum(A)==full(sum(B))))
-  assert(all(sum(A,1)==full(sum(B,1))))
-  assert(all(sum(A,2)==full(sum(B,2))))
+  B_DM = reshape(DM(A),size(A));
+  B_MX = MX(B_DM);
+  Bs = {B_DM, B_MX};
+  for j=1:2
+    B = Bs{j};
+    assert(all(sum(A)==full(evalf(sum(B)))))
+    assert(all(sum(A,1)==full(evalf(sum(B,1)))))
+    assert(all(sum(A,2)==full(evalf(sum(B,2)))))
 
-  if isvector(A)
-    assert(all(norm(A)==full(norm(B))))
-    assert(all(norm(A,1)==full(norm(B,1))))
-    assert(all(norm(A,2)==full(norm(B,2))))
-    assert(all(norm(A,inf)==full(norm(B,inf))))
-    assert(all(norm(A,'inf')==full(norm(B,'inf'))))
-    assert(all(norm(A,'fro')==full(norm(B,'fro'))))
-  else
-    assert(all(norm(A,'fro')==full(norm(B,'fro'))))
+    assert(all(all(cumsum(A)==full(evalf(cumsum(B))))))
+    assert(all(all(cumsum(A,1)==full(evalf(cumsum(B,1))))))
+    assert(all(all(cumsum(A,2)==full(evalf(cumsum(B,2))))))
+
+    assert(all(diff(A)==full(evalf(diff(B)))))
+    assert(all(diff(A,1)==full(evalf(diff(B,1)))))
+    assert(all(diff(A,2)==full(evalf(diff(B,2)))))
+    assert(all(all(diff(A,1,1)==full(evalf(diff(B,1,1))))))
+    assert(all(all(diff(A,1,2)==full(evalf(diff(B,1,2))))))
+    assert(all(all(diff(A,2,1)==full(evalf(diff(B,2,1))))))
+    assert(all(all(diff(A,2,2)==full(evalf(diff(B,2,2))))))
+
+    if j==1
+      if isvector(A)
+        assert(all(norm(A)==full(evalf(norm(B)))))
+        assert(all(norm(A,1)==full(evalf(norm(B,1)))))
+        assert(all(norm(A,2)==full(evalf(norm(B,2)))))
+        assert(all(norm(A,inf)==full(evalf(norm(B,inf)))))
+        assert(all(norm(A,'inf')==full(evalf(norm(B,'inf')))))
+        assert(all(norm(A,'fro')==full(evalf(norm(B,'fro')))))
+      else
+        assert(all(norm(A,'fro')==full(evalf(norm(B,'fro')))))
+      end
+    end
   end
 end
 
@@ -307,36 +331,150 @@ y = SX.sym('y',2)
 z = SX.sym('z',2,2)
 a = SX.sym('a',Sparsity.upper(2))
 
+%if ~(is_octave & ismac)
+if false
+  f = Function('f',{x,y,z,a},{x,y,z,a})
+  F = returntypes('full',f);
 
-f = Function('f',{x,y,z,a},{x,y,z,a})
-F = returntypes('full',f);
+  [a,b,c,d] = F(1,2,3,4);
 
-[a,b,c,d] = F(1,2,3,4);
+  assert(~issparse(c));
+  assert(~issparse(d));
 
-assert(~issparse(c));
-assert(~issparse(d));
+  F = returntypes('sparse',f);
 
-F = returntypes('sparse',f);
+  [a,b,c,d] = F(1,2,3,4);
 
-[a,b,c,d] = F(1,2,3,4);
+  assert(issparse(c));
+  assert(issparse(d));
 
-assert(issparse(c));
-assert(issparse(d));
+  F = returntypes('full|sparse',f);
 
-F = returntypes('full|sparse',f);
+  [a,b,c,d] = F(1,2,3,4);
 
-[a,b,c,d] = F(1,2,3,4);
+  assert(~issparse(c));
+  assert(issparse(d));
 
-assert(~issparse(c));
-assert(issparse(d));
+  F = returntypes({'sparse','full','sparse','full'},f);
 
-F = returntypes({'sparse','full','sparse','full'},f);
+  [a,b,c,d] = F(1,2,3,4);
 
-[a,b,c,d] = F(1,2,3,4);
+  assert(issparse(a));
+  assert(~issparse(b));
+  assert(issparse(c));
+  assert(~issparse(d));
+end
 
-assert(issparse(a));
+Sparsity(3,3)
+
+x = MX.sym('x',3,3);
+
+assert(numel(x)==9);
+
+xr = tril(x);
+xnz = xr{:};
+
+assert(numel(xnz)==6);
+
+
+
+if ~is_octave
+  x=SX.sym('x');
+  y = 4;
+
+  warning('dummy')
+  save('test.mat','x','y');
+  assert(~isempty(strfind(lastwarn,'not supported')))
+
+  warning('dummy')
+  data = load('test.mat');
+  assert(~isempty(strfind(lastwarn,'not supported')))
+  assert(data.y==4)
+  assert(data.x.isnull)
+end
+
+x=SX.sym('x');
+f=Function('f',{x},{2*x,DM.eye(2)*x});
+f.generate('fmex',struct('mex',true));
+clear fmex
+if is_octave
+mex -DMATLAB_MEX_FILE fmex.c
+else
+mex -largeArrayDims fmex.c
+end
+[a,b] = fmex('f',3);
+assert(norm(a-6,1)==0);
+assert(norm(b-3*eye(2),1)==0);
+assert(~issparse(a));
+assert(issparse(b));
+clear fmex
+if is_octave
+mex -DCASADI_MEX_NO_SPARSE -DMATLAB_MEX_FILE fmex.c
+else
+mex -DCASADI_MEX_NO_SPARSE -largeArrayDims fmex.c
+end
+[a,b] = fmex('f',3);
+assert(norm(a-6,1)==0);
+assert(norm(b-3*eye(2),1)==0);
+assert(~issparse(a));
 assert(~issparse(b));
-assert(issparse(c));
-assert(~issparse(d));
 
+Xs = {SX, MX};
+for j=1:2;
+  X = Xs{j};
 
+  for sA=[1,3]
+     for sy=[3]
+
+        A = X.sym('A',sA,sA);
+        y = X.sym('y',sy);
+
+        yv = [7;2;4];
+        Av = [13 0.2 1;1 9 2;0.1 1 3];
+        yv = yv(1:sy);
+        Av = Av(1:sA,1:sA);
+        F = Function('f',{A,y},{A\y, A\yv, Av\y, A\DM(yv), DM(Av)\y, DM(Av)\DM(yv)});
+        out = F.call({Av,yv});
+        for i=1:numel(out)
+          assert(norm(Av\yv-full(out{i}),1)<=1e-12);
+        end
+
+        yv = yv';
+        y = y';
+        F = Function('f',{A,y},{y/A, yv/A, y/Av, DM(yv)/A, y/DM(Av), DM(yv)/DM(Av)});
+        out = F.call({Av,yv});
+        for i=1:numel(out)
+          assert(norm(yv/Av-full(out{i}),1)<=1e-12);
+        end
+    end
+  end
+
+  A = X.sym('A',3,3);
+  Av = [13 0.2 1;1 9 2;0.1 1 3];
+  for N=[-4,-3,-2,-1,0,1,2,3,4]
+    F = Function('f',{A},{A^N,DM(Av)^N});
+    out = F.call({Av});
+    for i=1:numel(out)
+      assert(norm(Av^N-full(out{i}),1)<=1e-12);
+    end
+  end
+
+end
+
+c = {1,2,4;3 5 6}
+e = full(casadi.blockcat(c))
+assert(norm(cell2mat(c)-e)==0)
+
+e = full(casadi.blockcat({{1,2,4};{3 5 6}}))
+assert(norm(cell2mat(c)-e)==0)
+e = full(casadi.blockcat({{1,2,4} {3 5 6}}))
+assert(norm(cell2mat(c)-e)==0)
+e = full(casadi.blockcat({{1;2;4} {3 5 6}}))
+assert(norm(cell2mat(c)-e)==0)
+e = full(casadi.blockcat({{1;2;4} {3;5;6}}))
+assert(norm(cell2mat(c)-e)==0)
+
+c = casadi.blockcat({1 2 3})
+assert(norm(size(c)-[1 3])==0)
+c = casadi.blockcat({1;2;3})
+assert(norm(size(c)-[3 1])==0)

@@ -28,7 +28,7 @@
 
 #include <casadi/interfaces/knitro/casadi_nlpsol_knitro_export.h>
 #include <knitro.h>
-#include "casadi/core/function/nlpsol_impl.hpp"
+#include "casadi/core/nlpsol_impl.hpp"
 
 /** \defgroup plugin_Nlpsol_knitro
   KNITRO interface
@@ -49,10 +49,11 @@ namespace casadi {
     KTR_context_ptr kc;
 
     // Inputs
-    double *wx, *wlbx, *wubx, *wlbg, *wubg;
+    double *wlbx, *wubx, *wlbg, *wubg;
 
     // Stats
     const char* return_status;
+    bool success;
 
     /// Constructor
     KnitroMemory(const KnitroInterface& self);
@@ -67,18 +68,17 @@ namespace casadi {
   */
   class CASADI_NLPSOL_KNITRO_EXPORT KnitroInterface : public Nlpsol {
   public:
-    // NLP functions
-    Function fg_fcn_;
-    Function gf_jg_fcn_;
-    Function hess_l_fcn_;
     Sparsity jacg_sp_;
     Sparsity hesslag_sp_;
 
     explicit KnitroInterface(const std::string& name, const Function& nlp);
-    virtual ~KnitroInterface();
+    ~KnitroInterface() override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "knitro";}
+    const char* plugin_name() const override { return "knitro";}
+
+    // Get name of the class
+    std::string class_name() const override { return "KnitroInterface";}
 
     /** \brief  Create a new NLP Solver */
     static Nlpsol* creator(const std::string& name, const Function& nlp) {
@@ -88,33 +88,34 @@ namespace casadi {
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     // Initialize the solver
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new KnitroMemory(*this);}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<KnitroMemory*>(mem);}
+    void* alloc_mem() const override { return new KnitroMemory(*this);}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
+
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<KnitroMemory*>(mem);}
 
     /** \brief Set the (persistent) work vectors */
-    virtual void set_work(void* mem, const double**& arg, double**& res,
-                          int*& iw, double*& w) const;
+    void set_work(void* mem, const double**& arg, double**& res,
+                          casadi_int*& iw, double*& w) const override;
 
     // Solve the NLP
-    virtual void solve(void* mem) const;
+    int solve(void* mem) const override;
 
     /// Can discrete variables be treated
-    virtual bool integer_support() const { return true;}
+    bool integer_support() const override { return true;}
 
     // KNITRO callback wrapper
-    static int callback(const int evalRequestCode, const int n, const int m, const int nnzJ,
+    static int callback(const int evalRequestCode,
+                        const int n, const int m, const int nnzJ,
                         const int nnzH, const double * const x, const double * const lambda,
                         double * const obj, double * const c, double * const objGrad,
                         double * const jac, double * const hessian,
@@ -122,6 +123,9 @@ namespace casadi {
 
     // KNITRO return codes
     static const char* return_codes(int flag);
+
+    /// Get all statistics
+    Dict get_stats(void* mem) const override;
 
     // KNITRO options
     Dict opts_;

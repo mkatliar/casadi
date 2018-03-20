@@ -52,8 +52,8 @@ namespace casadi {
   // returns the variable bounds
   bool BonminUserClass::get_bounds_info(Index n, Number* x_l, Number* x_u,
                                        Index m, Number* g_l, Number* g_u) {
-    casadi_assert(n==solver_.nx_);
-    casadi_assert(m==solver_.ng_);
+    casadi_assert_dev(n==solver_.nx_);
+    casadi_assert_dev(m==solver_.ng_);
     return solver_.get_bounds_info(mem_, x_l, x_u, g_l, g_u);
   }
 
@@ -62,8 +62,8 @@ namespace casadi {
                                           bool init_z, Number* z_L, Number* z_U,
                                           Index m, bool init_lambda,
                                           Number* lambda) {
-    casadi_assert(n==solver_.nx_);
-    casadi_assert(m==solver_.ng_);
+    casadi_assert_dev(n==solver_.nx_);
+    casadi_assert_dev(m==solver_.ng_);
     return solver_.get_starting_point(mem_, init_x, x, init_z, z_L, z_U, init_lambda, lambda);
   }
 
@@ -105,14 +105,14 @@ namespace casadi {
       return solver_.calc_function(mem_, "nlp_jac_g")==0;
     } else {
       // Get the sparsity pattern
-      int ncol = solver_.jacg_sp_.size2();
-      const int* colind = solver_.jacg_sp_.colind();
-      const int* row = solver_.jacg_sp_.row();
+      casadi_int ncol = solver_.jacg_sp_.size2();
+      const casadi_int* colind = solver_.jacg_sp_.colind();
+      const casadi_int* row = solver_.jacg_sp_.row();
       if (nele_jac!=colind[ncol]) return false; // consistency check
 
       // Pass to BONMIN
-      for (int cc=0; cc<ncol; ++cc) {
-        for (int el=colind[cc]; el<colind[cc+1]; ++el) {
+      for (casadi_int cc=0; cc<ncol; ++cc) {
+        for (casadi_int el=colind[cc]; el<colind[cc+1]; ++el) {
           *iRow++ = row[el];
           *jCol++ = cc;
         }
@@ -137,13 +137,13 @@ namespace casadi {
       return true;
     } else {
       // Get the sparsity pattern
-      int ncol = solver_.hesslag_sp_.size2();
-      const int* colind = solver_.hesslag_sp_.colind();
-      const int* row = solver_.hesslag_sp_.row();
+      casadi_int ncol = solver_.hesslag_sp_.size2();
+      const casadi_int* colind = solver_.hesslag_sp_.colind();
+      const casadi_int* row = solver_.hesslag_sp_.row();
 
       // Pass to BONMIN
-      for (int cc=0; cc<ncol; ++cc) {
-        for (int el=colind[cc]; el<colind[cc+1]; ++el) {
+      for (casadi_int cc=0; cc<ncol; ++cc) {
+        for (casadi_int el=colind[cc]; el<colind[cc+1]; ++el) {
           *iRow++ = row[el];
           *jCol++ = cc;
         }
@@ -154,7 +154,7 @@ namespace casadi {
 
   void BonminUserClass::finalize_solution(TMINLP::SolverReturn status,
         Ipopt::Index n, const Ipopt::Number* x, Ipopt::Number obj_value) {
-    solver_.finalize_solution(mem_, x, obj_value);
+    solver_.finalize_solution(mem_, status, x, obj_value);
   }
 
 
@@ -203,14 +203,16 @@ namespace casadi {
  }
 
  bool BonminUserClass::get_variables_linearity(Index n, Ipopt::TNLP::LinearityType* var_types) {
-   for (int i=0; i<n; ++i) var_types[i] = Ipopt::TNLP::NON_LINEAR;
-   // Ipopt::TNLP::NON_LINEAR / Ipopt::TNLP::LINEAR
+   casadi_assert_dev(n==solver_.nl_ex_.size());
+   for (casadi_int i=0; i<n; ++i)
+    var_types[i] = solver_.nl_ex_[i] ? Ipopt::TNLP::NON_LINEAR : Ipopt::TNLP::LINEAR;
    return true;
  }
 
  bool BonminUserClass::get_constraints_linearity(Index m, Ipopt::TNLP::LinearityType* const_types) {
-   for (int i=0; i<m; ++i) const_types[i] = Ipopt::TNLP::NON_LINEAR;
-   // Ipopt::TNLP::NON_LINEAR / Ipopt::TNLP::LINEAR
+   casadi_assert_dev(m==solver_.nl_g_.size());
+   for (casadi_int i=0; i<m; ++i)
+    const_types[i] = solver_.nl_g_[i] ? Ipopt::TNLP::NON_LINEAR : Ipopt::TNLP::LINEAR;
    return true;
  }
 

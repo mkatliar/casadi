@@ -27,7 +27,7 @@
 #define CASADI_IPOPT_INTERFACE_HPP
 
 #include <casadi/interfaces/ipopt/casadi_nlpsol_ipopt_export.h>
-#include "casadi/core/function/nlpsol_impl.hpp"
+#include "casadi/core/nlpsol_impl.hpp"
 #include "casadi/core/timing.hpp"
 
 /** \defgroup plugin_Nlpsol_ipopt
@@ -72,17 +72,15 @@ namespace casadi {
     void* userclass;
     void* app;
 
-    // Current solution
-    double *xk, lam_fk, *lam_gk, *lam_xk;
-
     // Current calculated quantities
-    double fk, *gk, *grad_fk, *jac_gk, *hess_lk, *grad_lk;
+    double *gk, *grad_fk, *jac_gk, *hess_lk, *grad_lk;
 
     // Stats
     std::vector<double> inf_pr, inf_du, mu, d_norm, regularization_size,
       obj, alpha_pr, alpha_du;
     std::vector<int> ls_trials;
     const char* return_status;
+    bool success;
     int iter_count;
 
     // Meta-data
@@ -112,10 +110,13 @@ namespace casadi {
     Sparsity hesslag_sp_;
 
     explicit IpoptInterface(const std::string& name, const Function& nlp);
-    virtual ~IpoptInterface();
+    ~IpoptInterface() override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "ipopt";}
+    const char* plugin_name() const override { return "ipopt";}
+
+    // Get name of the class
+    std::string class_name() const override { return "IpoptInterface";}
 
     /** \brief  Create a new NLP Solver */
     static Nlpsol* creator(const std::string& name, const Function& nlp) {
@@ -125,30 +126,30 @@ namespace casadi {
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     // Initialize the solver
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new IpoptMemory();}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<IpoptMemory*>(mem);}
+    void* alloc_mem() const override { return new IpoptMemory();}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
+
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<IpoptMemory*>(mem);}
 
     /// Get all statistics
-    virtual Dict get_stats(void* mem) const;
+    Dict get_stats(void* mem) const override;
 
     /** \brief Set the (persistent) work vectors */
-    virtual void set_work(void* mem, const double**& arg, double**& res,
-                          int*& iw, double*& w) const;
+    void set_work(void* mem, const double**& arg, double**& res,
+                          casadi_int*& iw, double*& w) const override;
 
     // Solve the NLP
-    virtual void solve(void* mem) const;
+    int solve(void* mem) const override;
 
     /// Exact Hessian?
     bool exact_hessian_;

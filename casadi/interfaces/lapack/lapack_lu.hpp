@@ -26,7 +26,7 @@
 #ifndef CASADI_LAPACK_LU_HPP
 #define CASADI_LAPACK_LU_HPP
 
-#include "casadi/core/function/linsol_internal.hpp"
+#include "casadi/core/linsol_internal.hpp"
 #include <casadi/interfaces/lapack/casadi_linsol_lapacklu_export.h>
 
 extern "C" {
@@ -80,42 +80,39 @@ namespace casadi {
   class CASADI_LINSOL_LAPACKLU_EXPORT LapackLu : public LinsolInternal {
   public:
     // Create a linear solver given a sparsity pattern and a number of right hand sides
-    LapackLu(const std::string& name);
+    LapackLu(const std::string& name, const Sparsity& sp);
 
     /** \brief  Create a new Linsol */
-    static LinsolInternal* creator(const std::string& name) {
-      return new LapackLu(name);
+    static LinsolInternal* creator(const std::string& name, const Sparsity& sp) {
+      return new LapackLu(name, sp);
     }
 
     /// Destructor
-    virtual ~LapackLu();
+    ~LapackLu() override;
 
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     /// Initialize the solver
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new LapackLuMemory();}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<LapackLuMemory*>(mem);}
+    void* alloc_mem() const override { return new LapackLuMemory();}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
 
-    // Set sparsity pattern
-    virtual void reset(void* mem, const int* sp) const;
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<LapackLuMemory*>(mem);}
 
     // Factorize the linear system
-    virtual void factorize(void* mem, const double* A) const;
+    int nfact(void* mem, const double* A) const override;
 
     // Solve the linear system
-    virtual void solve(void* mem, double* x, int nrhs, bool tr) const;
+    int solve(void* mem, const double* A, double* x, casadi_int nrhs, bool tr) const override;
 
     /// A documentation string
     static const std::string meta_doc;
@@ -129,7 +126,10 @@ namespace casadi {
     bool allow_equilibration_failure_;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "lapacklu";}
+    const char* plugin_name() const override { return "lapacklu";}
+
+    // Get name of the class
+    std::string class_name() const override { return "LapackLu";}
   };
 
 /// \endcond

@@ -26,8 +26,8 @@
 #ifndef CASADI_SLICOT_DPLE_HPP
 #define CASADI_SLICOT_DPLE_HPP
 
-#include "../../core/function/dple_impl.hpp"
-#include "../../core/function/linsol.hpp"
+#include "../../core/dple_impl.hpp"
+#include "../../core/linsol.hpp"
 #include <casadi/interfaces/slicot/casadi_dple_slicot_export.h>
 
 /** \defgroup plugin_Dple_slicot
@@ -71,7 +71,7 @@ namespace casadi {
 
     double *VZ, *T, *Z, *X, *Xbar, *nnKa, *nnKb, *eig_real, *eig_imag, *F, *FF, *A, *B;
     double *dwork, *wruntime;
-    int* partition, *iwruntime;
+    casadi_int* partition, *iwruntime;
 
     /// Solvers for low-order Discrete Periodic Sylvester Equations
     std::vector< std::vector< Linsol> > dpse_solvers;
@@ -111,35 +111,38 @@ namespace casadi {
     }
 
     /** \brief  Destructor */
-    virtual ~SlicotDple();
+    ~SlicotDple() override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "slicot";}
+    const char* plugin_name() const override { return "slicot";}
+
+    // Get name of the class
+    std::string class_name() const override { return "SlicotDple";}
 
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     /** \brief  Initialize */
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new SlicotDpleMemory();}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<SlicotDpleMemory*>(mem);}
-
-    /** \brief Set the (persistent) work vectors */
-    virtual void set_work(void* mem, const double**& arg, double**& res,
-                          int*& iw, double*& w) const;
+    void* alloc_mem() const override { return new SlicotDpleMemory();}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
+
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<SlicotDpleMemory*>(mem);}
+
+    /** \brief Set the (persistent) work vectors */
+    void set_work(void* mem, const double**& arg, double**& res,
+                          casadi_int*& iw, double*& w) const override;
 
     /** \brief  Evaluate numerically */
-    virtual void eval(void* mem, const double** arg, double** res, int* iw, double* w) const;
+    int eval(const double** arg, double** res, casadi_int* iw, double* w, void* mem) const override;
 
     /// A documentation string
     static const std::string meta_doc;
@@ -148,9 +151,10 @@ namespace casadi {
 
   private:
     /// Dimension of state-space
-    int n_;
+    casadi_int n_;
 
-    inline int partindex(const SlicotDpleMemory* m, int i, int j, int k, int r, int c) const;
+    inline casadi_int partindex(const SlicotDpleMemory* m, casadi_int i, casadi_int j, casadi_int k,
+                                casadi_int r, casadi_int c) const;
 
     /// Numerical zero, used in periodic Schur form
     double psd_num_zero_;
@@ -161,10 +165,13 @@ namespace casadi {
     /// Options to be passed to linear solver constructor
     Dict linear_solver_options_;
 
+    /// Has the plugin been loaded already?
+    static bool has_loaded_;
+
   };
 
 
-  void slicot_periodic_schur(int n, int K, const double* a,
+  void slicot_periodic_schur(casadi_int n, casadi_int K, const double* a,
                              double* t,  double * z,
                              double* dwork, double* eig_real,
                              double *eig_imag, double num_zero=0);

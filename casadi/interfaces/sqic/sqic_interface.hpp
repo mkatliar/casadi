@@ -26,7 +26,7 @@
 #ifndef CASADI_SQIC_INTERFACE_HPP
 #define CASADI_SQIC_INTERFACE_HPP
 
-#include "casadi/core/function/conic.hpp"
+#include "casadi/core/conic.hpp"
 #include <casadi/interfaces/sqic/casadi_conic_sqic_export.h>
 
 /** \defgroup plugin_Conic_sqic
@@ -60,10 +60,13 @@ namespace casadi {
     explicit SqicInterface(const std::map<std::string, Sparsity>& st);
 
     /** \brief  Destructor */
-    virtual ~SqicInterface();
+    ~SqicInterface() override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "sqic";}
+    const char* plugin_name() const override { return "sqic";}
+
+    // Get name of the class
+    std::string class_name() const override { return "SqicInterface";}
 
     /** \brief  Initialize */
     virtual void init();
@@ -74,13 +77,13 @@ namespace casadi {
     virtual void evaluate();
 
     /// Throw error
-    static void sqic_error(const std::string& module, int flag);
+    static void sqic_error(const std::string& module, casadi_int flag);
 
     /// Calculate the error message map
-    static std::map<int, std::string> calc_flagmap();
+    static std::map<casadi_int, std::string> calc_flagmap();
 
     /// Error message map
-    static std::map<int, std::string> flagmap;
+    static std::map<casadi_int, std::string> flagmap;
 
     /// A documentation string
     static const std::string meta_doc;
@@ -97,17 +100,17 @@ namespace casadi {
     /// Storage space for sqic \p x variable
     std::vector<double> x_;
     /// Storage space for sqic \p locA variable
-    std::vector<int> locA_;
+    std::vector<casadi_int> locA_;
     /// Storage space for sqic \p indA variable
-    std::vector<int> indA_;
+    std::vector<casadi_int> indA_;
     /// Storage space for sqic \p hs variable
-    std::vector<int> hs_;
+    std::vector<casadi_int> hs_;
     /// Storage space for sqic \p hEtype variable
-    std::vector<int> hEtype_;
+    std::vector<casadi_int> hEtype_;
     /// Storage space for sqic \p indH variable
-    std::vector<int> indH_;
+    std::vector<casadi_int> indH_;
     /// Storage space for sqic \p locH variable
-    std::vector<int> locH_;
+    std::vector<casadi_int> locH_;
     /// Storage space for sqic \p rc variable
     std::vector<double> rc_;
     /// Storage space for sqic \p rc variable

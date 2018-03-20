@@ -134,7 +134,7 @@ class SXtests(casadiTestCase):
       x0=array([[0.738]])
 
       def fmod(f,x):
-        J=f.jacobian()
+        J=f.jacobian_old(0, 0)
         return J
 
       self.numpyEvaluationCheckPool(self.Jpool,[x],x0,name="SX unary operations, jacobian",fmod=fmod)
@@ -145,9 +145,9 @@ class SXtests(casadiTestCase):
       x0=array([[0.738]])
 
       def fmod(f,x):
-        j=SX.jac(f)
-        J=Function("J", x,[j])
-        return J
+          y = f.call(x)
+          J = Function('J', x, [jacobian(y[0],x[0])])
+          return J
 
       self.numpyEvaluationCheckPool(self.Jpool,[x],x0,name="SX unary operations, jac",fmod=fmod)
 
@@ -157,7 +157,7 @@ class SXtests(casadiTestCase):
       x0=array([0.738,0.9,0.3])
 
       def fmod(f,x):
-        J=f.jacobian()
+        J=f.jacobian_old(0, 0)
         return J
 
       self.numpyEvaluationCheckPool(self.Jpool,[x],x0,name="SX unary operations, jacobian",fmod=fmod)
@@ -169,7 +169,7 @@ class SXtests(casadiTestCase):
       x0=array([0.738,0.9,0.3])
 
       def fmod(f,x):
-        J=f.jacobian()
+        J=f.jacobian_old(0, 0)
         return J
 
       self.numpyEvaluationCheckPool(self.Jpool,[x],x0,name="SX unary operations, jacobian",fmod=fmod)
@@ -313,7 +313,7 @@ class SXtests(casadiTestCase):
     for i in range(3):
       self.assertAlmostEqual(z[i], zr[i],10,'SXfunction output in correct')
     self.message("SXFunction jacobian evaluation")
-    J=f.jacobian()
+    J=f.jacobian_old(0, 0)
     J_in = [0]*J.n_in();J_in[0]=L
     J_out = J.call(J_in)
     Jr=matrix([[1,1],[3,2],[4,27]])
@@ -334,7 +334,7 @@ class SXtests(casadiTestCase):
       self.assertEqual(str(f),'[SX(((3-sin((x*x)))-y)), SX((sqrt(y)*x))]','SX representation is wrong'+str(f))
     fcn = Function("fcn", [vertcat(*[x,y])],[vertcat(*f)])
 
-    self.assertEqual(repr(fcn),'fcn','SX representation is wrong')
+    self.assertEqual(repr(fcn),'Function(fcn:(i0[2])->(o0[2]) SXFunction)','SX representation is wrong')
 
     # Pass inputs
     L=[2,3]
@@ -1050,7 +1050,7 @@ class SXtests(casadiTestCase):
     f = Function("f", [x],[mtimes([x.T,H,x])], {'verbose':True})
     H *= 2
 
-    h = f.hessian()
+    h = f.hessian_old(0, 0)
     h_out = h.call([0])
 
     self.assertTrue(h.sparsity_out(0)==H.sparsity())
@@ -1144,7 +1144,7 @@ class SXtests(casadiTestCase):
     f_out = f.call(f_in)
     self.checkarray(f_out[0],DM([2]))
 
-    J = f.jacobian()
+    J = f.jacobian_old(0, 0)
 
     J_in = [0]*J.n_in();J_in[0]=2
     J_in[1]=0.5
@@ -1171,7 +1171,7 @@ class SXtests(casadiTestCase):
     J_out = J.call(J_in)
     self.checkarray(J_out[0],DM([1]))
 
-    J = f.jacobian(1)
+    J = f.jacobian_old(1, 0)
 
     J_in = [0]*J.n_in();J_in[0]=2
     J_in[1]=0.5
@@ -1232,46 +1232,47 @@ class SXtests(casadiTestCase):
       is_smooth(x)
 
   def test_which_depends(self):
-    x =SX.sym("x")
-    y =SX.sym("y")
+    for X in [SX,MX]:
+      x = X.sym("x")
+      y = X.sym("y")
 
-    p =SX.sym("p")
+      p = X.sym("p")
 
-    e = vertcat(0,x,y,p,2*p**3,x*y,x*p,sin(x),cos(y),sqrt(x+y),p*p*x,x*y*p)
-    
-    self.checkarray(which_depends(e, vertcat(x,y),2,True),[0, 0, 0, 0,0, 1, 0, 1, 1, 1, 0, 1])
-    self.checkarray(which_depends(e, vertcat(x,y),1,True),[0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1])
+      e = vertcat(0,x,y,p,2*p**3,x*y,x*p,sin(x),cos(y),sqrt(x+y),p*p*x,x*y*p)
 
-    z =SX.sym("z")
-    e = vertcat(x*p,x+y)
-    self.checkarray(which_depends(e, vertcat(x,y,p,z),2,False),[True, False, True, False])
-    self.checkarray(which_depends(e, vertcat(x,y,p,z),1,False),[True, True, True, False])
-    
-    e = vertcat(x*p,x+z*y)
-    self.checkarray(which_depends(e, vertcat(x,y,p),2,False),[True, False, True])
-    self.checkarray(which_depends(e, vertcat(x,y,p),1,False),[True, True, True])
+      self.checkarray(which_depends(e, vertcat(x,y),2,True),[0, 0, 0, 0,0, 1, 0, 1, 1, 1, 0, 1])
+      self.checkarray(which_depends(e, vertcat(x,y),1,True),[0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1])
 
-    e = vertcat(x*p,x+z*y)
-    self.checkarray(which_depends(e, vertcat(x,y,p,z),2,False),[True, True, True, True])
-    self.checkarray(which_depends(e, vertcat(x,y,p,z),1,False),[True, True, True, True])
-    
-    e = vertcat(sin(x+y)+p)
-    self.checkarray(which_depends(e, vertcat(x,y,p,z),2,False),[True, True, False, False])
-    self.checkarray(which_depends(e, vertcat(x,y,p,z),1,False),[True, True, True, False])
-    
-    e = vertcat(sin(x)*p**2,y**2)
-    #self.checkarray(which_depends(e, vertcat(x,y,p),3,True),[True, False])
-    #self.checkarray(which_depends(e, vertcat(x,y,p),3,False),[True, False, True])
-    self.checkarray(which_depends(e, vertcat(x,y,p),2,True),[True, True])
-    self.checkarray(which_depends(e, vertcat(x,y,p),2,False),[True, True, True])
-    
-    e = vertcat(x**2*p,y)
-    #self.checkarray(which_depends(e, vertcat(x,y,p),3,True),[True, False])
-    #self.checkarray(which_depends(e, vertcat(x,y,p),3,False),[True, False, False])
-    
-    self.checkarray(which_depends(e, vertcat(x,y,p),2,True),[True, False])
-    self.checkarray(which_depends(e, vertcat(x,y,p),2,False),[True, False, True])
-    
+      z =X.sym("z")
+      e = vertcat(x*p,x+y)
+      self.checkarray(which_depends(e, vertcat(x,y,p,z),2,False),[True, False, True, False])
+      self.checkarray(which_depends(e, vertcat(x,y,p,z),1,False),[True, True, True, False])
+
+      e = vertcat(x*p,x+z*y)
+      self.checkarray(which_depends(e, vertcat(x,y,p),2,False),[True, False, True])
+      self.checkarray(which_depends(e, vertcat(x,y,p),1,False),[True, True, True])
+
+      e = vertcat(x*p,x+z*y)
+      self.checkarray(which_depends(e, vertcat(x,y,p,z),2,False),[True, True, True, True])
+      self.checkarray(which_depends(e, vertcat(x,y,p,z),1,False),[True, True, True, True])
+
+      e = vertcat(sin(x+y)+p)
+      self.checkarray(which_depends(e, vertcat(x,y,p,z),2,False),[True, True, False, False])
+      self.checkarray(which_depends(e, vertcat(x,y,p,z),1,False),[True, True, True, False])
+
+      e = vertcat(sin(x)*p**2,y**2)
+      #self.checkarray(which_depends(e, vertcat(x,y,p),3,True),[True, False])
+      #self.checkarray(which_depends(e, vertcat(x,y,p),3,False),[True, False, True])
+      self.checkarray(which_depends(e, vertcat(x,y,p),2,True),[True, True])
+      self.checkarray(which_depends(e, vertcat(x,y,p),2,False),[True, True, True])
+
+      e = vertcat(x**2*p,y)
+      #self.checkarray(which_depends(e, vertcat(x,y,p),3,True),[True, False])
+      #self.checkarray(which_depends(e, vertcat(x,y,p),3,False),[True, False, False])
+
+      self.checkarray(which_depends(e, vertcat(x,y,p),2,True),[True, False])
+      self.checkarray(which_depends(e, vertcat(x,y,p),2,False),[True, False, True])
+
   def test_if_else_zero_sens(self):
 
     for X in [SX]:
@@ -1299,6 +1300,125 @@ class SXtests(casadiTestCase):
 
       self.checkfunction(f,fa,inputs=[3])
       self.checkfunction(f,fb,inputs=[-3],evals=1)
+
+  def test_pw_const(self):
+      t= SX.sym("t")
+
+      e = pw_const(t, [0,2,3],[7,1,3,5])
+
+      E = Function("E",[t],[e])
+
+      self.checkarray(E(-2),7)
+      self.checkarray(E(-1),7)
+      self.checkarray(E(0),1)
+      self.checkarray(E(1),1)
+      self.checkarray(E(1.9999),1)
+      self.checkarray(E(2),3)
+      self.checkarray(E(2.5),3)
+      self.checkarray(E(3),5)
+      self.checkarray(E(10),5)
+
+  def test_pw_lin(self):
+      t= SX.sym("t")
+
+      e = pw_lin(t, [0,2,3,5], [7,1,3,2])
+
+      E = Function("E",[t],[e])
+
+      self.checkarray(E(-2),13)
+      self.checkarray(E(-1),10)
+      self.checkarray(E(0),7)
+      self.checkarray(E(1),4)
+      self.checkarray(E(2),1)
+      self.checkarray(E(2.5),2)
+      self.checkarray(E(3),3)
+      self.checkarray(E(4),2.5)
+      self.checkarray(E(5),2)
+      self.checkarray(E(7),1)
+
+  def test_numpy_error(self):
+      x = SX.sym("x",3)
+      with self.assertInException("Use an equivalent CasADi function"):
+        np.linalg.norm(x)
+
+
+  def test_quadratic(self):
+    for X in [SX,MX]:
+      x = X.sym("x")
+      p = X.sym("p")
+      y = X.sym("y")
+
+      self.assertFalse(is_quadratic(sin(x),x))
+      self.assertFalse(is_quadratic(x**3,x))
+      self.assertTrue(is_quadratic(x**2,x))
+      self.assertTrue(is_quadratic(4*x,x))
+      self.assertTrue(is_quadratic(5,x))
+
+      self.assertFalse(is_quadratic(sin(x)*p**4,x))
+      self.assertFalse(is_quadratic(x**3*p**4,x))
+      self.assertTrue(is_quadratic(x**2*p**4,x))
+      self.assertTrue(is_quadratic(x*p**4,x))
+      self.assertTrue(is_quadratic(5*p**4,x))
+
+      self.assertFalse(is_linear(sin(x),x))
+      self.assertFalse(is_linear(x**3,x))
+      self.assertFalse(is_linear(x**2,x))
+      self.assertTrue(is_linear(3*x,x))
+      self.assertTrue(is_linear(5,x))
+
+      self.assertFalse(is_linear(sin(x)*p**4,x))
+      self.assertFalse(is_linear(x**3*p**4,x))
+      self.assertFalse(is_linear(x**2*p**4,x))
+      self.assertTrue(is_linear(x*p**4,x))
+      self.assertTrue(is_linear(5*p**4,x))
+
+
+
+      z = x**2+3*y**2 + 0.5*x*y + 7*x + 6*y+7
+      [A,b,c] = quadratic_coeff(z,vertcat(x,y))
+
+      with self.assertInException("non-quadratic"):
+        [A,b,c] = quadratic_coeff(x**2+3*y**2 + 0.5*x*y + 7*x + 6*y+7+sin(x),vertcat(x,y))
+
+      with self.assertInException("scalar"):
+        [A,b,c] = quadratic_coeff(vertcat(x,y),x)
+
+      z = x**2+3*y**2 + 0.5*x*y -p*y + 7*x + 6*y+7
+      [A,b,c] = quadratic_coeff(z,vertcat(x,y))
+
+      xy = vertcat(x,y)
+
+      e = 0.5*bilin(A,xy,xy)+dot(b,xy)+c
+
+      f = Function('f',[xy,p],[z])
+      f2 = Function('f',[xy,p],[e])
+      self.checkfunction(f,f2,inputs=[1.1,1.3])
+
+
+      with self.assertInException("non-linear"):
+        [A,b] = linear_coeff(x**2+3*y**2 + 0.5*x*y + 7*x + 6*y+7,vertcat(x,y))
+
+      with self.assertInException("vector"):
+        [A,b] = linear_coeff(blockcat([[x,y],[y,x]]),x)
+
+      z = vertcat(7*x + 6*y+7 ,5 -p*y )
+      [A,b] = linear_coeff(z,xy)
+
+      e = mtimes(A,xy)+b
+
+      f = Function('f',[xy,p],[z])
+      f2 = Function('f',[xy,p],[e])
+      self.checkfunction(f,f2,inputs=[1.1,1.3])
+
+  def test_evalf(self):
+    x = SX.sym("x")
+
+    y = SX(5)
+
+    self.checkarray(evalf(y),5)
+    with self.assertInException("since variables [x] are free"):
+      evalf(x)
+
 
 if __name__ == '__main__':
     unittest.main()

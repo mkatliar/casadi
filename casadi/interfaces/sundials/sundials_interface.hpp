@@ -27,7 +27,7 @@
 #define CASADI_SUNDIALS_INTERFACE_HPP
 
 #include <casadi/interfaces/sundials/casadi_sundials_common_export.h>
-#include "casadi/core/function/integrator_impl.hpp"
+#include "casadi/core/integrator_impl.hpp"
 
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_dense.h>
@@ -63,10 +63,12 @@ namespace casadi {
     long nsteps, nfevals, nlinsetups, netfails;
     int qlast, qcur;
     double hinused, hlast, hcur, tcur;
+    long nniters, nncfails;
 
     long nstepsB, nfevalsB, nlinsetupsB, netfailsB;
     int qlastB, qcurB;
     double hinusedB, hlastB, hcurB, tcurB;
+    long nnitersB, nncfailsB;
 
     // Temporaries for [x;z] or [rx;rz]
     double *v1, *v2;
@@ -87,58 +89,67 @@ namespace casadi {
     SundialsInterface(const std::string& name, const Function& dae);
 
     /** \brief  Destructor */
-    virtual ~SundialsInterface()=0;
+    ~SundialsInterface() override=0;
 
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     /** \brief  Initialize */
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
+
+    /** \brief Get relative tolerance */
+    double get_reltol() const override { return reltol_;}
+
+    /** \brief Get absolute tolerance */
+    double get_abstol() const override { return abstol_;}
 
     // Get system Jacobian
     virtual Function getJ(bool backward) const = 0;
 
     /// Get all statistics
-    virtual Dict get_stats(void* mem) const;
+    Dict get_stats(void* mem) const override;
 
     /** \brief  Print solver statistics */
-    virtual void print_stats(IntegratorMemory* mem, std::ostream &stream) const;
+    void print_stats(IntegratorMemory* mem) const override;
 
     /** \brief  Reset the forward problem and bring the time back to t0 */
-    virtual void reset(IntegratorMemory* mem, double t, const double* x,
-                       const double* z, const double* p) const;
+    void reset(IntegratorMemory* mem, double t, const double* x,
+                       const double* z, const double* p) const override;
 
     /** \brief  Reset the backward problem and take time to tf */
-    virtual void resetB(IntegratorMemory* mem, double t, const double* rx,
-                        const double* rz, const double* rp) const;
+    void resetB(IntegratorMemory* mem, double t, const double* rx,
+                        const double* rz, const double* rp) const override;
 
     /** \brief Cast to memory object */
     static SundialsMemory* to_mem(void *mem) {
       SundialsMemory* m = static_cast<SundialsMemory*>(mem);
-      casadi_assert(m);
+      casadi_assert_dev(m);
       return m;
     }
 
     ///@{
     /// Options
     double abstol_, reltol_;
-    int max_num_steps_;
+    casadi_int max_num_steps_;
     bool stop_at_end_;
     bool quad_err_con_;
-    int steps_per_checkpoint_;
+    casadi_int steps_per_checkpoint_;
     bool disable_internal_warnings_;
-    int max_multistep_order_;
+    casadi_int max_multistep_order_;
     std::string linear_solver_;
     Dict linear_solver_options_;
-    int max_krylov_;
+    casadi_int max_krylov_;
     bool use_precon_;
     bool second_order_correction_;
+    double step0_;
+    double nonlin_conv_coeff_;
+    double max_order_;
     ///@}
 
     /// Linear solver
@@ -154,17 +165,17 @@ namespace casadi {
     struct LinSolDataDense {};
 
     /** \brief Set the (persistent) work vectors */
-    virtual void set_work(void* mem, const double**& arg, double**& res,
-                          int*& iw, double*& w) const;
+    void set_work(void* mem, const double**& arg, double**& res,
+                          casadi_int*& iw, double*& w) const override;
 
     // Print a variable
     static void printvar(const std::string& id, double v) {
-      userOut() << id << " = " << v << std::endl;
+      uout() << id << " = " << v << std::endl;
     }
     // Print an N_Vector
     static void printvar(const std::string& id, N_Vector v) {
       std::vector<double> tmp(NV_DATA_S(v), NV_DATA_S(v)+NV_LENGTH_S(v));
-      userOut() << id << " = " << tmp << std::endl;
+      uout() << id << " = " << tmp << std::endl;
     }
   };
 

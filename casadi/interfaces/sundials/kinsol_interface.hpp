@@ -27,7 +27,7 @@
 #define CASADI_KINSOL_INTERFACE_HPP
 
 #include <casadi/interfaces/sundials/casadi_rootfinder_kinsol_export.h>
-#include "casadi/core/function/rootfinder_impl.hpp"
+#include "casadi/core/rootfinder_impl.hpp"
 #include <nvector/nvector_serial.h>   /* serial N_Vector types, fcts., and macros */
 #include <sundials/sundials_dense.h>  /* definitions DlsMat DENSE_ELEM */
 #include <sundials/sundials_types.h>  /* definition of type double */
@@ -83,7 +83,7 @@ namespace casadi {
     explicit KinsolInterface(const std::string& name, const Function& f);
 
     /** \brief  Destructor */
-    virtual ~KinsolInterface();
+    ~KinsolInterface() override;
 
     /** \brief  Create a new Rootfinder */
     static Rootfinder* creator(const std::string& name, const Function& f) {
@@ -93,29 +93,32 @@ namespace casadi {
     ///@{
     /** \brief Options */
     static Options options_;
-    virtual const Options& get_options() const { return options_;}
+    const Options& get_options() const override { return options_;}
     ///@}
 
     /** \brief  Initialize stage */
-    virtual void init(const Dict& opts);
+    void init(const Dict& opts) override;
 
     /// Solve the system of equations and calculate derivatives
-    virtual void solve(void* mem) const;
+    int solve(void* mem) const override;
 
     // Get name of the plugin
-    virtual const char* plugin_name() const { return "kinsol";}
+    const char* plugin_name() const override { return "kinsol";}
+
+    // Get name of the class
+    std::string class_name() const override { return "KinsolInterface";}
 
     // Scaling
     N_Vector u_scale_, f_scale_;
 
     /// Globalization strategy
-    int strategy_;
+    casadi_int strategy_;
 
     // Should KINSOL internal warning messages be ignored
     bool disable_internal_warnings_;
 
     // Maximum number of iterations
-    int max_iter_;
+    casadi_int max_iter_;
 
     // Use exact Jacobian?
     bool exact_jac_;
@@ -125,10 +128,10 @@ namespace casadi {
     LinsolType linear_solver_type_;
 
     // Bandwidth (for banded solvers)
-    int upper_bandwidth_, lower_bandwidth_;
+    casadi_int upper_bandwidth_, lower_bandwidth_;
 
     // Krylov subspace size (for iterative solvers)
-    int maxl_;
+    casadi_int maxl_;
 
     // Iterative solver
     enum IterativeSolver { GMRES, BCGSTAB, TFQMR};
@@ -153,22 +156,22 @@ namespace casadi {
     static const std::string meta_doc;
 
     /** \brief Create memory block */
-    virtual void* alloc_memory() const { return new KinsolMemory(*this);}
-
-    /** \brief Free memory block */
-    virtual void free_memory(void *mem) const { delete static_cast<KinsolMemory*>(mem);}
+    void* alloc_mem() const override { return new KinsolMemory(*this);}
 
     /** \brief Initalize memory block */
-    virtual void init_memory(void* mem) const;
+    int init_mem(void* mem) const override;
+
+    /** \brief Free memory block */
+    void free_mem(void *mem) const override { delete static_cast<KinsolMemory*>(mem);}
 
     /** \brief Set the (persistent) work vectors */
-    virtual void set_work(void* mem, const double**& arg, double**& res,
-                          int*& iw, double*& w) const;
+    void set_work(void* mem, const double**& arg, double**& res,
+                          casadi_int*& iw, double*& w) const override;
 
     /** \brief Cast to memory object */
     static KinsolMemory* to_mem(void *mem) {
       KinsolMemory* m = static_cast<KinsolMemory*>(mem);
-      casadi_assert(m);
+      casadi_assert_dev(m);
       return m;
     }
 
