@@ -78,8 +78,9 @@ namespace casadi {
       obj, alpha_pr, alpha_du;
     std::vector<casadi_int> ls_trials;
     const char* return_status;
-    bool success;
     casadi_int iter_count;
+
+    Bonmin::TMINLP::SosInfo sos_info;
 
     /// Constructor
     BonminMemory();
@@ -165,12 +166,22 @@ namespace casadi {
                                double inf_pr, double inf_du, double mu, double d_norm,
                                double regularization_size, double alpha_du, double alpha_pr,
                                int ls_trials, bool full_callback) const;
+    const Bonmin::TMINLP::SosInfo& sosConstraints(BonminMemory* m) const;
 
     /// Can discrete variables be treated
     bool integer_support() const override { return true;}
 
     /// A documentation string
     static const std::string meta_doc;
+
+    /// Sos constraints information
+    std::vector<double> sos1_weights_;
+    std::vector<int> sos1_indices_;
+    std::vector<int> sos1_priorities_;
+    std::vector<int> sos1_starts_;
+    std::vector<char> sos1_types_;
+    casadi_int sos_num_;
+    casadi_int sos_num_nz_;
 
     // Options
     bool pass_nonlinear_variables_;

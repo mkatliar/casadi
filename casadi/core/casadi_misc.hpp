@@ -37,6 +37,33 @@
 namespace casadi {
 
 #ifndef SWIG
+
+template<typename T>
+class scoped_checkout {
+public:
+  scoped_checkout(const T& proto) : proto_(proto) {
+    mem = proto_.checkout();
+  }
+
+  scoped_checkout(scoped_checkout&& that) : mem(that.mem), proto_(that.proto_) {
+    that.mem = -1;
+  }
+
+  scoped_checkout(const scoped_checkout& that) = delete;
+
+  ~scoped_checkout() {
+    if (mem!=-1) proto_.release(mem);
+  }
+
+  operator casadi_int() const {
+    return mem;
+  }
+
+private:
+  casadi_int mem;
+  const T& proto_;
+};
+
   /**  \brief Range function
   * \param start
   * \param stop
@@ -52,6 +79,8 @@ namespace casadi {
 
   CASADI_EXPORT std::string join(const std::vector<std::string>& l, const std::string& delim=",");
 
+  /// Checsks if s starts with p
+  CASADI_EXPORT bool startswith(const std::string& s, const std::string& p);
   /**  \brief Range function
   * \param stop
   *
@@ -69,6 +98,11 @@ namespace casadi {
   /// Computes a mapping for a (dense) tensor permutation
   CASADI_EXPORT std::vector<casadi_int> tensor_permute_mapping(const std::vector<casadi_int>& dims,
       const std::vector<casadi_int>& order);
+
+  CASADI_EXPORT int to_int(casadi_int rhs);
+  CASADI_EXPORT std::vector<int> to_int(const std::vector<casadi_int>& rhs);
+  CASADI_EXPORT std::vector< std::vector<int> > to_int(
+    const std::vector< std::vector<casadi_int> >& rhs);
 
   /**  \brief Slicing vector
   *  \param v Vector to slice
@@ -566,7 +600,7 @@ namespace casadi {
   template<typename T>
   T* get_ptr(std::vector<T> &v) {
     if (v.empty())
-      return 0;
+      return nullptr;
     else
       return &v.front();
   }
@@ -574,7 +608,7 @@ namespace casadi {
   template<typename T>
   const T* get_ptr(const std::vector<T> &v) {
     if (v.empty())
-      return 0;
+      return nullptr;
     else
       return &v.front();
   }

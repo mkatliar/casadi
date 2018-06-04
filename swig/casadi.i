@@ -96,7 +96,7 @@
   namespace casadi {
     // Redirect printout to mexPrintf
     static void mexlogger(const char* s, std::streamsize num, bool error) {
-      mexPrintf("%.*s", static_cast<casadi_int>(num), s);
+      mexPrintf("%.*s", static_cast<int>(num), s);
     }
 
 #ifdef HAVE_OCTAVE
@@ -1389,6 +1389,7 @@ namespace std {
           || to_generic<std::vector<bool> >(p, m)
           || to_generic<std::vector<std::string> >(p, m)
           || to_generic<std::vector<std::vector<casadi_int> > >(p, m)
+          || to_generic<std::vector<std::vector<double> > >(p, m)
           || to_generic<casadi::Function>(p, m)
           || to_generic<std::vector<casadi::Function> >(p, m)
           || to_generic<casadi::GenericType::Dict>(p, m)) {
@@ -1412,6 +1413,7 @@ namespace std {
       case OT_INTVECTORVECTOR: return from_tmp(a->as_int_vector_vector());
       case OT_BOOLVECTOR: return from_tmp(a->as_bool_vector());
       case OT_DOUBLEVECTOR: return from_tmp(a->as_double_vector());
+      case OT_DOUBLEVECTORVECTOR: return from_tmp(a->as_double_vector_vector());
       case OT_STRINGVECTOR: return from_tmp(a->as_string_vector());
       case OT_DICT: return from_tmp(a->as_dict());
       case OT_FUNCTION: return from_tmp(a->as_function());
@@ -2664,7 +2666,7 @@ namespace casadi{
 #ifdef SWIGMATLAB
   %matlabcode %{
     function s = repr(self)
-      s = [s.type_name() '(' self.str() ')'];
+      s = [self.type_name() '(' self.str() ')'];
     end
   %}
 #endif // SWIGMATLAB
@@ -2828,6 +2830,12 @@ namespace casadi{
  DECL M casadi_repmat(const M& A, const std::pair<casadi_int, casadi_int>& rc) {
  return repmat(A, rc.first, rc.second);
  }
+ DECL M casadi_sum2(const M& x) {
+ return sum2(x);
+ }
+ DECL M casadi_sum1(const M& x) {
+ return sum1(x);
+ }
 #endif
 %enddef
 
@@ -2893,6 +2901,10 @@ DECL M casadi_interp1d(const std::vector<double>& x, const M&v,
   return interp1d(x, v, xq, mode, equidistant);
 }
 
+DECL M casadi_soc(const M& x, const M& y) {
+  return soc(x, y);
+}
+
 DECL M casadi_cross(const M& a, const M& b, casadi_int dim = -1) {
   return cross(a, b, dim);
 }
@@ -2948,14 +2960,6 @@ DECL M casadi_norm_1(const M& x) {
 
 DECL M casadi_norm_inf(const M& x) {
   return norm_inf(x);
-}
-
-DECL M casadi_sum2(const M& x) {
-  return sum2(x);
-}
-
-DECL M casadi_sum1(const M& x) {
-  return sum1(x);
 }
 
 DECL M casadi_dot(const M& x, const M& y) {
@@ -4259,7 +4263,7 @@ make_property(casadi::Opti, casadi_solver);
         frame = sys._getframe(1)
         meta = {"stacktrace": {"file":os.path.abspath(frame.f_code.co_filename),"line":frame.f_lineno,"name":frame.f_code.co_name}}
         ret = self._subject_to(*args)
-        self.update_user_dict(args, meta)
+        self.update_user_dict(args[0], meta)
         return ret
     %}
   }

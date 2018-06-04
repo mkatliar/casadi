@@ -264,8 +264,8 @@ namespace casadi {
   }
 
   void CodeGenerator::generate_casadi_int(std::ostream &s) const {
-    s << "#ifndef CASADI_INT_TYPE\n"
-      << "#define CASADI_INT_TYPE " << this->casadi_int_type << endl
+    s << "#ifndef casadi_int\n"
+      << "#define casadi_int " << this->casadi_int_type << endl
       << "#endif\n\n";
   }
 
@@ -774,17 +774,20 @@ namespace casadi {
       break;
     case AUX_QR:
       add_auxiliary(AUX_IF_ELSE);
+      add_auxiliary(AUX_SCAL);
+      add_auxiliary(AUX_DOT);
+      add_auxiliary(AUX_FILL);
       this->auxiliaries << sanitize_source(casadi_qr_str, inst);
       break;
     case AUX_LDL:
       this->auxiliaries << sanitize_source(casadi_ldl_str, inst);
       break;
     case AUX_NEWTON:
-        add_auxiliary(AUX_COPY);
-        add_auxiliary(AUX_AXPY);
-        add_auxiliary(AUX_NORM_INF);
-        add_auxiliary(AUX_QR);
-        this->auxiliaries << sanitize_source(casadi_newton_str, inst);
+      add_auxiliary(AUX_COPY);
+      add_auxiliary(AUX_AXPY);
+      add_auxiliary(AUX_NORM_INF);
+      add_auxiliary(AUX_QR);
+      this->auxiliaries << sanitize_source(casadi_newton_str, inst);
       break;
     case AUX_TO_DOUBLE:
       this->auxiliaries << "#define casadi_to_double(x) "

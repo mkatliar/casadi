@@ -114,7 +114,7 @@ namespace casadi {
   }
 
   std::vector<MX> MX::createMultipleOutput(MXNode* node) {
-    casadi_assert_dev(dynamic_cast<MultipleOutput*>(node)!=0);
+    casadi_assert_dev(dynamic_cast<MultipleOutput*>(node)!=nullptr);
     MX x =  MX::create(node);
     std::vector<MX> ret(x->nout());
     for (casadi_int i=0; i<ret.size(); ++i) {
@@ -716,7 +716,7 @@ namespace casadi {
   }
 
   bool MX::is_norm() const {
-    return dynamic_cast<const Norm*>(get())!=0;
+    return dynamic_cast<const Norm*>(get())!=nullptr;
   }
 
   MX::operator double() const {
@@ -903,7 +903,7 @@ namespace casadi {
   }
 
   bool MX::test_cast(const SharedObjectInternal* ptr) {
-    return dynamic_cast<const MXNode*>(ptr)!=0;
+    return dynamic_cast<const MXNode*>(ptr)!=nullptr;
   }
 
   // Helper function
@@ -1632,8 +1632,10 @@ namespace casadi {
           always_inline = op.second;
         } else if (op.first=="never_inline") {
           never_inline = op.second;
+        } else if (op.first=="verbose") {
+          continue;
         } else {
-          casadi_error("No such option: " + string(op.second));
+          casadi_error("No such option: " + string(op.first));
         }
       }
       // Call internal function on a temporary object
@@ -1659,8 +1661,10 @@ namespace casadi {
           always_inline = op.second;
         } else if (op.first=="never_inline") {
           never_inline = op.second;
+        } else if (op.first=="verbose") {
+          continue;
         } else {
-          casadi_error("No such option: " + string(op.second));
+          casadi_error("No such option: " + string(op.first));
         }
       }
       // Call internal function on a temporary object
@@ -1745,8 +1749,12 @@ namespace casadi {
   }
 
   MX MX::repmat(const MX& x, casadi_int n, casadi_int m) {
-    if (n==0 || m==0) {
+    if (n==0 && m==0) {
       return MX();
+    } else if (n==0) {
+      return MX(0, x.size2()*m);
+    } else if (m==0) {
+      return MX(x.size1()*n, 0);
     } else if (n==1 && m==1) {
       return x;
     } else {

@@ -27,7 +27,6 @@
 #include "casadi_misc.hpp"
 #include "sx_function.hpp"
 #include "mx_function.hpp"
-#include "map.hpp"
 #include "switch.hpp"
 #include "bspline.hpp"
 #include "nlpsol.hpp"
@@ -343,7 +342,7 @@ namespace casadi {
 
   vector<const double*> Function::buf_in(Function::MapArg arg) const {
     // Return value (RVO)
-    vector<const double*> ret(sz_arg(), 0);
+    vector<const double*> ret(sz_arg(), nullptr);
 
     // Read inputs
     for (auto i=arg.begin(); i!=arg.end(); ++i) {
@@ -357,7 +356,7 @@ namespace casadi {
 
   vector<double*> Function::buf_out(Function::MapRes res) const {
     // Return value (RVO)
-    vector<double*> ret(sz_res(), 0);
+    vector<double*> ret(sz_res(), nullptr);
 
     // Read outputs
     for (auto i=res.begin(); i!=res.end(); ++i) {
@@ -371,7 +370,7 @@ namespace casadi {
 
   vector<double*> Function::buf_out(Function::MPrRes res) const {
     // Return value (RVO)
-    vector<double*> ret(sz_res(), 0);
+    vector<double*> ret(sz_res(), nullptr);
 
     // Read outputs
     for (auto i=res.begin(); i!=res.end(); ++i) {
@@ -654,11 +653,10 @@ namespace casadi {
         res[i] = horzcat(tmp);
       }
       // Construct function
-      return Function(name() + "_" + str(n), arg, res,
-                      name_in(), name_out());
+      return Function(name() + "_" + str(n), arg, res, name_in(), name_out());
     } else {
-      // Create Map object
-      return Map::create(parallelization, *this, n);
+      // Generate/retrieve potentially cached map
+      return (*this)->map(n, parallelization);
     }
   }
 
@@ -823,7 +821,7 @@ namespace casadi {
   }
 
   bool Function::test_cast(const SharedObjectInternal* ptr) {
-    return dynamic_cast<const FunctionInternal*>(ptr)!=0;
+    return dynamic_cast<const FunctionInternal*>(ptr)!=nullptr;
   }
 
   Dict Function::stats(casadi_int mem) const {
@@ -1221,6 +1219,12 @@ namespace casadi {
   // Initialize at zero depth
   thread_local casadi_int Function::call_depth_ = 0;
 #endif // WITH_EXTRA_CHECKS
+
+  int Function::operator()(const double** arg, double** res,
+      casadi_int* iw, double* w) const {
+    scoped_checkout<Function> mem(*this);
+    return operator()(arg, res, iw, w, mem);
+  }
 
   int Function::operator()(const double** arg, double** res,
       casadi_int* iw, double* w, casadi_int mem) const {

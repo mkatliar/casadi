@@ -221,10 +221,28 @@ namespace casadi {
     // Get all options available in (s)IPOPT
     auto regops = (*app)->RegOptions()->RegisteredOptionsList();
 
+    Dict options = Options::sanitize(opts_);
+    // Replace resto group with prefixes
+    auto it = options.find("resto");
+    if (it!=options.end()) {
+      Dict resto_options = it->second;
+      options.erase(it);
+      for (auto&& op : resto_options) {
+        options["resto." + op.first] = op.second;
+      }
+    }
+
     // Pass all the options to ipopt
-    for (auto&& op : opts_) {
+    for (auto&& op : options) {
+
+      // There might be options with a resto prefix.
+      std::string option_name = op.first;
+      if (startswith(option_name, "resto.")) {
+        option_name = option_name.substr(6);
+      }
+
       // Find the option
-      auto regops_it = regops.find(op.first);
+      auto regops_it = regops.find(option_name);
       if (regops_it==regops.end()) {
         casadi_error("No such IPOPT option: " + op.first);
       }
@@ -341,8 +359,6 @@ namespace casadi {
     m->obj.clear();
     m->ls_trials.clear();
 
-    // Problem has not been solved at this point
-    m->success = false;
     // Reset number of iterations
     m->n_iter = 0;
 
@@ -408,7 +424,7 @@ namespace casadi {
           m->arg[NLPSOL_X] = x;
           m->arg[NLPSOL_F] = &obj_value;
           m->arg[NLPSOL_G] = g;
-          m->arg[NLPSOL_LAM_P] = 0;
+          m->arg[NLPSOL_LAM_P] = nullptr;
           m->arg[NLPSOL_LAM_X] = m->lam_x;
           m->arg[NLPSOL_LAM_G] = m->lam_g;
         }
@@ -562,12 +578,12 @@ namespace casadi {
   }
 
   bool IpoptInterface::
-  get_var_con_metadata(map<string, vector<string> >& var_string_md,
-                       map<string, vector<int> >& var_integer_md,
-                       map<string, vector<double> >& var_numeric_md,
-                       map<string, vector<string> >& con_string_md,
-                       map<string, vector<int> >& con_integer_md,
-                       map<string, vector<double> >& con_numeric_md) const {
+  get_var_con_metadata(std::map<string, vector<string> >& var_string_md,
+                       std::map<string, vector<int> >& var_integer_md,
+                       std::map<string, vector<double> >& var_numeric_md,
+                       std::map<string, vector<string> >& con_string_md,
+                       std::map<string, vector<int> >& con_integer_md,
+                       std::map<string, vector<double> >& con_numeric_md) const {
     for (auto&& op : var_string_md_) var_string_md[op.first] = op.second;
     for (auto&& op : var_integer_md_) var_integer_md[op.first] = op.second;
     for (auto&& op : var_numeric_md_) var_numeric_md[op.first] = op.second;
@@ -578,19 +594,19 @@ namespace casadi {
   }
 
   IpoptMemory::IpoptMemory() {
-    this->app = 0;
-    this->userclass = 0;
+    this->app = nullptr;
+    this->userclass = nullptr;
     this->return_status = "Unset";
   }
 
   IpoptMemory::~IpoptMemory() {
     // Free Ipopt application instance (or rather, the smart pointer holding it)
-    if (this->app != 0) {
+    if (this->app != nullptr) {
       delete static_cast<Ipopt::SmartPtr<Ipopt::IpoptApplication>*>(this->app);
     }
 
     // Free Ipopt user class (or rather, the smart pointer holding it)
-    if (this->userclass != 0) {
+    if (this->userclass != nullptr) {
       delete static_cast<Ipopt::SmartPtr<Ipopt::TNLP>*>(this->userclass);
     }
   }
@@ -600,7 +616,6 @@ namespace casadi {
     auto m = static_cast<IpoptMemory*>(mem);
     stats["return_status"] = m->return_status;
     stats["iter_count"] = m->iter_count;
-    stats["success"] = m->success;
     if (m->inf_pr.size()>0) {
       Dict iterations;
       iterations["inf_pr"] = m->inf_pr;

@@ -421,6 +421,13 @@ namespace casadi {
                                   const MatType &w) {
       return diagcat(std::vector<MatType>{x, y, z, w});
     }
+
+    /** \brief Return a row-wise summation of elements */
+    inline friend MatType sum1(const MatType &x) { return MatType::sum1(x);}
+
+    /** \brief Return a column-wise summation of elements  */
+    inline friend MatType sum2(const MatType &x) { return MatType::sum2(x);}
+
 /** \@} */
   };
 #endif // SWIG
@@ -434,8 +441,12 @@ namespace casadi {
 
   template<typename MatType>
   MatType SparsityInterface<MatType>::repmat(const MatType& x, casadi_int n, casadi_int m) {
+    if (n==1 && m==1) return x;
     MatType allrows = vertcat(std::vector<MatType>(n, x));
-    return horzcat(std::vector<MatType>(m, allrows));
+    if (n==0) allrows = MatType(0, x.size2());
+    MatType ret = horzcat(std::vector<MatType>(m, allrows));
+    if (m==0) ret = MatType(allrows.size1(), 0);
+    return ret;
   }
 
   template<typename MatType>

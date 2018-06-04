@@ -153,13 +153,15 @@ namespace casadi {
        for (casadi_int i=0;i<n_out_;++i) m->res[i+1] = m->ires[i];
        m->res[0] = M->jac_g_x;
        m->res[1+iout_] = M->g;
-       jac_f_z_(m->arg, m->res, m->iw, m->w, 0);
+       jac_f_z_(m->arg, m->res, m->iw, m->w);
 
        m->return_status = casadi_newton(M);
        if (m->return_status) break;
     }
     // Get the solution
     casadi_copy(M->x, n_, m->ires[iout_]);
+
+    m->success = m->return_status>0;
 
     return 0;
   }
@@ -245,7 +247,6 @@ namespace casadi {
     auto m = static_cast<FastNewtonMemory*>(mem);
     stats["return_status"] = return_code(m->return_status);
     stats["iter_count"] = m->iter;
-    stats["success"] = m->return_status>0;
     return stats;
   }
 

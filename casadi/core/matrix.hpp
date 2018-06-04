@@ -821,6 +821,11 @@ namespace casadi {
     /// Print sparse matrix style
     void print_sparse(std::ostream &stream, bool truncate=true) const;
 
+#ifndef SWIG
+    /// Print scalar
+    static void print_scalar(std::ostream &stream, const Scalar& e);
+#endif
+
     void clear();
     void resize(casadi_int nrow, casadi_int ncol);
     void reserve(casadi_int nnz);
@@ -855,8 +860,8 @@ namespace casadi {
 
     ///@{
     /// Get a pointer to the data
-    Scalar* ptr() { return nonzeros_.empty() ? 0 : &nonzeros_.front(); }
-    const Scalar* ptr() const { return nonzeros_.empty() ? 0 : &nonzeros_.front(); }
+    Scalar* ptr() { return nonzeros_.empty() ? nullptr : &nonzeros_.front(); }
+    const Scalar* ptr() const { return nonzeros_.empty() ? nullptr : &nonzeros_.front(); }
     friend inline Scalar* get_ptr(Matrix<Scalar>& v) { return v.ptr(); }
     friend inline const Scalar* get_ptr(const Matrix<Scalar>& v) { return v.ptr(); }
     ///@}

@@ -66,7 +66,7 @@ bool persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -202,10 +202,10 @@ elements.
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::index_in(const std::string
-&name) const  "
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
 
-[INTERNAL]  Get input scheme index by name.
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -272,7 +272,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -338,7 +338,7 @@ std::string &fname) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -382,11 +382,16 @@ oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::factory(const std::string
 &name, const std::vector< std::string > &s_in, const std::vector<
@@ -399,6 +404,13 @@ std::string > &s_out, const Function::AuxOut &aux, const Dict &opts) const
 &stream) const  "
 
 [INTERNAL]  Serialize.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -522,7 +534,7 @@ get_reverse(casadi_int nadj) if no cached version is available.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -536,7 +548,7 @@ nadj, const std::vector< MatType > &v) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -995,15 +1007,16 @@ always_inline, bool never_inline) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -1095,6 +1108,13 @@ const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::print_options(std::ostream
 &stream) const  "
 
@@ -1116,7 +1136,7 @@ std::string &fname, const Dict &opts) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -1360,6 +1380,13 @@ casadi::FunctionInternal::instruction_input(casadi_int k) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::index_in(const std::string
+&name) const  "
+
+[INTERNAL]  Get input scheme index by name.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::has_spfwd() const  "
 
 [INTERNAL]  Is the class able to propagate seeds through the algorithm?
@@ -1422,11 +1449,16 @@ buf_sz, const char *fmt,...) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring") casadi::BackwardDiff::~BackwardDiff "
 
@@ -1528,7 +1560,7 @@ size_t &sz_res, size_t &sz_iw, size_t &sz_w) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -1656,7 +1688,7 @@ persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -1841,22 +1873,24 @@ const  "
 
 ";
 
-%feature("docstring")  casadi::SharedObjectInternal::getCount() const  "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Get the reference count.
+[INTERNAL]  Get function in cache.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -2250,6 +2284,13 @@ Dennis Janka, Joel Andersson
 |                   |               | regarded as       |                  |
 |                   |               | numerically zero  |                  |
 +-------------------+---------------+-------------------+------------------+
+| error_on_fail     | OT_BOOL       | When the          | casadi::Nlpsol   |
+|                   |               | numerical process |                  |
+|                   |               | returns           |                  |
+|                   |               | unsuccessfully,   |                  |
+|                   |               | raise an error    |                  |
+|                   |               | (default false).  |                  |
++-------------------+---------------+-------------------+------------------+
 | eta               | OT_DOUBLE     | Filter line       | casadi::Blocksqp |
 |                   |               | search parameter, |                  |
 |                   |               | cf. IPOPT paper   |                  |
@@ -2515,7 +2556,7 @@ double cNormTrial, double dfTdeltaXi, bool swCond, casadi_int it) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -2622,11 +2663,16 @@ std::vector< MX > &arg, const std::string &parallelization) "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::get_reltol() const  "
 
@@ -2718,6 +2764,13 @@ nadj, const std::vector< MatType > &v) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::sz_iw() const  "
 
 [INTERNAL]  Get required length of iw field.
@@ -2730,6 +2783,12 @@ const  "
 [INTERNAL]  Return function that calculates adjoint derivatives
 reverse(nadj) returns a cached instance if available, and calls  Function
 get_reverse(casadi_int nadj) if no cached version is available.
+
+";
+
+%feature("docstring")  casadi::SharedObjectInternal::getCount() const  "
+
+[INTERNAL]  Get the reference count.
 
 ";
 
@@ -2857,7 +2916,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -2871,9 +2930,16 @@ std::vector< M > &res) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -3020,11 +3086,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::Blocksqp::free_mem(void *mem) const  "
 
@@ -3185,7 +3256,7 @@ ind) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -3226,7 +3297,7 @@ get_forward(casadi_int nfwd) if no cached version is available.
 
 ";
 
-%feature("docstring")  casadi::Blocksqp::get_stats(void *mem) const  "
+%feature("docstring")  casadi::Nlpsol::get_stats(void *mem) const  "
 
 [INTERNAL]  Get all statistics.
 
@@ -3442,7 +3513,7 @@ std::vector< std::string > &s_out, const Function::AuxOut
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -3471,192 +3542,222 @@ const  "
 
 >List of available options
 
-+-------------------+---------------+-------------------+------------------+
-|        Id         |     Type      |    Description    |     Used in      |
-+===================+===============+===================+==================+
-| bonmin            | OT_DICT       | Options to be     | casadi::BonMinMe |
-|                   |               | passed to BONMIN  | ssageHandler     |
-+-------------------+---------------+-------------------+------------------+
-| bound_consistency | OT_BOOL       | Ensure that       | casadi::Nlpsol   |
-|                   |               | primal-dual       |                  |
-|                   |               | solution is       |                  |
-|                   |               | consistent with   |                  |
-|                   |               | the bounds        |                  |
-+-------------------+---------------+-------------------+------------------+
-| calc_f            | OT_BOOL       | Calculate 'f' in  | casadi::Nlpsol   |
-|                   |               | the Nlpsol base   |                  |
-|                   |               | class             |                  |
-+-------------------+---------------+-------------------+------------------+
-| calc_g            | OT_BOOL       | Calculate 'g' in  | casadi::Nlpsol   |
-|                   |               | the Nlpsol base   |                  |
-|                   |               | class             |                  |
-+-------------------+---------------+-------------------+------------------+
-| calc_lam_p        | OT_BOOL       | Calculate 'lam_p' | casadi::Nlpsol   |
-|                   |               | in the Nlpsol     |                  |
-|                   |               | base class        |                  |
-+-------------------+---------------+-------------------+------------------+
-| calc_lam_x        | OT_BOOL       | Calculate 'lam_x' | casadi::Nlpsol   |
-|                   |               | in the Nlpsol     |                  |
-|                   |               | base class        |                  |
-+-------------------+---------------+-------------------+------------------+
-| calc_multipliers  | OT_BOOL       | Calculate         | casadi::Nlpsol   |
-|                   |               | Lagrange          |                  |
-|                   |               | multipliers in    |                  |
-|                   |               | the Nlpsol base   |                  |
-|                   |               | class             |                  |
-+-------------------+---------------+-------------------+------------------+
-| con_integer_md    | OT_DICT       | Integer metadata  | casadi::BonMinMe |
-|                   |               | (a dictionary     | ssageHandler     |
-|                   |               | with lists of     |                  |
-|                   |               | integers) about   |                  |
-|                   |               | constraints to be |                  |
-|                   |               | passed to BONMIN  |                  |
-+-------------------+---------------+-------------------+------------------+
-| con_numeric_md    | OT_DICT       | Numeric metadata  | casadi::BonMinMe |
-|                   |               | (a dictionary     | ssageHandler     |
-|                   |               | with lists of     |                  |
-|                   |               | reals) about      |                  |
-|                   |               | constraints to be |                  |
-|                   |               | passed to BONMIN  |                  |
-+-------------------+---------------+-------------------+------------------+
-| con_string_md     | OT_DICT       | String metadata   | casadi::BonMinMe |
-|                   |               | (a dictionary     | ssageHandler     |
-|                   |               | with lists of     |                  |
-|                   |               | strings) about    |                  |
-|                   |               | constraints to be |                  |
-|                   |               | passed to BONMIN  |                  |
-+-------------------+---------------+-------------------+------------------+
-| discrete          | OT_BOOLVECTOR | Indicates which   | casadi::Nlpsol   |
-|                   |               | of the variables  |                  |
-|                   |               | are discrete,     |                  |
-|                   |               | i.e. integer-     |                  |
-|                   |               | valued            |                  |
-+-------------------+---------------+-------------------+------------------+
-| eval_errors_fatal | OT_BOOL       | When errors occur | casadi::Nlpsol   |
-|                   |               | during evaluation |                  |
-|                   |               | of f,g,...,stop   |                  |
-|                   |               | the iterations    |                  |
-+-------------------+---------------+-------------------+------------------+
-| expand            | OT_BOOL       | Replace MX with   | casadi::Nlpsol   |
-|                   |               | SX expressions in |                  |
-|                   |               | problem           |                  |
-|                   |               | formulation       |                  |
-|                   |               | [false]           |                  |
-+-------------------+---------------+-------------------+------------------+
-| grad_f            | OT_FUNCTION   | Function for      | casadi::BonMinMe |
-|                   |               | calculating the   | ssageHandler     |
-|                   |               | gradient of the   |                  |
-|                   |               | objective         |                  |
-|                   |               | (column,          |                  |
-|                   |               | autogenerated by  |                  |
-|                   |               | default)          |                  |
-+-------------------+---------------+-------------------+------------------+
-| grad_f_options    | OT_DICT       | Options for the   | casadi::BonMinMe |
-|                   |               | autogenerated     | ssageHandler     |
-|                   |               | gradient of the   |                  |
-|                   |               | objective.        |                  |
-+-------------------+---------------+-------------------+------------------+
-| hess_lag          | OT_FUNCTION   | Function for      | casadi::BonMinMe |
-|                   |               | calculating the   | ssageHandler     |
-|                   |               | Hessian of the    |                  |
-|                   |               | Lagrangian        |                  |
-|                   |               | (autogenerated by |                  |
-|                   |               | default)          |                  |
-+-------------------+---------------+-------------------+------------------+
-| hess_lag_options  | OT_DICT       | Options for the   | casadi::BonMinMe |
-|                   |               | autogenerated     | ssageHandler     |
-|                   |               | Hessian of the    |                  |
-|                   |               | Lagrangian.       |                  |
-+-------------------+---------------+-------------------+------------------+
-| ignore_check_vec  | OT_BOOL       | If set to true,   | casadi::Nlpsol   |
-|                   |               | the input shape   |                  |
-|                   |               | of F will not be  |                  |
-|                   |               | checked.          |                  |
-+-------------------+---------------+-------------------+------------------+
-| iteration_callbac | OT_FUNCTION   | A function that   | casadi::Nlpsol   |
-| k                 |               | will be called at |                  |
-|                   |               | each iteration    |                  |
-|                   |               | with the solver   |                  |
-|                   |               | as input. Check   |                  |
-|                   |               | documentation of  |                  |
-|                   |               | Callback .        |                  |
-+-------------------+---------------+-------------------+------------------+
-| iteration_callbac | OT_BOOL       | If set to true,   | casadi::Nlpsol   |
-| k_ignore_errors   |               | errors thrown by  |                  |
-|                   |               | iteration_callbac |                  |
-|                   |               | k will be         |                  |
-|                   |               | ignored.          |                  |
-+-------------------+---------------+-------------------+------------------+
-| iteration_callbac | OT_INT        | Only call the     | casadi::Nlpsol   |
-| k_step            |               | callback function |                  |
-|                   |               | every few         |                  |
-|                   |               | iterations.       |                  |
-+-------------------+---------------+-------------------+------------------+
-| jac_g             | OT_FUNCTION   | Function for      | casadi::BonMinMe |
-|                   |               | calculating the   | ssageHandler     |
-|                   |               | Jacobian of the   |                  |
-|                   |               | constraints       |                  |
-|                   |               | (autogenerated by |                  |
-|                   |               | default)          |                  |
-+-------------------+---------------+-------------------+------------------+
-| jac_g_options     | OT_DICT       | Options for the   | casadi::BonMinMe |
-|                   |               | autogenerated     | ssageHandler     |
-|                   |               | Jacobian of the   |                  |
-|                   |               | constraints.      |                  |
-+-------------------+---------------+-------------------+------------------+
-| no_nlp_grad       | OT_BOOL       | Prevent the       | casadi::Nlpsol   |
-|                   |               | creation of the   |                  |
-|                   |               | 'nlp_grad'        |                  |
-|                   |               | function          |                  |
-+-------------------+---------------+-------------------+------------------+
-| oracle_options    | OT_DICT       | Options to be     | casadi::Nlpsol   |
-|                   |               | passed to the     |                  |
-|                   |               | oracle function   |                  |
-+-------------------+---------------+-------------------+------------------+
-| pass_nonlinear_co | OT_BOOL       | Pass list of      | casadi::BonMinMe |
-| nstraints         |               | constraints       | ssageHandler     |
-|                   |               | entering          |                  |
-|                   |               | nonlinearly to    |                  |
-|                   |               | BONMIN            |                  |
-+-------------------+---------------+-------------------+------------------+
-| pass_nonlinear_va | OT_BOOL       | Pass list of      | casadi::BonMinMe |
-| riables           |               | variables         | ssageHandler     |
-|                   |               | entering          |                  |
-|                   |               | nonlinearly to    |                  |
-|                   |               | BONMIN            |                  |
-+-------------------+---------------+-------------------+------------------+
-| var_integer_md    | OT_DICT       | Integer metadata  | casadi::BonMinMe |
-|                   |               | (a dictionary     | ssageHandler     |
-|                   |               | with lists of     |                  |
-|                   |               | integers) about   |                  |
-|                   |               | variables to be   |                  |
-|                   |               | passed to BONMIN  |                  |
-+-------------------+---------------+-------------------+------------------+
-| var_numeric_md    | OT_DICT       | Numeric metadata  | casadi::BonMinMe |
-|                   |               | (a dictionary     | ssageHandler     |
-|                   |               | with lists of     |                  |
-|                   |               | reals) about      |                  |
-|                   |               | variables to be   |                  |
-|                   |               | passed to BONMIN  |                  |
-+-------------------+---------------+-------------------+------------------+
-| var_string_md     | OT_DICT       | String metadata   | casadi::BonMinMe |
-|                   |               | (a dictionary     | ssageHandler     |
-|                   |               | with lists of     |                  |
-|                   |               | strings) about    |                  |
-|                   |               | variables to be   |                  |
-|                   |               | passed to BONMIN  |                  |
-+-------------------+---------------+-------------------+------------------+
-| verbose_init      | OT_BOOL       | Print out timing  | casadi::Nlpsol   |
-|                   |               | information about |                  |
-|                   |               | the different     |                  |
-|                   |               | stages of         |                  |
-|                   |               | initialization    |                  |
-+-------------------+---------------+-------------------+------------------+
-| warn_initial_boun | OT_BOOL       | Warn if the       | casadi::Nlpsol   |
-| ds                |               | initial guess     |                  |
-|                   |               | does not satisfy  |                  |
-|                   |               | LBX and UBX       |                  |
-+-------------------+---------------+-------------------+------------------+
++------------------+------------------+------------------+-----------------+
+|        Id        |       Type       |   Description    |     Used in     |
++==================+==================+==================+=================+
+| bonmin           | OT_DICT          | Options to be    | casadi::BonMinM |
+|                  |                  | passed to BONMIN | essageHandler   |
++------------------+------------------+------------------+-----------------+
+| bound_consistenc | OT_BOOL          | Ensure that      | casadi::Nlpsol  |
+| y                |                  | primal-dual      |                 |
+|                  |                  | solution is      |                 |
+|                  |                  | consistent with  |                 |
+|                  |                  | the bounds       |                 |
++------------------+------------------+------------------+-----------------+
+| calc_f           | OT_BOOL          | Calculate 'f' in | casadi::Nlpsol  |
+|                  |                  | the Nlpsol base  |                 |
+|                  |                  | class            |                 |
++------------------+------------------+------------------+-----------------+
+| calc_g           | OT_BOOL          | Calculate 'g' in | casadi::Nlpsol  |
+|                  |                  | the Nlpsol base  |                 |
+|                  |                  | class            |                 |
++------------------+------------------+------------------+-----------------+
+| calc_lam_p       | OT_BOOL          | Calculate        | casadi::Nlpsol  |
+|                  |                  | 'lam_p' in the   |                 |
+|                  |                  | Nlpsol base      |                 |
+|                  |                  | class            |                 |
++------------------+------------------+------------------+-----------------+
+| calc_lam_x       | OT_BOOL          | Calculate        | casadi::Nlpsol  |
+|                  |                  | 'lam_x' in the   |                 |
+|                  |                  | Nlpsol base      |                 |
+|                  |                  | class            |                 |
++------------------+------------------+------------------+-----------------+
+| calc_multipliers | OT_BOOL          | Calculate        | casadi::Nlpsol  |
+|                  |                  | Lagrange         |                 |
+|                  |                  | multipliers in   |                 |
+|                  |                  | the Nlpsol base  |                 |
+|                  |                  | class            |                 |
++------------------+------------------+------------------+-----------------+
+| con_integer_md   | OT_DICT          | Integer metadata | casadi::BonMinM |
+|                  |                  | (a dictionary    | essageHandler   |
+|                  |                  | with lists of    |                 |
+|                  |                  | integers) about  |                 |
+|                  |                  | constraints to   |                 |
+|                  |                  | be passed to     |                 |
+|                  |                  | BONMIN           |                 |
++------------------+------------------+------------------+-----------------+
+| con_numeric_md   | OT_DICT          | Numeric metadata | casadi::BonMinM |
+|                  |                  | (a dictionary    | essageHandler   |
+|                  |                  | with lists of    |                 |
+|                  |                  | reals) about     |                 |
+|                  |                  | constraints to   |                 |
+|                  |                  | be passed to     |                 |
+|                  |                  | BONMIN           |                 |
++------------------+------------------+------------------+-----------------+
+| con_string_md    | OT_DICT          | String metadata  | casadi::BonMinM |
+|                  |                  | (a dictionary    | essageHandler   |
+|                  |                  | with lists of    |                 |
+|                  |                  | strings) about   |                 |
+|                  |                  | constraints to   |                 |
+|                  |                  | be passed to     |                 |
+|                  |                  | BONMIN           |                 |
++------------------+------------------+------------------+-----------------+
+| discrete         | OT_BOOLVECTOR    | Indicates which  | casadi::Nlpsol  |
+|                  |                  | of the variables |                 |
+|                  |                  | are discrete,    |                 |
+|                  |                  | i.e. integer-    |                 |
+|                  |                  | valued           |                 |
++------------------+------------------+------------------+-----------------+
+| error_on_fail    | OT_BOOL          | When the         | casadi::Nlpsol  |
+|                  |                  | numerical        |                 |
+|                  |                  | process returns  |                 |
+|                  |                  | unsuccessfully,  |                 |
+|                  |                  | raise an error   |                 |
+|                  |                  | (default false). |                 |
++------------------+------------------+------------------+-----------------+
+| eval_errors_fata | OT_BOOL          | When errors      | casadi::Nlpsol  |
+| l                |                  | occur during     |                 |
+|                  |                  | evaluation of    |                 |
+|                  |                  | f,g,...,stop the |                 |
+|                  |                  | iterations       |                 |
++------------------+------------------+------------------+-----------------+
+| expand           | OT_BOOL          | Replace MX with  | casadi::Nlpsol  |
+|                  |                  | SX expressions   |                 |
+|                  |                  | in problem       |                 |
+|                  |                  | formulation      |                 |
+|                  |                  | [false]          |                 |
++------------------+------------------+------------------+-----------------+
+| grad_f           | OT_FUNCTION      | Function for     | casadi::BonMinM |
+|                  |                  | calculating the  | essageHandler   |
+|                  |                  | gradient of the  |                 |
+|                  |                  | objective        |                 |
+|                  |                  | (column,         |                 |
+|                  |                  | autogenerated by |                 |
+|                  |                  | default)         |                 |
++------------------+------------------+------------------+-----------------+
+| grad_f_options   | OT_DICT          | Options for the  | casadi::BonMinM |
+|                  |                  | autogenerated    | essageHandler   |
+|                  |                  | gradient of the  |                 |
+|                  |                  | objective.       |                 |
++------------------+------------------+------------------+-----------------+
+| hess_lag         | OT_FUNCTION      | Function for     | casadi::BonMinM |
+|                  |                  | calculating the  | essageHandler   |
+|                  |                  | Hessian of the   |                 |
+|                  |                  | Lagrangian       |                 |
+|                  |                  | (autogenerated   |                 |
+|                  |                  | by default)      |                 |
++------------------+------------------+------------------+-----------------+
+| hess_lag_options | OT_DICT          | Options for the  | casadi::BonMinM |
+|                  |                  | autogenerated    | essageHandler   |
+|                  |                  | Hessian of the   |                 |
+|                  |                  | Lagrangian.      |                 |
++------------------+------------------+------------------+-----------------+
+| ignore_check_vec | OT_BOOL          | If set to true,  | casadi::Nlpsol  |
+|                  |                  | the input shape  |                 |
+|                  |                  | of F will not be |                 |
+|                  |                  | checked.         |                 |
++------------------+------------------+------------------+-----------------+
+| iteration_callba | OT_FUNCTION      | A function that  | casadi::Nlpsol  |
+| ck               |                  | will be called   |                 |
+|                  |                  | at each          |                 |
+|                  |                  | iteration with   |                 |
+|                  |                  | the solver as    |                 |
+|                  |                  | input. Check     |                 |
+|                  |                  | documentation of |                 |
+|                  |                  | Callback .       |                 |
++------------------+------------------+------------------+-----------------+
+| iteration_callba | OT_BOOL          | If set to true,  | casadi::Nlpsol  |
+| ck_ignore_errors |                  | errors thrown by |                 |
+|                  |                  | iteration_callba |                 |
+|                  |                  | ck will be       |                 |
+|                  |                  | ignored.         |                 |
++------------------+------------------+------------------+-----------------+
+| iteration_callba | OT_INT           | Only call the    | casadi::Nlpsol  |
+| ck_step          |                  | callback         |                 |
+|                  |                  | function every   |                 |
+|                  |                  | few iterations.  |                 |
++------------------+------------------+------------------+-----------------+
+| jac_g            | OT_FUNCTION      | Function for     | casadi::BonMinM |
+|                  |                  | calculating the  | essageHandler   |
+|                  |                  | Jacobian of the  |                 |
+|                  |                  | constraints      |                 |
+|                  |                  | (autogenerated   |                 |
+|                  |                  | by default)      |                 |
++------------------+------------------+------------------+-----------------+
+| jac_g_options    | OT_DICT          | Options for the  | casadi::BonMinM |
+|                  |                  | autogenerated    | essageHandler   |
+|                  |                  | Jacobian of the  |                 |
+|                  |                  | constraints.     |                 |
++------------------+------------------+------------------+-----------------+
+| no_nlp_grad      | OT_BOOL          | Prevent the      | casadi::Nlpsol  |
+|                  |                  | creation of the  |                 |
+|                  |                  | 'nlp_grad'       |                 |
+|                  |                  | function         |                 |
++------------------+------------------+------------------+-----------------+
+| oracle_options   | OT_DICT          | Options to be    | casadi::Nlpsol  |
+|                  |                  | passed to the    |                 |
+|                  |                  | oracle function  |                 |
++------------------+------------------+------------------+-----------------+
+| pass_nonlinear_c | OT_BOOL          | Pass list of     | casadi::BonMinM |
+| onstraints       |                  | constraints      | essageHandler   |
+|                  |                  | entering         |                 |
+|                  |                  | nonlinearly to   |                 |
+|                  |                  | BONMIN           |                 |
++------------------+------------------+------------------+-----------------+
+| pass_nonlinear_v | OT_BOOL          | Pass list of     | casadi::BonMinM |
+| ariables         |                  | variables        | essageHandler   |
+|                  |                  | entering         |                 |
+|                  |                  | nonlinearly to   |                 |
+|                  |                  | BONMIN           |                 |
++------------------+------------------+------------------+-----------------+
+| sos1_groups      | OT_INTVECTORVECT | Options for the  | casadi::BonMinM |
+|                  | OR               | autogenerated    | essageHandler   |
+|                  |                  | gradient of the  |                 |
+|                  |                  | objective.       |                 |
++------------------+------------------+------------------+-----------------+
+| sos1_priorities  | OT_INTVECTOR     | Options for the  | casadi::BonMinM |
+|                  |                  | autogenerated    | essageHandler   |
+|                  |                  | gradient of the  |                 |
+|                  |                  | objective.       |                 |
++------------------+------------------+------------------+-----------------+
+| sos1_weights     | OT_DOUBLEVECTORV | Options for the  | casadi::BonMinM |
+|                  | ECTOR            | autogenerated    | essageHandler   |
+|                  |                  | gradient of the  |                 |
+|                  |                  | objective.       |                 |
++------------------+------------------+------------------+-----------------+
+| var_integer_md   | OT_DICT          | Integer metadata | casadi::BonMinM |
+|                  |                  | (a dictionary    | essageHandler   |
+|                  |                  | with lists of    |                 |
+|                  |                  | integers) about  |                 |
+|                  |                  | variables to be  |                 |
+|                  |                  | passed to BONMIN |                 |
++------------------+------------------+------------------+-----------------+
+| var_numeric_md   | OT_DICT          | Numeric metadata | casadi::BonMinM |
+|                  |                  | (a dictionary    | essageHandler   |
+|                  |                  | with lists of    |                 |
+|                  |                  | reals) about     |                 |
+|                  |                  | variables to be  |                 |
+|                  |                  | passed to BONMIN |                 |
++------------------+------------------+------------------+-----------------+
+| var_string_md    | OT_DICT          | String metadata  | casadi::BonMinM |
+|                  |                  | (a dictionary    | essageHandler   |
+|                  |                  | with lists of    |                 |
+|                  |                  | strings) about   |                 |
+|                  |                  | variables to be  |                 |
+|                  |                  | passed to BONMIN |                 |
++------------------+------------------+------------------+-----------------+
+| verbose_init     | OT_BOOL          | Print out timing | casadi::Nlpsol  |
+|                  |                  | information      |                 |
+|                  |                  | about the        |                 |
+|                  |                  | different stages |                 |
+|                  |                  | of               |                 |
+|                  |                  | initialization   |                 |
++------------------+------------------+------------------+-----------------+
+| warn_initial_bou | OT_BOOL          | Warn if the      | casadi::Nlpsol  |
+| nds              |                  | initial guess    |                 |
+|                  |                  | does not satisfy |                 |
+|                  |                  | LBX and UBX      |                 |
++------------------+------------------+------------------+-----------------+
 
 Diagrams
 --------
@@ -3812,11 +3913,16 @@ Ipopt::TNLP::LinearityType *var_types)  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::BSpline::get_sparsity_in(casadi_int i)  "
 
@@ -3846,7 +3952,7 @@ Generate a function that calculates nadj adjoint derivatives.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -3872,8 +3978,15 @@ Options.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -4156,6 +4269,13 @@ bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::n_instructions() const  "
 
 [INTERNAL]  Get the number of atomic operations.
@@ -4263,11 +4383,16 @@ double **arg, double **res, casadi_int *iw, double *w) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")
 casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
@@ -4419,6 +4544,13 @@ const std::string &fname) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::alloc_arg(size_t sz_arg,
 bool persistent=false) "
 
@@ -4427,7 +4559,7 @@ bool persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -4655,7 +4787,7 @@ generated function.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -5108,7 +5240,7 @@ std::string &fname) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -5191,7 +5323,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -5204,23 +5336,17 @@ casadi::FunctionInternal::codegen_sparsities(CodeGenerator &g) const  "
 
 ";
 
-%feature("docstring") casadi::BSpline::BSpline(const std::string &name,
-const std::vector< double > &knots, const std::vector< casadi_int > &offset,
-const std::vector< double > &coeffs, const std::vector< casadi_int >
-&degree, casadi_int m) "
-
-";
-
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -5715,7 +5841,7 @@ bool persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -5762,7 +5888,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -5822,11 +5948,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::BSplineCommon::get_n_out()  "
 
@@ -5924,7 +6055,7 @@ classes.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -6028,6 +6159,13 @@ multiplying.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::size_out(casadi_int ind)
 const  "
 
@@ -6087,10 +6225,17 @@ elements.
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::index_in(const std::string
-&name) const  "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Get input scheme index by name.
+[INTERNAL]  Get function in cache.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -6140,7 +6285,7 @@ always_inline, bool never_inline) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -6366,7 +6511,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -6392,16 +6537,17 @@ casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
 
 ";
 
-%feature("docstring") casadi::BSplineCommon::BSplineCommon(const std::string
-&name, const std::vector< double > &knots, const std::vector< casadi_int >
-&offset, const std::vector< casadi_int > &degree, casadi_int m) "
-
-";
-
 %feature("docstring")  casadi::FunctionInternal::get_min_in(casadi_int ind)
 const  "
 
 [INTERNAL]  Get smallest input value.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::index_in(const std::string
+&name) const  "
+
+[INTERNAL]  Get input scheme index by name.
 
 ";
 
@@ -6454,7 +6600,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -6506,22 +6652,28 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
+
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -6683,6 +6835,13 @@ const  "
 %feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
 
 [INTERNAL]  Construct Prepares the function for evaluation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -6902,11 +7061,16 @@ bool more) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::instruction_id(casadi_int
 k) const  "
@@ -6999,7 +7163,7 @@ double **arg, double **res, casadi_int *iw, double *w) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -7066,15 +7230,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -7636,7 +7801,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -7653,6 +7818,13 @@ casadi::FunctionInternal::getJacSparsityGen(casadi_int iind, casadi_int
 oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
 
 [INTERNAL]  Get the sparsity pattern, forward mode.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -7677,7 +7849,7 @@ Is the class able to propagate seeds through the algorithm?
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -7712,7 +7884,7 @@ Generate a function that calculates nadj adjoint derivatives.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -7721,6 +7893,13 @@ std::vector< M > &res) const  "
 %feature("docstring")  casadi::FunctionInternal::free_mx() const  "
 
 [INTERNAL]  Get free variables ( MX)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -7804,13 +7983,6 @@ std::string > &s_out, const Function::AuxOut &aux, const Dict &opts) const
 
 [INTERNAL] ";
 
-%feature("docstring") casadi::BSplineDual::BSplineDual(const std::string
-&name, const std::vector< double > &knots, const std::vector< casadi_int >
-&offset, const std::vector< double > &x, const std::vector< casadi_int >
-&degree, casadi_int m, bool reverse) "
-
-";
-
 %feature("docstring")
 casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
 
@@ -7869,7 +8041,7 @@ casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -7912,11 +8084,16 @@ std::string &lang, std::ostream &stream, const Dict &options) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::has_jac() const  "
 
@@ -8103,7 +8280,7 @@ Generate a function that calculates nfwd forward derivatives.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -8119,7 +8296,7 @@ double **arg, double **res, casadi_int *iw, double *w) const  "
 
 // File: classcasadi_1_1BSplineInterpolant.xml
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -8302,23 +8479,31 @@ k) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -8384,11 +8569,16 @@ persistent=false) "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::ProtoFunction::free_mem(void *mem) const  "
 
@@ -8496,7 +8686,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -8651,7 +8841,7 @@ symmetric, bool allow_forward, bool allow_reverse) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -8849,7 +9039,7 @@ oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -8908,7 +9098,7 @@ casadi::FunctionInternal::instruction_output(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -8974,11 +9164,16 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::get_min_in(casadi_int ind)
 const  "
@@ -9030,6 +9225,13 @@ tr:  Flip the relationship. Return which expressions contain the variables
 **arg, bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
 
 [INTERNAL]  Evaluate a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -9295,6 +9497,13 @@ const  "
 
 [INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
 multiplying.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -9569,6 +9778,44 @@ returned.
 
 ";
 
+%feature("docstring") casadi::casadi_reverse "
+
+Get a function that calculates nadj adjoint derivatives.
+
+Returns a function with n_in + n_out + n_out inputs and n_in outputs. The
+first n_in inputs correspond to nondifferentiated inputs. The next n_out
+inputs correspond to nondifferentiated outputs. and the last n_out inputs
+correspond to adjoint seeds, stacked horizontally The n_in outputs
+correspond to adjoint sensitivities, stacked horizontally. * (n_in = n_in(),
+n_out = n_out())
+
+(n_in = n_in(), n_out = n_out())
+
+The functions returned are cached, meaning that if called multiple timed
+with the same value, then multiple references to the same function will be
+returned.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_reverse "
+
+Get a function that calculates nadj adjoint derivatives.
+
+Returns a function with n_in + n_out + n_out inputs and n_in outputs. The
+first n_in inputs correspond to nondifferentiated inputs. The next n_out
+inputs correspond to nondifferentiated outputs. and the last n_out inputs
+correspond to adjoint seeds, stacked horizontally The n_in outputs
+correspond to adjoint sensitivities, stacked horizontally. * (n_in = n_in(),
+n_out = n_out())
+
+(n_in = n_in(), n_out = n_out())
+
+The functions returned are cached, meaning that if called multiple timed
+with the same value, then multiple references to the same function will be
+returned.
+
+";
+
 %feature("docstring")  casadi::Callback::get_name_in(casadi_int i) "
 
 Get the sparsity of an input This function is called during construction.
@@ -9591,6 +9838,18 @@ Get required length of arg field.
 %feature("docstring")  casadi::Function::slice(const std::string &name,
 const std::vector< casadi_int > &order_in, const std::vector< casadi_int >
 &order_out, const Dict &opts=Dict()) const  "
+
+returns a new function with a selection of inputs/outputs of the original
+
+";
+
+%feature("docstring") casadi::casadi_slice "
+
+returns a new function with a selection of inputs/outputs of the original
+
+";
+
+%feature("docstring")  casadi::Function::casadi_slice "
 
 returns a new function with a selection of inputs/outputs of the original
 
@@ -9627,11 +9886,6 @@ iind:  The index of the input
 oind:  The index of the output Legacy function: To be deprecated in a future
 version of CasADi. Exists only for compatibility with Function::hessian pre-
 CasADi 3.2
-
-";
-
-%feature("docstring")  casadi::Function::has_function(const std::string
-&fname) const  "
 
 ";
 
@@ -9716,6 +9970,40 @@ For a particular input or for all of the inputs
 ";
 
 %feature("docstring")  casadi::Function::forward(casadi_int nfwd) const  "
+
+Get a function that calculates nfwd forward derivatives.
+
+Returns a function with n_in + n_out + n_in inputs and nfwd outputs. The
+first n_in inputs correspond to nondifferentiated inputs. The next n_out
+inputs correspond to nondifferentiated outputs. and the last n_in inputs
+correspond to forward seeds, stacked horizontally The n_out outputs
+correspond to forward sensitivities, stacked horizontally. * (n_in = n_in(),
+n_out = n_out())
+
+The functions returned are cached, meaning that if called multiple timed
+with the same value, then multiple references to the same function will be
+returned.
+
+";
+
+%feature("docstring") casadi::casadi_forward "
+
+Get a function that calculates nfwd forward derivatives.
+
+Returns a function with n_in + n_out + n_in inputs and nfwd outputs. The
+first n_in inputs correspond to nondifferentiated inputs. The next n_out
+inputs correspond to nondifferentiated outputs. and the last n_in inputs
+correspond to forward seeds, stacked horizontally The n_out outputs
+correspond to forward sensitivities, stacked horizontally. * (n_in = n_in(),
+n_out = n_out())
+
+The functions returned are cached, meaning that if called multiple timed
+with the same value, then multiple references to the same function will be
+returned.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_forward "
 
 Get a function that calculates nfwd forward derivatives.
 
@@ -9829,6 +10117,20 @@ the output elements).
 
 ";
 
+%feature("docstring") casadi::casadi_jacobian "
+
+Generate a Jacobian function of all the inputs elements with respect to all
+the output elements).
+
+";
+
+%feature("docstring")  casadi::Function::casadi_jacobian "
+
+Generate a Jacobian function of all the inputs elements with respect to all
+the output elements).
+
+";
+
 %feature("docstring")  casadi::Function::n_nodes() const  "
 
 Number of nodes in the algorithm.
@@ -9925,6 +10227,32 @@ Is the class able to propagate seeds through the algorithm?
 %feature("docstring")  casadi::Function::which_depends(const std::string
 &s_in, const std::vector< std::string > &s_out, casadi_int order=1, bool
 tr=false) const  "
+
+Which variables enter with some order.
+
+Parameters:
+-----------
+
+order:  Only 1 (linear) and 2 (nonlinear) allowed
+
+tr:  Flip the relationship. Return which expressions contain the variables
+
+";
+
+%feature("docstring") casadi::casadi_which_depends "
+
+Which variables enter with some order.
+
+Parameters:
+-----------
+
+order:  Only 1 (linear) and 2 (nonlinear) allowed
+
+tr:  Flip the relationship. Return which expressions contain the variables
+
+";
+
+%feature("docstring")  casadi::Function::casadi_which_depends "
 
 Which variables enter with some order.
 
@@ -10360,12 +10688,6 @@ Get the MX node corresponding to an instruction ( MXFunction)
 
 ";
 
-%feature("docstring")  casadi::Function::factory(const std::string &name,
-const std::vector< std::string > &s_in, const std::vector< std::string >
-&s_out, const AuxOut &aux=AuxOut(), const Dict &opts=Dict()) const  "
-
-";
-
 %feature("docstring")  casadi::Function::sz_res() const  "
 
 Get required length of res field.
@@ -10449,10 +10771,38 @@ the outputs summed up.
 
 ";
 
+%feature("docstring") casadi::casadi_map "
+
+Map with reduction A subset of the inputs are non-repeated and a subset of
+the outputs summed up.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_map "
+
+Map with reduction A subset of the inputs are non-repeated and a subset of
+the outputs summed up.
+
+";
+
 %feature("docstring")  casadi::Function::map(const std::string &name, const
 std::string &parallelization, casadi_int n, const std::vector< std::string >
 &reduce_in, const std::vector< std::string > &reduce_out, const Dict
 &opts=Dict()) const  "
+
+Map with reduction A subset of the inputs are non-repeated and a subset of
+the outputs summed up.
+
+";
+
+%feature("docstring") casadi::casadi_map "
+
+Map with reduction A subset of the inputs are non-repeated and a subset of
+the outputs summed up.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_map "
 
 Map with reduction A subset of the inputs are non-repeated and a subset of
 the outputs summed up.
@@ -10499,8 +10849,81 @@ parallelization:  Type of parallelization used: unroll|serial|openmp
 
 ";
 
-%feature("docstring")  casadi::Function::map(casadi_int n, const std::string
-&parallelization, casadi_int max_num_threads) const  "
+%feature("docstring") casadi::casadi_map "
+
+Create a mapped version of this function.
+
+Suppose the function has a signature of:
+
+::
+
+     f: (a, p) -> ( s )
+  
+
+
+
+The the mapped version has the signature:
+
+::
+
+     F: (A, P) -> (S )
+  
+      with
+          A: horzcat([a0, a1, ..., a_(N-1)])
+          P: horzcat([p0, p1, ..., p_(N-1)])
+          S: horzcat([s0, s1, ..., s_(N-1)])
+      and
+          s0 <- f(a0, p0)
+          s1 <- f(a1, p1)
+          ...
+          s_(N-1) <- f(a_(N-1), p_(N-1))
+  
+
+
+
+Parameters:
+-----------
+
+parallelization:  Type of parallelization used: unroll|serial|openmp
+
+";
+
+%feature("docstring")  casadi::Function::casadi_map "
+
+Create a mapped version of this function.
+
+Suppose the function has a signature of:
+
+::
+
+     f: (a, p) -> ( s )
+  
+
+
+
+The the mapped version has the signature:
+
+::
+
+     F: (A, P) -> (S )
+  
+      with
+          A: horzcat([a0, a1, ..., a_(N-1)])
+          P: horzcat([p0, p1, ..., p_(N-1)])
+          S: horzcat([s0, s1, ..., s_(N-1)])
+      and
+          s0 <- f(a0, p0)
+          s1 <- f(a1, p1)
+          ...
+          s_(N-1) <- f(a_(N-1), p_(N-1))
+  
+
+
+
+Parameters:
+-----------
+
+parallelization:  Type of parallelization used: unroll|serial|openmp
 
 ";
 
@@ -10826,8 +11249,32 @@ Expand a function to SX.
 
 ";
 
+%feature("docstring") casadi::casadi_expand "
+
+Expand a function to SX.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_expand "
+
+Expand a function to SX.
+
+";
+
 %feature("docstring")  casadi::Function::expand(const std::string &name,
 const Dict &opts=Dict()) const  "
+
+Expand a function to SX.
+
+";
+
+%feature("docstring") casadi::casadi_expand "
+
+Expand a function to SX.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_expand "
 
 Expand a function to SX.
 
@@ -10941,15 +11388,6 @@ Get output dimension.
 
 ";
 
-%feature("docstring")  casadi::Function::get_function() const  "
-
-";
-
-%feature("docstring")  casadi::Function::get_function(const std::string
-&name) const  "
-
-";
-
 %feature("docstring")  casadi::Callback::get_name_out(casadi_int i) "
 
 Get the sparsity of an output This function is called during construction.
@@ -11039,7 +11477,7 @@ C++ includes: casadi_meta.hpp ";
 
 // File: classcasadi_1_1CentralDiff.xml
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -11250,13 +11688,20 @@ multiplying.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::has_function(const
 std::string &fname) const  "
 
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -11303,7 +11748,7 @@ classes.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -11395,7 +11840,7 @@ k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -11815,16 +12260,28 @@ persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
+
 %feature("docstring")  casadi::FunctionInternal::finalize(const Dict &opts)
 "
 
 [INTERNAL]  Finalize the object creation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -12289,7 +12746,7 @@ get_reverse(casadi_int nadj) if no cached version is available.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -12299,6 +12756,13 @@ std::vector< M > &res) const  "
 size_t &sz_res, size_t &sz_iw, size_t &sz_w) const  "
 
 [INTERNAL]  Get number of temporary variables needed.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -12396,11 +12860,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::factory(const std::string
 &name, const std::vector< std::string > &s_in, const std::vector<
@@ -12430,22 +12899,23 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -12794,15 +13264,16 @@ original
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -13016,7 +13487,7 @@ std::vector< MX > &arg, const std::string &parallelization) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -13048,14 +13519,14 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -13282,6 +13753,13 @@ const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")
 casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
 
@@ -13385,7 +13863,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -13438,7 +13916,7 @@ casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -13578,6 +14056,13 @@ structure recognition.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::FixedStepIntegrator::init_mem(void *mem)
 const  "
 
@@ -13593,7 +14078,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -13782,7 +14267,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -13850,11 +14335,16 @@ std::vector< MX > &arg) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::symbolicAdjSeed(casadi_int
 nadj, const std::vector< MatType > &v) const  "
@@ -14101,11 +14591,16 @@ k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::forward(casadi_int nfwd)
 const  "
@@ -14224,6 +14719,13 @@ double t, const double *x, const double *z, const double *p) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")
 casadi::FunctionInternal::getJacSparsityGen(casadi_int iind, casadi_int
 oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
@@ -14238,11 +14740,16 @@ oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
 
 // File: classcasadi_1_1Conic.xml
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::call_forward(const
 std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
@@ -14686,10 +15193,10 @@ double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::is_a(const std::string
-&type, bool recursive) const  "
+%feature("docstring")  casadi::FunctionInternal::symbolicAdjSeed(casadi_int
+nadj, const std::vector< MatType > &v) const  "
 
-[INTERNAL]  Check if the function is of a particular type.
+[INTERNAL]  Symbolic expressions for the adjoint seeds.
 
 ";
 
@@ -14710,7 +15217,7 @@ constructor), this class should invoke this function when initialized.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -14776,18 +15283,23 @@ std::string &fname, const Dict &opts) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::Conic::get_name_in(casadi_int i)  "
 
@@ -14853,8 +15365,15 @@ std::map< std::string, Sparsity > &st) "
 
 [INTERNAL] ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -14931,15 +15450,16 @@ bool more) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -14953,16 +15473,16 @@ bool never_inline) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::print(const char *fmt,...)
-const  "
+%feature("docstring")  casadi::FunctionInternal::codegen(CodeGenerator &g,
+const std::string &fname) const  "
 
-[INTERNAL]  C-style formatted printing during evaluation.
+[INTERNAL]  Generate code the function.
 
 ";
 
@@ -15132,6 +15652,13 @@ casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::sparsity_in(casadi_int ind)
 const  "
 
@@ -15167,15 +15694,15 @@ bool persistent=false) "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::codegen(CodeGenerator &g,
-const std::string &fname) const  "
+%feature("docstring")  casadi::Conic::is_a(const std::string &type, bool
+recursive) const  "
 
-[INTERNAL]  Generate code the function.
+[INTERNAL]  Check if the function is of a particular type.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -15225,13 +15752,6 @@ std::string > &s_out, const Function::AuxOut &aux, const Dict &opts) const
 "
 
 [INTERNAL] ";
-
-%feature("docstring")  casadi::FunctionInternal::symbolicAdjSeed(casadi_int
-nadj, const std::vector< MatType > &v) const  "
-
-[INTERNAL]  Symbolic expressions for the adjoint seeds.
-
-";
 
 %feature("docstring")  casadi::FunctionInternal::get_stats(void *mem) const
 "
@@ -15303,6 +15823,12 @@ oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
 %feature("docstring")  casadi::FunctionInternal::uses_output() const  "
 
 [INTERNAL]  Do the derivative functions need nondifferentiated outputs?
+
+";
+
+%feature("docstring")  casadi::Conic::psd_support() const  "
+
+[INTERNAL]  Can psd constraints be treated.
 
 ";
 
@@ -15658,7 +16184,7 @@ C++ includes: conic_impl.hpp ";
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -15689,71 +16215,10 @@ const  "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::export_code(const
-std::string &lang, std::ostream &stream, const Dict &options) const  "
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
 
-[INTERNAL]  Export function in a specific language.
-
-";
-
-
-// File: classcasadi_1_1ConicActiveSet.xml
-%feature("docstring")  casadi::FunctionInternal::jit_dependencies(const
-std::string &fname) "
-
-[INTERNAL]  Jit dependencies.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_in(casadi_int ind) const
-"
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_in() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_iw() const  "
-
-[INTERNAL]  Get required length of iw field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc(const Function &f,
-bool persistent=false) "
-
-[INTERNAL]  Ensure work vectors long enough to evaluate function.
-
-";
-
-%feature("docstring")  casadi::Conic::get_n_in()  "
-
-[INTERNAL]  Number of function inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
-
-[INTERNAL]  Replace 0-by-0 forward seeds.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_arg() const  "
-
-[INTERNAL]  Get required length of arg field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
-
-[INTERNAL]  Replace 0-by-0 outputs.
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -15761,280 +16226,6 @@ std::vector< M > &res) const  "
 std::string &lang, std::ostream &stream, const Dict &options) const  "
 
 [INTERNAL]  Export function in a specific language.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_jac(const std::string
-&name, const std::vector< std::string > &inames, const std::vector<
-std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::codegen_meta(CodeGenerator
-&g) const  "
-
-[INTERNAL]  Generate meta-information allowing a user to evaluate a
-generated function.
-
-";
-
-%feature("docstring")  casadi::ConicActiveSet::free_mem(void *mem) const  "
-
-[INTERNAL]  Free memory block.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sp_forward(const bvec_t
-**arg, bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
-
-[INTERNAL]  Propagate sparsity forward.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_w(size_t sz_w, bool
-persistent=false) "
-
-[INTERNAL]  Ensure required length of w field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_spfwd() const  "
-
-[INTERNAL]  Is the class able to propagate seeds through the algorithm?
-
-";
-
-%feature("docstring")  casadi::Conic::get_name_out(casadi_int i)  "
-
-[INTERNAL]  Names of function input and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sparsity_jac(casadi_int
-iind, casadi_int oind, bool compact, bool symmetric) const  "
-
-[INTERNAL]  Get, if necessary generate, the sparsity of a Jacobian block.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::print_option(const
-std::string &name, std::ostream &stream) const  "
-
-[INTERNAL]  Print all information there is to know about a certain option.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sprint(char *buf, size_t
-buf_sz, const char *fmt,...) const  "
-
-[INTERNAL]  C-style formatted printing to string.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::wrap() const  "
-
-[INTERNAL]  Wrap in an Function instance consisting of only one MX call.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sp_weight() const  "
-
-[INTERNAL]  Weighting factor for chosing forward/reverse mode, sparsity
-propagation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size1_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::generate_lifted(Function
-&vdef_fcn, Function &vinit_fcn) const  "
-
-[INTERNAL]  Extract the functions needed for the Lifted Newton method.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_abstol() const  "
-
-[INTERNAL]  Get absolute tolerance.
-
-";
-
-%feature("docstring")  casadi::ConicActiveSet::print_vector(const char *id,
-const double *x, casadi_int n) const  "
-
-[INTERNAL]  Print a vector
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Replace 0-by-0 inputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::free_mx() const  "
-
-[INTERNAL]  Get free variables ( MX)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::slice(const std::string
-&name, const std::vector< casadi_int > &order_in, const std::vector<
-casadi_int > &order_out, const Dict &opts) const  "
-
-[INTERNAL]  returns a new function with a selection of inputs/outputs of the
-original
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::jac() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::Conic::get_default_in(casadi_int ind) const
-"
-
-[INTERNAL]  Get default input value.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::setup(void *mem, const
-double **arg, double **res, casadi_int *iw, double *w) const  "
-
-[INTERNAL]  Set the (persistent and temporary) work vectors.
-
-";
-
-%feature("docstring")  casadi::Conic::integer_support() const  "
-
-[INTERNAL]  Can discrete variables be treated.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::codegen_body(CodeGenerator
-&g) const  "
-
-[INTERNAL]  Generate code for the function body.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call(const std::vector< M >
-&arg, std::vector< M > &res, bool always_inline, bool never_inline) const  "
-
-[INTERNAL]   Call a function, templated.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::codegen(CodeGenerator &g,
-const std::string &fname) const  "
-
-[INTERNAL]  Generate code the function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::fwdViaJac(casadi_int nfwd)
-const  "
-
-[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
-multiplying.
-
-";
-
-%feature("docstring")  casadi::ConicActiveSet::init(const Dict &opts)  "
-
-[INTERNAL]  Initialize.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::uses_output() const  "
-
-[INTERNAL]  Do the derivative functions need nondifferentiated outputs?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::self() const  "
-
-[INTERNAL]  Get a public class instance.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::print_options(std::ostream
-&stream) const  "
-
-[INTERNAL]  Print list of options.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
-
-[INTERNAL]  Check if output arguments have correct length and dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::fwd_seed(casadi_int nfwd)
-const  "
-
-[INTERNAL]  Symbolic expressions for the forward seeds.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_reltol() const  "
-
-[INTERNAL]  Get relative tolerance.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::instruction_id(casadi_int
-k) const  "
-
-[INTERNAL]  Get an atomic operation operator index.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::set_work(void *mem, const
-double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
-
-[INTERNAL]  Set the (persistent) work vectors.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_sx(const SXElem **arg,
-SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
-
-[INTERNAL]  Evaluate with symbolic scalars.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::ad_weight() const  "
-
-[INTERNAL]  Weighting factor for chosing forward/reverse mode.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::instruction_input(casadi_int k) const  "
-
-[INTERNAL]  Get the (integer) input arguments of an atomic operation.
 
 ";
 
@@ -16042,938 +16233,6 @@ casadi::FunctionInternal::instruction_input(casadi_int k) const  "
 const  "
 
 [INTERNAL]  C-style formatted printing during evaluation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::getAdaptorSolverName()
-const  "
-
-[INTERNAL]  Obtain solver name from Adaptor.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::all_scalar() const  "
-
-[INTERNAL]  Are all inputs and outputs scalar.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::codegen_declarations(CodeGenerator &g) const  "
-
-[INTERNAL]  Generate code for the declarations of the C function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::generate_dependencies(const
-std::string &fname, const Dict &opts) const  "
-
-[INTERNAL]  Export / Generate C code for the dependency function.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
-
-[INTERNAL]  Codegen incref for dependencies.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Check if output arguments that needs to be replaced.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_jacobian_sparsity()
-const  "
-
-[INTERNAL]  Get Jacobian sparsity.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::set_temp(void *mem, const
-double **arg, double **res, casadi_int *iw, double *w) const  "
-
-[INTERNAL]  Set the (temporary) work vectors.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::which_depends(const
-std::string &s_in, const std::vector< std::string > &s_out, casadi_int
-order, bool tr=false) const  "
-
-[INTERNAL]  Which variables enter with some order.
-
-Parameters:
------------
-
-s_in:   Input name
-
-s_out:   Output name(s)
-
-order:  Only 1 (linear) and 2 (nonlinear) allowed
-
-tr:  Flip the relationship. Return which expressions contain the variables
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::n_nodes() const  "
-
-[INTERNAL]  Number of nodes in the algorithm.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_free() const  "
-
-[INTERNAL]  Does the function have free variables.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_iw(size_t sz_iw, bool
-persistent=false) "
-
-[INTERNAL]  Ensure required length of iw field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_partition(casadi_int
-iind, casadi_int oind, Sparsity &D1, Sparsity &D2, bool compact, bool
-symmetric, bool allow_forward, bool allow_reverse) const  "
-
-[INTERNAL]  Get the unidirectional or bidirectional partition.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sparsity_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output sparsity.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
-
-[INTERNAL]  Print dimensions of inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::is_a(const std::string
-&type, bool recursive) const  "
-
-[INTERNAL]  Check if the function is of a particular type.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_max_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Get largest input value.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_in() const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring") casadi::ConicActiveSet::~ConicActiveSet "
-
-[INTERNAL]  Destructor.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_reverse(casadi_int
-nadj, const std::string &name, const std::vector< std::string > &inames,
-const std::vector< std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Return function that calculates adjoint derivatives
-reverse(nadj) returns a cached instance if available, and calls  Function
-get_reverse(casadi_int nadj) if no cached version is available.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_out() const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring")  casadi::Conic::generateNativeCode(std::ostream &file)
-const  "
-
-[INTERNAL]  Generate native code in the interfaced language for debugging
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_in(casadi_int ind) const
-"
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_in() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::Conic::get_sparsity_out(casadi_int i)  "
-
-[INTERNAL]  Sparsities of function inputs and outputs.
-
-";
-
-%feature("docstring") casadi::ConicActiveSet "
-
-'activeset' plugin for Conic
-
-Solve QPs using an active-set method
-
->List of available options
-
-+----------+-----------+--------------------------------------+
-|    Id    |   Type    |             Description              |
-+==========+===========+======================================+
-| max_iter | OT_INT    | Maximum number of iterations [1000]. |
-+----------+-----------+--------------------------------------+
-| tol      | OT_DOUBLE | Tolerance [1e-8].                    |
-+----------+-----------+--------------------------------------+
-
-Joel Andersson
-
->List of available options
-
-+----------+---------------+-----------------------+-----------------------+
-|    Id    |     Type      |      Description      |        Used in        |
-+==========+===============+=======================+=======================+
-| discrete | OT_BOOLVECTOR | Indicates which of    | casadi::Conic         |
-|          |               | the variables are     |                       |
-|          |               | discrete, i.e.        |                       |
-|          |               | integer-valued        |                       |
-+----------+---------------+-----------------------+-----------------------+
-| max_iter | OT_INT        | Maximum number of     | casadi::ConicActiveSe |
-|          |               | iterations [1000].    | t                     |
-+----------+---------------+-----------------------+-----------------------+
-| tol      | OT_DOUBLE     | Tolerance [1e-8].     | casadi::ConicActiveSe |
-|          |               |                       | t                     |
-+----------+---------------+-----------------------+-----------------------+
-
-Diagrams
---------
-
-
-
-C++ includes: conic_activeset.hpp ";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_in() const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_res() const  "
-
-[INTERNAL]  Get required length of res field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Check if input arguments that needs to be replaced.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size2_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_dm(const std::vector<
-DM > &arg) const  "
-
-[INTERNAL]  Evaluate with DM matrices.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_work(size_t &sz_arg,
-size_t &sz_res, size_t &sz_iw, size_t &sz_w) const  "
-
-[INTERNAL]  Get number of temporary variables needed.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_free() const  "
-
-[INTERNAL]  Print free variables.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::n_instructions() const  "
-
-[INTERNAL]  Get the number of atomic operations.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::adjViaJac(casadi_int nadj)
-const  "
-
-[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
-multiplying.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::instruction_MX(casadi_int
-k) const  "
-
-[INTERNAL]  get MX expression associated with instruction
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_jacobian() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_sprev() const  "
-
-[INTERNAL]  Is the class able to propagate seeds through the algorithm?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_arg(size_t sz_arg,
-bool persistent=false) "
-
-[INTERNAL]  Ensure required length of arg field.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::getJacSparsityHierarchicalSymm(casadi_int iind,
-casadi_int oind) const  "
-
-[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
-structure recognition for symmetric Jacobians
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sparsity_out(casadi_int
-ind) const  "
-
-[INTERNAL]  Input/output sparsity.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_stats(void *mem) const
-"
-
-[INTERNAL]  Get all statistics.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::getJacSparsityGen(casadi_int iind, casadi_int
-oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
-
-[INTERNAL]  Get the sparsity pattern, forward mode.
-
-";
-
-%feature("docstring")  casadi::SharedObjectInternal::weak() "
-
-[INTERNAL]  Get a weak reference to the object.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::getJacSparsity(casadi_int
-iind, casadi_int oind, bool symmetric) const  "
-
-[INTERNAL]  Generate the sparsity of a Jacobian block.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::free_sx() const  "
-
-[INTERNAL]  Get free variables (SX)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::forward(casadi_int nfwd)
-const  "
-
-[INTERNAL]  Return function that calculates forward derivatives
-forward(nfwd) returns a cached instance if available, and calls  Function
-get_forward(casadi_int nfwd) if no cached version is available.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_mx(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
-
-[INTERNAL]  Evaluate with symbolic matrices.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::codegen_sparsities(CodeGenerator &g) const  "
-
-[INTERNAL]  Codegen sparsities.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
-
-[INTERNAL]  Construct Prepares the function for evaluation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_forward(casadi_int
-nfwd, const std::string &name, const std::vector< std::string > &inames,
-const std::vector< std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Return function that calculates forward derivatives
-forward(nfwd) returns a cached instance if available, and calls  Function
-get_forward(casadi_int nfwd) if no cached version is available.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
-
-[INTERNAL]  Serialize function header.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_jac() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_gen(const double
-**arg, double **res, casadi_int *iw, double *w, void *mem) const  "
-
-[INTERNAL]  Evaluate numerically.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_gen(const SXElem
-**arg, SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
-
-[INTERNAL]  Evaluate a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_gen(const bvec_t
-**arg, bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
-
-[INTERNAL]  Evaluate a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_forward(casadi_int
-nfwd) const  "
-
-[INTERNAL]  Return function that calculates forward derivatives
-forward(nfwd) returns a cached instance if available, and calls  Function
-get_forward(casadi_int nfwd) if no cached version is available.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::definition() const  "
-
-[INTERNAL]  Get function signature: name:(inputs)->(outputs)
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::checkout() const  "
-
-[INTERNAL]  Checkout a memory object.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mapsum_mx(const
-std::vector< MX > &arg, const std::string &parallelization) "
-
-[INTERNAL]  Parallel evaluation.
-
-";
-
-%feature("docstring")  casadi::ConicActiveSet::alloc_mem() const  "
-
-[INTERNAL]  Create memory block.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::instruction_output(casadi_int k) const  "
-
-[INTERNAL]  Get the (integer) output argument of an atomic operation.
-
-";
-
-%feature("docstring")  casadi::ConicActiveSet::plugin_name() const  "
-
-[INTERNAL] ";
-
-%feature("docstring") casadi::ConicActiveSet::ConicActiveSet(const
-std::string &name, const std::map< std::string, Sparsity > &st) "
-
-[INTERNAL]  Create a new Solver.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::getJacSparsityHierarchical(casadi_int iind,
-casadi_int oind) const  "
-
-[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
-structure recognition.
-
-";
-
-%feature("docstring")  casadi::ConicActiveSet::get_options() const  "
-
-[INTERNAL]  Options.
-
-";
-
-%feature("docstring")  casadi::ConicActiveSet::print_ivector(const char *id,
-const casadi_int *x, casadi_int n) const  "
-
-[INTERNAL]  Print an integer vector
-
-";
-
-%feature("docstring")  casadi::ConicActiveSet::class_name() const  "
-
-[INTERNAL]  Readable name of the internal class.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_function() const  "
-
-[INTERNAL] ";
-
-%feature("docstring")  casadi::FunctionInternal::get_function(const
-std::string &name) const  "
-
-[INTERNAL] ";
-
-%feature("docstring")  casadi::Conic::check_inputs(const double *lbx, const
-double *ubx, const double *lba, const double *uba) const  "
-
-[INTERNAL]  Check if the numerical values of the supplied bounds make sense.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::codegen_decref(CodeGenerator &g) const  "
-
-[INTERNAL]  Codegen decref for dependencies.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::factory(const std::string
-&name, const std::vector< std::string > &s_in, const std::vector<
-std::string > &s_out, const Function::AuxOut &aux, const Dict &opts) const
-"
-
-[INTERNAL] ";
-
-%feature("docstring")  casadi::ProtoFunction::release(casadi_int mem) const
-"
-
-[INTERNAL]  Release a memory object.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::codegen_name(const
-CodeGenerator &g) const  "
-
-[INTERNAL]  Get name in codegen.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::symbolic_output(const
-std::vector< MX > &arg) const  "
-
-[INTERNAL]  Get a vector of symbolic variables corresponding to the outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_function(const
-std::string &fname) const  "
-
-[INTERNAL] ";
-
-%feature("docstring")  casadi::FunctionInternal::finalize(const Dict &opts)
-"
-
-[INTERNAL]  Finalize the object creation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_derivative() const  "
-
-[INTERNAL]  Can derivatives be calculated in any way?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::info() const  "
-
-[INTERNAL]  Obtain information about function
-
-";
-
-%feature("docstring")  casadi::Conic::get_sparsity_in(casadi_int i)  "
-
-[INTERNAL]  Sparsities of function inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::index_out(const std::string
-&name) const  "
-
-[INTERNAL]  Get output scheme index by name.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_forward(const
-std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
-std::vector< MX > > &fseed, std::vector< std::vector< MX > > &fsens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
-classes.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_forward(const
-std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
-std::vector< SX > > &fseed, std::vector< std::vector< SX > > &fsens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
-classes.
-
-";
-
-%feature("docstring")  casadi::Conic::get_name_in(casadi_int i)  "
-
-[INTERNAL]  Names of function input and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_jacobian(const
-std::string &name, const std::vector< std::string > &inames, const
-std::vector< std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Check if input arguments have correct length and dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_out() const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
-
-[INTERNAL]   Call a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
-
-[INTERNAL]   Call a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::ConicActiveSet::print_signs(const char *id,
-const double *x, casadi_int n) const  "
-
-[INTERNAL]  Print signs for a vector
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_out() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::serialize(std::ostream
-&stream) const  "
-
-[INTERNAL]  Serialize.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::clear_mem() "
-
-[INTERNAL]  Clear all memory (called from destructor)
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
-
-[INTERNAL]  Get the floating point output argument of an atomic operation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_out() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::disp_more(std::ostream
-&stream) const  "
-
-[INTERNAL]  Print more.
-
-";
-
-%feature("docstring")  casadi::ConicActiveSet::init_mem(void *mem) const  "
-
-[INTERNAL]  Initalize memory block.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_codegen() const  "
-
-[INTERNAL]  Is codegen supported?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_w() const  "
-
-[INTERNAL]  Get required length of w field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::jacobian() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::signature(const std::string
-&fname) const  "
-
-[INTERNAL]  Code generate the function.
-
-";
-
-%feature("docstring")  casadi::ConicActiveSet::eval(const double **arg,
-double **res, casadi_int *iw, double *w, void *mem) const  "
-
-[INTERNAL]  Evaluate numerically.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::memory(casadi_int ind) const
-"
-
-[INTERNAL]  Memory objects.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::reverse(casadi_int nadj)
-const  "
-
-[INTERNAL]  Return function that calculates adjoint derivatives
-reverse(nadj) returns a cached instance if available, and calls  Function
-get_reverse(casadi_int nadj) if no cached version is available.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size2_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::Conic::print_fstats(const ConicMemory *m)
-const  "
-
-[INTERNAL]  Print statistics.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::symbolicAdjSeed(casadi_int
-nadj, const std::vector< MatType > &v) const  "
-
-[INTERNAL]  Symbolic expressions for the adjoint seeds.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::index_in(const std::string
-&name) const  "
-
-[INTERNAL]  Get input scheme index by name.
-
-";
-
-%feature("docstring")  casadi::Conic::get_n_out()  "
-
-[INTERNAL]  Number of function inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
-
-[INTERNAL]  Replace 0-by-0 reverse seeds.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_min_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Get smallest input value.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_reverse(casadi_int
-nadj) const  "
-
-[INTERNAL]  Return function that calculates adjoint derivatives
-reverse(nadj) returns a cached instance if available, and calls  Function
-get_reverse(casadi_int nadj) if no cached version is available.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_reverse(const
-std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
-std::vector< MX > > &aseed, std::vector< std::vector< MX > > &asens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_reverse(const
-std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
-std::vector< SX > > &aseed, std::vector< std::vector< SX > > &asens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size1_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_res(size_t sz_res,
-bool persistent=false) "
-
-[INTERNAL]  Ensure required length of res field.
-
-";
-
-%feature("docstring")  casadi::SharedObjectInternal::getCount() const  "
-
-[INTERNAL]  Get the reference count.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::disp(std::ostream &stream,
-bool more) const  "
-
-[INTERNAL]  Display object.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::oracle() const  "
-
-[INTERNAL]  Get oracle.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sp_reverse(bvec_t **arg,
-bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
-
-[INTERNAL]  Propagate sparsity backwards.
 
 ";
 
@@ -17099,8 +16358,32 @@ Get the lower bound by name.
 
 ";
 
+%feature("docstring") casadi::casadi_min "
+
+Get the lower bound by name.
+
+";
+
+%feature("docstring")  casadi::DaeBuilder::casadi_min "
+
+Get the lower bound by name.
+
+";
+
 %feature("docstring")  casadi::DaeBuilder::min(const MX &var, bool
 normalized=false) const  "
+
+Get the lower bound(s) by expression.
+
+";
+
+%feature("docstring") casadi::casadi_min "
+
+Get the lower bound(s) by expression.
+
+";
+
+%feature("docstring")  casadi::DaeBuilder::casadi_min "
 
 Get the lower bound(s) by expression.
 
@@ -17133,8 +16416,32 @@ Get the upper bound by name.
 
 ";
 
+%feature("docstring") casadi::casadi_max "
+
+Get the upper bound by name.
+
+";
+
+%feature("docstring")  casadi::DaeBuilder::casadi_max "
+
+Get the upper bound by name.
+
+";
+
 %feature("docstring")  casadi::DaeBuilder::max(const MX &var, bool
 normalized=false) const  "
+
+Get the upper bound(s) by expression.
+
+";
+
+%feature("docstring") casadi::casadi_max "
+
+Get the upper bound(s) by expression.
+
+";
+
+%feature("docstring")  casadi::DaeBuilder::casadi_max "
 
 Get the upper bound(s) by expression.
 
@@ -18156,11 +17463,16 @@ C++ includes: dple_impl.hpp ";
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::get_stats(void *mem) const
 "
@@ -18472,7 +17784,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -18506,6 +17818,13 @@ double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
 %feature("docstring")  casadi::FunctionInternal::sz_arg() const  "
 
 [INTERNAL]  Get required length of arg field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_arg(size_t sz_arg,
+bool persistent=false) "
+
+[INTERNAL]  Ensure required length of arg field.
 
 ";
 
@@ -18691,10 +18010,10 @@ ind) const  "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::alloc_arg(size_t sz_arg,
-bool persistent=false) "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Ensure required length of arg field.
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -18746,7 +18065,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -18795,7 +18114,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -18847,11 +18166,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::ProtoFunction::release(casadi_int mem) const
 "
@@ -18920,7 +18244,7 @@ casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -18936,6 +18260,13 @@ std::vector< M > &arg) const  "
 const std::string &fname) const  "
 
 [INTERNAL]  Generate code the function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -19040,7 +18371,7 @@ casadi::FunctionInternal::codegen_sparsities(CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -19050,6 +18381,13 @@ std::vector< M > &arg) const  "
 CodeGenerator &g) const  "
 
 [INTERNAL]  Get name in codegen.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -19101,7 +18439,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -19194,15 +18532,16 @@ bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -19229,6 +18568,13 @@ const  "
 %feature("docstring")  casadi::FunctionInternal::has_free() const  "
 
 [INTERNAL]  Does the function have free variables.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -19280,7 +18626,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -19478,7 +18824,7 @@ propagation.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -19591,7 +18937,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -19872,25 +19218,35 @@ k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
+
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::has_spfwd() const  "
 
@@ -19918,6 +19274,13 @@ const std::string &fname) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::sz_work(size_t &sz_arg,
 size_t &sz_res, size_t &sz_iw, size_t &sz_w) const  "
 
@@ -19935,7 +19298,7 @@ get_reverse(casadi_int nadj) if no cached version is available.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -20324,15 +19687,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -20409,7 +19773,7 @@ casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -20488,6 +19852,13 @@ elements.
 %feature("docstring")  casadi::Expm::has_forward(casadi_int nfwd) const  "
 
 [INTERNAL]  Generate a function that calculates nfwd forward derivatives.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -20662,7 +20033,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -20789,6 +20160,13 @@ classes.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::External::class_name() const  "
 
 [INTERNAL]  Get type name.
@@ -20878,6 +20256,13 @@ elements.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::size_out(casadi_int ind)
 const  "
 
@@ -20886,7 +20271,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -20947,7 +20332,7 @@ bool more) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -20968,7 +20353,7 @@ casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -21003,11 +20388,16 @@ std::vector< std::string > &onames, const Dict &opts) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::print(const char *fmt,...)
 const  "
@@ -21300,15 +20690,16 @@ casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -21382,6 +20773,13 @@ const  "
 "
 
 [INTERNAL]  Release a memory object.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -21515,11 +20913,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::get_max_in(casadi_int ind)
 const  "
@@ -21680,7 +21083,7 @@ bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -21694,7 +21097,7 @@ DM > &arg) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -21871,7 +21274,7 @@ std::string &s) "
 [INTERNAL] ";
 
 %feature("docstring") casadi::Factory< MatType >::Factory(const
-Function::AuxOut &aux) "
+Function::AuxOut &aux, bool verbose=false) "
 
 [INTERNAL] ";
 
@@ -21882,7 +21285,7 @@ Function::AuxOut &aux) "
 
 // File: classcasadi_1_1FastNewton.xml
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -22013,6 +21416,12 @@ bool persistent=false) "
 
 ";
 
+%feature("docstring")  casadi::SharedObjectInternal::getCount() const  "
+
+[INTERNAL]  Get the reference count.
+
+";
+
 %feature("docstring")  casadi::OracleFunction::set_function(const Function
 &fcn, const std::string &fname, bool jit=false) "
 
@@ -22047,6 +21456,18 @@ const  "
 
 ";
 
+%feature("docstring") casadi::casadi_solve "
+
+Solve the system of equations and calculate derivatives.
+
+";
+
+%feature("docstring")  casadi::FastNewton::casadi_solve "
+
+Solve the system of equations and calculate derivatives.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::getJacSparsity(casadi_int
 iind, casadi_int oind, bool symmetric) const  "
 
@@ -22055,7 +21476,7 @@ iind, casadi_int oind, bool symmetric) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -22064,6 +21485,13 @@ std::vector< M > &arg) const  "
 %feature("docstring")  casadi::Rootfinder::has_spfwd() const  "
 
 [INTERNAL]  Is the class able to propagate seeds through the algorithm?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -22243,6 +21671,13 @@ Joris Gillis
 |                   |              | > 0.0, -2: ui <   |                   |
 |                   |              | 0.0.              |                   |
 +-------------------+--------------+-------------------+-------------------+
+| error_on_fail     | OT_BOOL      | When the          | casadi::Rootfinde |
+|                   |              | numerical process | r                 |
+|                   |              | returns           |                   |
+|                   |              | unsuccessfully,   |                   |
+|                   |              | raise an error    |                   |
+|                   |              | (default false).  |                   |
++-------------------+--------------+-------------------+-------------------+
 | implicit_input    | OT_INT       | Index of the      | casadi::Rootfinde |
 |                   |              | input that        | r                 |
 |                   |              | corresponds to    |                   |
@@ -22290,9 +21725,10 @@ bool persistent=false) "
 
 ";
 
-%feature("docstring")  casadi::SharedObjectInternal::getCount() const  "
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
 
-[INTERNAL]  Get the reference count.
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -22393,7 +21829,7 @@ multiplying.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -22547,11 +21983,16 @@ CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::Rootfinder::get_forward(casadi_int nfwd,
 const std::string &name, const std::vector< std::string > &inames, const
@@ -22588,7 +22029,7 @@ double **arg, double **res, casadi_int *iw, double *w) const  "
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -22648,6 +22089,13 @@ const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::get_default_in(casadi_int
 ind) const  "
 
@@ -22660,7 +22108,7 @@ ind) const  "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -22965,11 +22413,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::eval_sx(const SXElem **arg,
 SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
@@ -23019,7 +22472,7 @@ tr:  Flip the relationship. Return which expressions contain the variables
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -23065,7 +22518,7 @@ persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -23138,15 +22591,16 @@ oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -23588,9 +23042,10 @@ elements.
 
 ";
 
-%feature("docstring")  casadi::SharedObjectInternal::weak() "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Get a weak reference to the object.
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -23684,7 +23139,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -23861,6 +23316,13 @@ ind) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::size2_in(casadi_int ind)
 const  "
 
@@ -23977,7 +23439,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -24036,11 +23498,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::print(const char *fmt,...)
 const  "
@@ -24092,7 +23559,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -24159,11 +23626,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::fwdViaJac(casadi_int nfwd)
 const  "
@@ -24180,15 +23652,16 @@ multiplying.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -24208,7 +23681,7 @@ casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -24227,6 +23700,13 @@ std::vector< std::string > &onames, const Dict &opts) const  "
 
 [INTERNAL]  Return Jacobian of all input elements with respect to all output
 elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -24277,6 +23757,12 @@ const  "
 %feature("docstring")  casadi::FunctionInternal::get_reltol() const  "
 
 [INTERNAL]  Get relative tolerance.
+
+";
+
+%feature("docstring")  casadi::SharedObjectInternal::weak() "
+
+[INTERNAL]  Get a weak reference to the object.
 
 ";
 
@@ -24347,7 +23833,7 @@ const std::string &fname) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -24617,7 +24103,7 @@ double **arg, double **res, casadi_int *iw, double *w) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -24697,7 +24183,7 @@ persistent=false) "
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -24789,7 +24275,7 @@ casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -24843,11 +24329,10 @@ CodeGenerator &g) const  "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::get_partition(casadi_int
-iind, casadi_int oind, Sparsity &D1, Sparsity &D2, bool compact, bool
-symmetric, bool allow_forward, bool allow_reverse) const  "
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
 
-[INTERNAL]  Get the unidirectional or bidirectional partition.
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -24915,7 +24400,7 @@ std::string &lang, std::ostream &stream, const Dict &options) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -24983,9 +24468,16 @@ multiplying.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -25018,11 +24510,16 @@ DM > &arg) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::OracleFunction::set_function(const Function
 &fcn, const std::string &fname, bool jit=false) "
@@ -25305,6 +24802,13 @@ std::string &fname, const Dict &opts) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FixedStepIntegrator::init(const Dict &opts)
 "
 
@@ -25404,7 +24908,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -25632,15 +25136,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -25705,7 +25210,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -25719,7 +25224,7 @@ casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -25790,6 +25295,14 @@ const  "
 
 [INTERNAL]  Generate meta-information allowing a user to evaluate a
 generated function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_partition(casadi_int
+iind, casadi_int oind, Sparsity &D1, Sparsity &D2, bool compact, bool
+symmetric, bool allow_forward, bool allow_reverse) const  "
+
+[INTERNAL]  Get the unidirectional or bidirectional partition.
 
 ";
 
@@ -25999,11 +25512,16 @@ std::string &name) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::is_a(const std::string
 &type, bool recursive) const  "
@@ -26191,10 +25709,10 @@ const  "
 
 ";
 
-%feature("docstring")
-casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Serialize function header.
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -26272,14 +25790,14 @@ std::vector< std::string > &onames, const Dict &opts) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -26299,11 +25817,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::n_nodes() const  "
 
@@ -26411,22 +25934,23 @@ std::string &fname) const  "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -26513,6 +26037,13 @@ structure recognition for symmetric Jacobians
 %feature("docstring")  casadi::FunctionInternal::mx_in() const  "
 
 [INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -26922,7 +26453,7 @@ std::string &name) const  "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -26961,6 +26492,13 @@ const  "
 
 ";
 
+%feature("docstring")
+casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
+
+[INTERNAL]  Serialize function header.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::instruction_id(casadi_int
 k) const  "
 
@@ -26992,6 +26530,13 @@ std::vector< MX > &arg, const std::string &parallelization) "
 &stream) const  "
 
 [INTERNAL]  Print more.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -27101,14 +26646,14 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -27603,11 +27148,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 
 // File: classcasadi_1_1FStats.xml
@@ -27689,6 +27239,20 @@ Name of the function.
 ";
 
 %feature("docstring")  casadi::Function::jacobian() const  "
+
+Generate a Jacobian function of all the inputs elements with respect to all
+the output elements).
+
+";
+
+%feature("docstring") casadi::casadi_jacobian "
+
+Generate a Jacobian function of all the inputs elements with respect to all
+the output elements).
+
+";
+
+%feature("docstring")  casadi::Function::casadi_jacobian "
 
 Generate a Jacobian function of all the inputs elements with respect to all
 the output elements).
@@ -28260,15 +27824,6 @@ For a particular input or for all of the inputs
 
 ";
 
-%feature("docstring")  casadi::Function::get_function() const  "
-
-";
-
-%feature("docstring")  casadi::Function::get_function(const std::string
-&name) const  "
-
-";
-
 %feature("docstring")  casadi::Function::serialize() const  "
 
 Serialize.
@@ -28288,6 +27843,40 @@ Is a null pointer?
 ";
 
 %feature("docstring")  casadi::Function::forward(casadi_int nfwd) const  "
+
+Get a function that calculates nfwd forward derivatives.
+
+Returns a function with n_in + n_out + n_in inputs and nfwd outputs. The
+first n_in inputs correspond to nondifferentiated inputs. The next n_out
+inputs correspond to nondifferentiated outputs. and the last n_in inputs
+correspond to forward seeds, stacked horizontally The n_out outputs
+correspond to forward sensitivities, stacked horizontally. * (n_in = n_in(),
+n_out = n_out())
+
+The functions returned are cached, meaning that if called multiple timed
+with the same value, then multiple references to the same function will be
+returned.
+
+";
+
+%feature("docstring") casadi::casadi_forward "
+
+Get a function that calculates nfwd forward derivatives.
+
+Returns a function with n_in + n_out + n_in inputs and nfwd outputs. The
+first n_in inputs correspond to nondifferentiated inputs. The next n_out
+inputs correspond to nondifferentiated outputs. and the last n_in inputs
+correspond to forward seeds, stacked horizontally The n_out outputs
+correspond to forward sensitivities, stacked horizontally. * (n_in = n_in(),
+n_out = n_out())
+
+The functions returned are cached, meaning that if called multiple timed
+with the same value, then multiple references to the same function will be
+returned.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_forward "
 
 Get a function that calculates nfwd forward derivatives.
 
@@ -28433,6 +28022,18 @@ returns a new function with a selection of inputs/outputs of the original
 
 ";
 
+%feature("docstring") casadi::casadi_slice "
+
+returns a new function with a selection of inputs/outputs of the original
+
+";
+
+%feature("docstring")  casadi::Function::casadi_slice "
+
+returns a new function with a selection of inputs/outputs of the original
+
+";
+
 %feature("docstring")  casadi::Function::mapsum(const std::vector< MX >
 &arg, const std::string &parallelization="serial") const  "
 
@@ -28510,12 +28111,6 @@ adheres to SCHEME_NLPINput
 
 ";
 
-%feature("docstring")  casadi::Function::factory(const std::string &name,
-const std::vector< std::string > &s_in, const std::vector< std::string >
-&s_out, const AuxOut &aux=AuxOut(), const Dict &opts=Dict()) const  "
-
-";
-
 %feature("docstring")  casadi::Function::checkout() const  "
 
 Checkout a memory object.
@@ -28555,10 +28150,38 @@ the outputs summed up.
 
 ";
 
+%feature("docstring") casadi::casadi_map "
+
+Map with reduction A subset of the inputs are non-repeated and a subset of
+the outputs summed up.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_map "
+
+Map with reduction A subset of the inputs are non-repeated and a subset of
+the outputs summed up.
+
+";
+
 %feature("docstring")  casadi::Function::map(const std::string &name, const
 std::string &parallelization, casadi_int n, const std::vector< std::string >
 &reduce_in, const std::vector< std::string > &reduce_out, const Dict
 &opts=Dict()) const  "
+
+Map with reduction A subset of the inputs are non-repeated and a subset of
+the outputs summed up.
+
+";
+
+%feature("docstring") casadi::casadi_map "
+
+Map with reduction A subset of the inputs are non-repeated and a subset of
+the outputs summed up.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_map "
 
 Map with reduction A subset of the inputs are non-repeated and a subset of
 the outputs summed up.
@@ -28605,8 +28228,81 @@ parallelization:  Type of parallelization used: unroll|serial|openmp
 
 ";
 
-%feature("docstring")  casadi::Function::map(casadi_int n, const std::string
-&parallelization, casadi_int max_num_threads) const  "
+%feature("docstring") casadi::casadi_map "
+
+Create a mapped version of this function.
+
+Suppose the function has a signature of:
+
+::
+
+     f: (a, p) -> ( s )
+  
+
+
+
+The the mapped version has the signature:
+
+::
+
+     F: (A, P) -> (S )
+  
+      with
+          A: horzcat([a0, a1, ..., a_(N-1)])
+          P: horzcat([p0, p1, ..., p_(N-1)])
+          S: horzcat([s0, s1, ..., s_(N-1)])
+      and
+          s0 <- f(a0, p0)
+          s1 <- f(a1, p1)
+          ...
+          s_(N-1) <- f(a_(N-1), p_(N-1))
+  
+
+
+
+Parameters:
+-----------
+
+parallelization:  Type of parallelization used: unroll|serial|openmp
+
+";
+
+%feature("docstring")  casadi::Function::casadi_map "
+
+Create a mapped version of this function.
+
+Suppose the function has a signature of:
+
+::
+
+     f: (a, p) -> ( s )
+  
+
+
+
+The the mapped version has the signature:
+
+::
+
+     F: (A, P) -> (S )
+  
+      with
+          A: horzcat([a0, a1, ..., a_(N-1)])
+          P: horzcat([p0, p1, ..., p_(N-1)])
+          S: horzcat([s0, s1, ..., s_(N-1)])
+      and
+          s0 <- f(a0, p0)
+          s1 <- f(a1, p1)
+          ...
+          s_(N-1) <- f(a_(N-1), p_(N-1))
+  
+
+
+
+Parameters:
+-----------
+
+parallelization:  Type of parallelization used: unroll|serial|openmp
 
 ";
 
@@ -28694,6 +28390,44 @@ guarantee that subsequent calls return unique answers.
 ";
 
 %feature("docstring")  casadi::Function::reverse(casadi_int nadj) const  "
+
+Get a function that calculates nadj adjoint derivatives.
+
+Returns a function with n_in + n_out + n_out inputs and n_in outputs. The
+first n_in inputs correspond to nondifferentiated inputs. The next n_out
+inputs correspond to nondifferentiated outputs. and the last n_out inputs
+correspond to adjoint seeds, stacked horizontally The n_in outputs
+correspond to adjoint sensitivities, stacked horizontally. * (n_in = n_in(),
+n_out = n_out())
+
+(n_in = n_in(), n_out = n_out())
+
+The functions returned are cached, meaning that if called multiple timed
+with the same value, then multiple references to the same function will be
+returned.
+
+";
+
+%feature("docstring") casadi::casadi_reverse "
+
+Get a function that calculates nadj adjoint derivatives.
+
+Returns a function with n_in + n_out + n_out inputs and n_in outputs. The
+first n_in inputs correspond to nondifferentiated inputs. The next n_out
+inputs correspond to nondifferentiated outputs. and the last n_out inputs
+correspond to adjoint seeds, stacked horizontally The n_in outputs
+correspond to adjoint sensitivities, stacked horizontally. * (n_in = n_in(),
+n_out = n_out())
+
+(n_in = n_in(), n_out = n_out())
+
+The functions returned are cached, meaning that if called multiple timed
+with the same value, then multiple references to the same function will be
+returned.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_reverse "
 
 Get a function that calculates nadj adjoint derivatives.
 
@@ -29173,6 +28907,32 @@ tr:  Flip the relationship. Return which expressions contain the variables
 
 ";
 
+%feature("docstring") casadi::casadi_which_depends "
+
+Which variables enter with some order.
+
+Parameters:
+-----------
+
+order:  Only 1 (linear) and 2 (nonlinear) allowed
+
+tr:  Flip the relationship. Return which expressions contain the variables
+
+";
+
+%feature("docstring")  casadi::Function::casadi_which_depends "
+
+Which variables enter with some order.
+
+Parameters:
+-----------
+
+order:  Only 1 (linear) and 2 (nonlinear) allowed
+
+tr:  Flip the relationship. Return which expressions contain the variables
+
+";
+
 %feature("docstring")  casadi::Function::jit(const std::string &name, const
 std::string &body, const std::vector< std::string > &name_in, const
 std::vector< std::string > &name_out, const Dict &opts=Dict()) "
@@ -29300,6 +29060,18 @@ Expand a function to SX.
 
 ";
 
+%feature("docstring") casadi::casadi_expand "
+
+Expand a function to SX.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_expand "
+
+Expand a function to SX.
+
+";
+
 %feature("docstring")  casadi::Function::expand(const std::string &name,
 const Dict &opts=Dict()) const  "
 
@@ -29307,8 +29079,15 @@ Expand a function to SX.
 
 ";
 
-%feature("docstring")  casadi::Function::has_function(const std::string
-&fname) const  "
+%feature("docstring") casadi::casadi_expand "
+
+Expand a function to SX.
+
+";
+
+%feature("docstring")  casadi::Function::casadi_expand "
+
+Expand a function to SX.
 
 ";
 
@@ -29349,6 +29128,13 @@ const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::index_in(const std::string
 &name) const  "
 
@@ -29357,22 +29143,23 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -29459,11 +29246,16 @@ nadj, const std::vector< MatType > &v) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")
 casadi::FunctionInternal::codegen_sparsities(CodeGenerator &g) const  "
@@ -29636,11 +29428,16 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::ProtoFunction::checkout() const  "
 
@@ -29676,7 +29473,7 @@ ind) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -29787,6 +29584,13 @@ always_inline, bool never_inline) const  "
 bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
 
 [INTERNAL]  Propagate sparsity backwards.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -29948,7 +29752,7 @@ propagation.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -30150,6 +29954,13 @@ persistent=false) "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::ad_weight() const  "
 
 [INTERNAL]  Weighting factor for chosing forward/reverse mode.
@@ -30157,7 +29968,7 @@ persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -30188,7 +29999,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -30516,7 +30327,7 @@ casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -30532,101 +30343,83 @@ std::vector< M > &arg) const  "
 in the Symbolic Toolbox for Matlab but instead creating a CasADi symbolic
 primitive.
 
-*/ %feature("docstring")  sum2(const MatType &x) "
+*/ %feature("docstring")  casadi::GenericMatrixCommon::dot(const MatType &x,
+const MatType &y) "
 
-Return a column-wise summation of elements.
-
-";
-
-%feature("docstring")  sum1(const MatType &x) "
-
-Return a row-wise summation of elements.
+[INTERNAL]  Inner product of two matrices with x and y matrices of the same
+dimension.
 
 ";
 
-%feature("docstring")  mrdivide(const MatType &x, const MatType &n) "
+%feature("docstring") casadi::casadi_dot "
 
-Matrix divide (cf. slash '/' in MATLAB)
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::linear_coeff(const
-MatType &expr, const MatType &var, MatType &A, MatType &b) "
-
-Recognizes linear form in vector expression.
-
-A x + b
+Inner product of two matrices with x and y matrices of the same dimension.
 
 ";
 
-%feature("docstring")  if_else(const MatType &cond, const MatType &if_true,
-const MatType &if_false, bool short_circuit=false) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_dot "
 
-Branching on MX nodes Ternary operator, \"cond ? if_true : if_false\".
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::tril2symm(const
-MatType &a) "
-
-Convert a lower triangular matrix to a symmetric one.
+Inner product of two matrices with x and y matrices of the same dimension.
 
 ";
 
-%feature("docstring")  det(const MatType &A) "
+%feature("docstring")  casadi::GenericMatrixCommon::is_quadratic(const
+MatType &expr, const MatType &var) "
 
-Matrix determinant (experimental)
+Is expr quadratic in var?
 
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::nnz_diag() const  "
-
-Get get the number of non-zeros on the diagonal.
+False negatives are possible (an expression may not be recognised as
+quadratic while it really is), false positives not.
 
 ";
 
-%feature("docstring")  conditional(const MatType &ind, const std::vector<
-MatType > &x, const MatType &x_default, bool short_circuit=false) "
+%feature("docstring") casadi::casadi_is_quadratic "
 
-Create a switch.
+Is expr quadratic in var?
 
-If the condition
-
-Parameters:
------------
-
-ind:  evaluates to the integer k, where 0<=k<f.size(), then x[k] will be
-returned, otherwise
-
-x_default:  will be returned.
+False negatives are possible (an expression may not be recognised as
+quadratic while it really is), false positives not.
 
 ";
 
-%feature("docstring")  pinv(const MatType &A) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_is_quadratic "
 
-Computes the Moore-Penrose pseudo-inverse.
+Is expr quadratic in var?
 
-If the matrix A is fat (size1<size2), mul(A, pinv(A)) is unity.
-
-pinv(A)' = (AA')^(-1) A
-
-If the matrix A is slender (size1>size2), mul(pinv(A), A) is unity.
-
-pinv(A) = (A'A)^(-1) A'
+False negatives are possible (an expression may not be recognised as
+quadratic while it really is), false positives not.
 
 ";
 
-%feature("docstring")  pinv(const MatType &A, const std::string &lsolver,
-const Dict &dict=Dict()) "
+%feature("docstring")  casadi::GenericMatrixCommon::solve(const MatType &A,
+const MatType &b) "
 
-Computes the Moore-Penrose pseudo-inverse.
+[INTERNAL]   Solve a system of equations: A*x = b The solve routine works
+similar to Matlab's backslash when A is square and nonsingular. The
+algorithm used is the following:
 
-If the matrix A is fat (size1>size2), mul(A, pinv(A)) is unity. If the
-matrix A is slender (size2<size1), mul(pinv(A), A) is unity.
+A simple forward or backward substitution if A is upper or lower triangular
+
+If the linear system is at most 3-by-3, form the inverse via minor expansion
+and multiply
+
+Permute the variables and equations as to get a (structurally) nonzero
+diagonal, then perform a QR factorization without pivoting and solve the
+factorized system.
+
+Note 1: If there are entries of the linear system known to be zero, these
+will be removed. Elements that are very small, or will evaluate to be zero,
+can still cause numerical errors, due to the lack of pivoting (which is not
+possible since cannot compare the size of entries)
+
+Note 2: When permuting the linear system, a BLT (block lower triangular)
+transformation is formed. Only the permutation part of this is however used.
+An improvement would be to solve block-by-block if there are multiple BLT
+blocks.
 
 ";
 
-%feature("docstring")  solve(const MatType &A, const MatType &b) "
+%feature("docstring") casadi::casadi_solve "
 
 Solve a system of equations: A*x = b The solve routine works similar to
 Matlab's backslash when A is square and nonsingular. The algorithm used is
@@ -30653,114 +30446,152 @@ blocks.
 
 ";
 
-%feature("docstring")  solve(const MatType &A, const MatType &b, const
-std::string &lsolver, const Dict &dict=Dict()) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_solve "
+
+Solve a system of equations: A*x = b The solve routine works similar to
+Matlab's backslash when A is square and nonsingular. The algorithm used is
+the following:
+
+A simple forward or backward substitution if A is upper or lower triangular
+
+If the linear system is at most 3-by-3, form the inverse via minor expansion
+and multiply
+
+Permute the variables and equations as to get a (structurally) nonzero
+diagonal, then perform a QR factorization without pivoting and solve the
+factorized system.
+
+Note 1: If there are entries of the linear system known to be zero, these
+will be removed. Elements that are very small, or will evaluate to be zero,
+can still cause numerical errors, due to the lack of pivoting (which is not
+possible since cannot compare the size of entries)
+
+Note 2: When permuting the linear system, a BLT (block lower triangular)
+transformation is formed. Only the permutation part of this is however used.
+An improvement would be to solve block-by-block if there are multiple BLT
+blocks.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::solve(const MatType &A,
+const MatType &b, const std::string &lsolver, const Dict &dict=Dict()) "
+
+[INTERNAL]   Solve a system of equations: A*x = b.
+
+";
+
+%feature("docstring") casadi::casadi_solve "
 
 Solve a system of equations: A*x = b.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::interp1d(const
-std::vector< double > &x, const MatType &v, const std::vector< double > &xq,
-const std::string &mode, bool equidistant=false) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_solve "
 
-Performs 1d linear interpolation.
-
-The data-points to be interpolated are given as (x[i], v[i]). xq[j] is used
-as interplating value
+Solve a system of equations: A*x = b.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::get_row() const  "
+%feature("docstring")  casadi::GenericMatrixCommon::pinv(const MatType &A) "
 
-Get the sparsity pattern. See the Sparsity class for details.
+[INTERNAL]  Computes the Moore-Penrose pseudo-inverse.
 
-";
+If the matrix A is fat (size1<size2), mul(A, pinv(A)) is unity.
 
-%feature("docstring")  print_operator(const MatType &xb, const std::vector<
-std::string > &args) "
+pinv(A)' = (AA')^(-1) A
 
-Get a string representation for a binary MatType, using custom arguments.
+If the matrix A is slender (size1>size2), mul(pinv(A), A) is unity.
 
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::linearize(const
-MatType &f, const MatType &x, const MatType &x0) "
-
-Linearize an expression.
+pinv(A) = (A'A)^(-1) A'
 
 ";
 
-%feature("docstring")  jacobian(const MatType &ex, const MatType &arg, const
-Dict &opts=Dict()) "
+%feature("docstring") casadi::casadi_pinv "
+
+Computes the Moore-Penrose pseudo-inverse.
+
+If the matrix A is fat (size1<size2), mul(A, pinv(A)) is unity.
+
+pinv(A)' = (AA')^(-1) A
+
+If the matrix A is slender (size1>size2), mul(pinv(A), A) is unity.
+
+pinv(A) = (A'A)^(-1) A'
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_pinv "
+
+Computes the Moore-Penrose pseudo-inverse.
+
+If the matrix A is fat (size1<size2), mul(A, pinv(A)) is unity.
+
+pinv(A)' = (AA')^(-1) A
+
+If the matrix A is slender (size1>size2), mul(pinv(A), A) is unity.
+
+pinv(A) = (A'A)^(-1) A'
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::pinv(const MatType &A,
+const std::string &lsolver, const Dict &dict=Dict()) "
+
+[INTERNAL]  Computes the Moore-Penrose pseudo-inverse.
+
+If the matrix A is fat (size1>size2), mul(A, pinv(A)) is unity. If the
+matrix A is slender (size2<size1), mul(pinv(A), A) is unity.
+
+";
+
+%feature("docstring") casadi::casadi_pinv "
+
+Computes the Moore-Penrose pseudo-inverse.
+
+If the matrix A is fat (size1>size2), mul(A, pinv(A)) is unity. If the
+matrix A is slender (size2<size1), mul(pinv(A), A) is unity.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_pinv "
+
+Computes the Moore-Penrose pseudo-inverse.
+
+If the matrix A is fat (size1>size2), mul(A, pinv(A)) is unity. If the
+matrix A is slender (size2<size1), mul(pinv(A), A) is unity.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::jacobian(const MatType
+&ex, const MatType &arg, const Dict &opts=Dict()) "
+
+[INTERNAL]  Calculate Jacobian.
+
+";
+
+%feature("docstring") casadi::casadi_jacobian "
 
 Calculate Jacobian.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::is_dense() const  "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_jacobian "
 
-Check if the matrix expression is dense.
-
-";
-
-%feature("docstring")  cumsum(const MatType &x, casadi_int axis=-1) "
-
-Returns cumulative sum along given axis (MATLAB convention)
+Calculate Jacobian.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::nnz_lower() const
-"
+%feature("docstring")  casadi::GenericMatrixCommon::substitute_inplace(const
+std::vector< MatType > &v, std::vector< MatType > &inout_vdef, std::vector<
+MatType > &inout_ex, bool reverse=false) "
 
-Get the number of non-zeros in the lower triangular half.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::rank1(const MatType
-&A, const MatType &alpha, const MatType &x, const MatType &y) "
-
-Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
+[INTERNAL]  Inplace substitution with piggyback expressions Substitute
+variables v out of the expressions vdef sequentially, as well as out of a
+number of other expressions piggyback.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::gradient(const
-MatType &ex, const MatType &arg) "
-
-Functions called by friend functions defined here
-
-";
-
-%feature("docstring")  n_nodes(const MatType &A) "
-
-Count number of nodes
-
-";
-
-%feature("docstring")  hessian(const MatType &ex, const MatType &arg) "
-
-";
-
-%feature("docstring")  hessian(const MatType &ex, const MatType &arg,
-MatType &output_g) "
-
-";
-
-%feature("docstring")  nullspace(const MatType &A) "
-
-Computes the nullspace of a matrix A.
-
-Finds Z m-by-(m-n) such that AZ = 0 with A n-by-m with m > n
-
-Assumes A is full rank
-
-Inspired by Numerical Methods in Scientific Computing by Ake Bjorck
-
-";
-
-%feature("docstring")  substitute_inplace(const std::vector< MatType > &v,
-std::vector< MatType > &inout_vdef, std::vector< MatType > &inout_ex, bool
-reverse=false) "
+%feature("docstring") casadi::casadi_substitute_inplace "
 
 Inplace substitution with piggyback expressions Substitute variables v out
 of the expressions vdef sequentially, as well as out of a number of other
@@ -30768,138 +30599,256 @@ expressions piggyback.
 
 ";
 
-%feature("docstring")  mmax(const MatType &x) "
+%feature("docstring")
+casadi::GenericMatrixCommon::casadi_substitute_inplace "
+
+Inplace substitution with piggyback expressions Substitute variables v out
+of the expressions vdef sequentially, as well as out of a number of other
+expressions piggyback.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::simplify(const MatType
+&x) "
+
+[INTERNAL]  Simplify an expression.
+
+";
+
+%feature("docstring") casadi::casadi_simplify "
+
+Simplify an expression.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_simplify "
+
+Simplify an expression.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::cumsum(const MatType &x,
+casadi_int axis=-1) "
+
+[INTERNAL]  Returns cumulative sum along given axis (MATLAB convention)
+
+";
+
+%feature("docstring") casadi::casadi_cumsum "
+
+Returns cumulative sum along given axis (MATLAB convention)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_cumsum "
+
+Returns cumulative sum along given axis (MATLAB convention)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::nnz_diag() const  "
+
+Get get the number of non-zeros on the diagonal.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::conditional(const
+MatType &ind, const std::vector< MatType > &x, const MatType &x_default,
+bool short_circuit=false) "
+
+[INTERNAL]  Create a switch.
+
+If the condition
+
+Parameters:
+-----------
+
+ind:  evaluates to the integer k, where 0<=k<f.size(), then x[k] will be
+returned, otherwise
+
+x_default:  will be returned.
+
+";
+
+%feature("docstring") casadi::casadi_conditional "
+
+Create a switch.
+
+If the condition
+
+Parameters:
+-----------
+
+ind:  evaluates to the integer k, where 0<=k<f.size(), then x[k] will be
+returned, otherwise
+
+x_default:  will be returned.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_conditional "
+
+Create a switch.
+
+If the condition
+
+Parameters:
+-----------
+
+ind:  evaluates to the integer k, where 0<=k<f.size(), then x[k] will be
+returned, otherwise
+
+x_default:  will be returned.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::print_operator(const
+MatType &xb, const std::vector< std::string > &args) "
+
+[INTERNAL]  Get a string representation for a binary MatType, using custom
+arguments.
+
+";
+
+%feature("docstring") casadi::casadi_print_operator "
+
+Get a string representation for a binary MatType, using custom arguments.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_print_operator "
+
+Get a string representation for a binary MatType, using custom arguments.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::trace(const MatType &x)
+"
+
+[INTERNAL]   Matrix trace.
+
+";
+
+%feature("docstring") casadi::casadi_trace "
+
+Matrix trace.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_trace "
+
+Matrix trace.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::mmax(const MatType &x) "
+
+[INTERNAL]  Largest element in a matrix.
+
+";
+
+%feature("docstring") casadi::casadi_mmax "
 
 Largest element in a matrix.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::is_scalar(bool
-scalar_and_dense=false) const  "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_mmax "
 
-Check if the matrix expression is scalar.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::columns() const  "
-
-Get the number of columns, Octave-style syntax.
+Largest element in a matrix.
 
 ";
 
-%feature("docstring")  mmin(const MatType &x) "
-
-Smallest element in a matrix.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::is_column() const
-"
-
-Check if the matrix is a column vector (i.e. size2()==1)
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::skew(const MatType
-&a) "
-
-Generate a skew symmetric matrix from a 3-vector.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::is_tril() const  "
-
-Check if the matrix is lower triangular.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::diff(const MatType
-&x, casadi_int n=1, casadi_int axis=-1) "
-
-Returns difference (n-th order) along given axis (MATLAB convention)
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::colind(casadi_int
-col) const  "
+%feature("docstring")  casadi::GenericMatrixCommon::get_row() const  "
 
 Get the sparsity pattern. See the Sparsity class for details.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::is_triu() const  "
+%feature("docstring")  casadi::GenericMatrixCommon::n_nodes(const MatType
+&A) "
 
-Check if the matrix is upper triangular.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::gradient(const
-MatType &ex, const MatType &arg) "
-
-Calculate Jacobian.
+[INTERNAL]  Count number of nodes
 
 ";
 
-%feature("docstring")  unite(const MatType &A, const MatType &B) "
+%feature("docstring")  casadi::GenericMatrixCommon::norm_inf(const MatType
+&x) "
 
-Unite two matrices no overlapping sparsity.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::dim(bool
-with_nz=false) const  "
-
-Get string representation of dimensions. The representation is e.g. \"4x5\"
-or \"4x5,10nz\".
+[INTERNAL]  Infinity-norm.
 
 ";
 
-%feature("docstring")  inv(const MatType &A) "
+%feature("docstring") casadi::casadi_norm_inf "
 
-Matrix inverse.
-
-";
-
-%feature("docstring")  inv(const MatType &A, const std::string &lsolver,
-const Dict &options=Dict()) "
-
-Matrix inverse.
+Infinity-norm.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::size1() const  "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_norm_inf "
 
-Get the first dimension (i.e. number of rows)
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::size2() const  "
-
-Get the second dimension (i.e. number of columns)
+Infinity-norm.
 
 ";
 
-%feature("docstring")  norm_1(const MatType &x) "
+%feature("docstring")  casadi::GenericMatrixCommon::mmin(const MatType &x) "
 
-1-norm
-
-";
-
-%feature("docstring")  norm_2(const MatType &x) "
-
-2-norm
+[INTERNAL]  Smallest element in a matrix.
 
 ";
 
-%feature("docstring")  forward(const std::vector< MatType > &ex, const
-std::vector< MatType > &arg, const std::vector< std::vector< MatType > > &v,
-const Dict &opts=Dict()) "
+%feature("docstring") casadi::casadi_mmin "
 
-Forward directional derivative.
+Smallest element in a matrix.
 
 ";
 
-%feature("docstring")  diag(const MatType &A) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_mmin "
+
+Smallest element in a matrix.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_dense() const  "
+
+Check if the matrix expression is dense.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::tril2symm(const MatType
+&a) "
+
+Convert a lower triangular matrix to a symmetric one.
+
+";
+
+%feature("docstring") casadi::casadi_tril2symm "
+
+Convert a lower triangular matrix to a symmetric one.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_tril2symm "
+
+Convert a lower triangular matrix to a symmetric one.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::nnz_lower() const  "
+
+Get the number of non-zeros in the lower triangular half.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::diag(const MatType &A) "
+
+[INTERNAL]  Get the diagonal of a matrix or construct a diagonal When the
+input is square, the diagonal elements are returned. If the input is vector-
+like, a diagonal matrix is constructed with it.
+
+";
+
+%feature("docstring") casadi::casadi_diag "
 
 Get the diagonal of a matrix or construct a diagonal When the input is
 square, the diagonal elements are returned. If the input is vector- like, a
@@ -30907,16 +30856,654 @@ diagonal matrix is constructed with it.
 
 ";
 
-%feature("docstring")  project(const MatType &A, const Sparsity &sp, bool
-intersect=false) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_diag "
 
-Create a new matrix with a given sparsity pattern but with the nonzeros
-taken from an existing matrix.
+Get the diagonal of a matrix or construct a diagonal When the input is
+square, the diagonal elements are returned. If the input is vector- like, a
+diagonal matrix is constructed with it.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::jtimes(const
-MatType &ex, const MatType &arg, const MatType &v, bool tr=false) "
+%feature("docstring")  casadi::GenericMatrixCommon::is_linear(const MatType
+&expr, const MatType &var) "
+
+Is expr linear in var?
+
+False negatives are possible (an expression may not be recognised as linear
+while it really is), false positives not.
+
+";
+
+%feature("docstring") casadi::casadi_is_linear "
+
+Is expr linear in var?
+
+False negatives are possible (an expression may not be recognised as linear
+while it really is), false positives not.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_is_linear "
+
+Is expr linear in var?
+
+False negatives are possible (an expression may not be recognised as linear
+while it really is), false positives not.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::unite(const MatType &A,
+const MatType &B) "
+
+[INTERNAL]  Unite two matrices no overlapping sparsity.
+
+";
+
+%feature("docstring") casadi::casadi_unite "
+
+Unite two matrices no overlapping sparsity.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_unite "
+
+Unite two matrices no overlapping sparsity.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::rank1(const MatType &A,
+const MatType &alpha, const MatType &x, const MatType &y) "
+
+Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
+
+";
+
+%feature("docstring") casadi::casadi_rank1 "
+
+Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_rank1 "
+
+Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::rank1(const MatType &A,
+const MatType &alpha, const MatType &x, const MatType &y) "
+
+Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
+
+";
+
+%feature("docstring") casadi::casadi_rank1 "
+
+Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_rank1 "
+
+Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::gradient(const MatType
+&ex, const MatType &arg) "
+
+Calculate Jacobian.
+
+";
+
+%feature("docstring") casadi::casadi_gradient "
+
+Calculate Jacobian.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_gradient "
+
+Calculate Jacobian.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::gradient(const MatType
+&ex, const MatType &arg) "
+
+Functions called by friend functions defined here
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::symvar(const MatType &x)
+"
+
+[INTERNAL]  Get all symbols contained in the supplied expression Get all
+symbols on which the supplied expression depends.
+
+See:  SXFunction::getFree(), MXFunction::getFree()
+
+";
+
+%feature("docstring") casadi::casadi_symvar "
+
+Get all symbols contained in the supplied expression Get all symbols on
+which the supplied expression depends.
+
+See:  SXFunction::getFree(), MXFunction::getFree()
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_symvar "
+
+Get all symbols contained in the supplied expression Get all symbols on
+which the supplied expression depends.
+
+See:  SXFunction::getFree(), MXFunction::getFree()
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::skew(const MatType &a) "
+
+Generate a skew symmetric matrix from a 3-vector.
+
+";
+
+%feature("docstring") casadi::casadi_skew "
+
+Generate a skew symmetric matrix from a 3-vector.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_skew "
+
+Generate a skew symmetric matrix from a 3-vector.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_scalar(bool
+scalar_and_dense=false) const  "
+
+Check if the matrix expression is scalar.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::expm_const(const MatType
+&A, const MatType &t) "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::GenericMatrixCommon::columns() const  "
+
+Get the number of columns, Octave-style syntax.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_column() const  "
+
+Check if the matrix is a column vector (i.e. size2()==1)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::quadratic_coeff(const
+MatType &expr, const MatType &var, MatType &A, MatType &b, MatType &c) "
+
+Recognizes quadratic form in scalar expression.
+
+1/2*x' A x + b' x + c
+
+e = 0.5*bilin(A,x,x)+dot(b,x)+c
+
+";
+
+%feature("docstring") casadi::casadi_quadratic_coeff "
+
+Recognizes quadratic form in scalar expression.
+
+1/2*x' A x + b' x + c
+
+e = 0.5*bilin(A,x,x)+dot(b,x)+c
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_quadratic_coeff "
+
+Recognizes quadratic form in scalar expression.
+
+1/2*x' A x + b' x + c
+
+e = 0.5*bilin(A,x,x)+dot(b,x)+c
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_tril() const  "
+
+Check if the matrix is lower triangular.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::colind(casadi_int col)
+const  "
+
+Get the sparsity pattern. See the Sparsity class for details.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_triu() const  "
+
+Check if the matrix is upper triangular.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::depends_on(const MatType
+&f, const MatType &arg) "
+
+[INTERNAL]  Check if expression depends on the argument The argument must be
+symbolic.
+
+";
+
+%feature("docstring") casadi::casadi_depends_on "
+
+Check if expression depends on the argument The argument must be symbolic.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_depends_on "
+
+Check if expression depends on the argument The argument must be symbolic.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::dim(bool with_nz=false)
+const  "
+
+Get string representation of dimensions. The representation is e.g. \"4x5\"
+or \"4x5,10nz\".
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::mrdivide(const MatType
+&x, const MatType &n) "
+
+[INTERNAL]   Matrix divide (cf. slash '/' in MATLAB)
+
+";
+
+%feature("docstring") casadi::casadi_mrdivide "
+
+Matrix divide (cf. slash '/' in MATLAB)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_mrdivide "
+
+Matrix divide (cf. slash '/' in MATLAB)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::linspace(const MatType
+&a, const MatType &b, casadi_int nsteps) "
+
+Matlab's linspace command.
+
+";
+
+%feature("docstring") casadi::casadi_linspace "
+
+Matlab's linspace command.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_linspace "
+
+Matlab's linspace command.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::triu2symm(const MatType
+&a) "
+
+Convert a upper triangular matrix to a symmetric one.
+
+";
+
+%feature("docstring") casadi::casadi_triu2symm "
+
+Convert a upper triangular matrix to a symmetric one.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_triu2symm "
+
+Convert a upper triangular matrix to a symmetric one.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::size1() const  "
+
+Get the first dimension (i.e. number of rows)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::size2() const  "
+
+Get the second dimension (i.e. number of columns)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::cross(const MatType &a,
+const MatType &b, casadi_int dim=-1) "
+
+Matlab's cross command.
+
+";
+
+%feature("docstring") casadi::casadi_cross "
+
+Matlab's cross command.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_cross "
+
+Matlab's cross command.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::mldivide(const MatType
+&x, const MatType &n) "
+
+[INTERNAL]   Matrix divide (cf. backslash '\\\\' in MATLAB)
+
+";
+
+%feature("docstring") casadi::casadi_mldivide "
+
+Matrix divide (cf. backslash '\\\\' in MATLAB)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_mldivide "
+
+Matrix divide (cf. backslash '\\\\' in MATLAB)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::tangent(const MatType
+&ex, const MatType &arg) "
+
+Calculate Jacobian.
+
+";
+
+%feature("docstring") casadi::casadi_tangent "
+
+Calculate Jacobian.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_tangent "
+
+Calculate Jacobian.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::tangent(const MatType
+&ex, const MatType &arg) "
+
+Functions called by friend functions defined here
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::substitute(const MatType
+&ex, const MatType &v, const MatType &vdef) "
+
+[INTERNAL]  Substitute variable v with expression vdef in an expression ex.
+
+";
+
+%feature("docstring") casadi::casadi_substitute "
+
+Substitute variable v with expression vdef in an expression ex.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_substitute "
+
+Substitute variable v with expression vdef in an expression ex.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::substitute(const
+std::vector< MatType > &ex, const std::vector< MatType > &v, const
+std::vector< MatType > &vdef) "
+
+[INTERNAL]  Substitute variable var with expression expr in multiple
+expressions.
+
+";
+
+%feature("docstring") casadi::casadi_substitute "
+
+Substitute variable var with expression expr in multiple expressions.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_substitute "
+
+Substitute variable var with expression expr in multiple expressions.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::inv_skew(const MatType
+&a) "
+
+Generate the 3-vector progenitor of a skew symmetric matrix.
+
+";
+
+%feature("docstring") casadi::casadi_inv_skew "
+
+Generate the 3-vector progenitor of a skew symmetric matrix.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_inv_skew "
+
+Generate the 3-vector progenitor of a skew symmetric matrix.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::bilin(const MatType &A,
+const MatType &x, const MatType &y) "
+
+Calculate bilinear form x^T A y.
+
+";
+
+%feature("docstring") casadi::casadi_bilin "
+
+Calculate bilinear form x^T A y.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_bilin "
+
+Calculate bilinear form x^T A y.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::bilin(const MatType &A,
+const MatType &x, const MatType &y) "
+
+Calculate bilinear form x^T A y.
+
+";
+
+%feature("docstring") casadi::casadi_bilin "
+
+Calculate bilinear form x^T A y.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_bilin "
+
+Calculate bilinear form x^T A y.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::inv_minor(const MatType
+&A) "
+
+[INTERNAL]   Matrix inverse (experimental)
+
+";
+
+%feature("docstring") casadi::casadi_inv_minor "
+
+Matrix inverse (experimental)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_inv_minor "
+
+Matrix inverse (experimental)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::norm_1(const MatType &x)
+"
+
+[INTERNAL]  1-norm
+
+";
+
+%feature("docstring") casadi::casadi_norm_1 "
+
+1-norm
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_norm_1 "
+
+1-norm
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::norm_2(const MatType &x)
+"
+
+[INTERNAL]  2-norm
+
+";
+
+%feature("docstring") casadi::casadi_norm_2 "
+
+2-norm
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_norm_2 "
+
+2-norm
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::get_colind() const  "
+
+Get the sparsity pattern. See the Sparsity class for details.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_empty(bool
+both=false) const  "
+
+Check if the sparsity is empty, i.e. if one of the dimensions is zero (or
+optionally both dimensions)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_row() const  "
+
+Check if the matrix is a row vector (i.e. size1()==1)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::soc(const MatType &x,
+const MatType &y) "
+
+Construct second-order-convex.
+
+Parameters:
+-----------
+
+x:  vector expression of size n
+
+y:  scalar expression
+
+soc(x,y) computes [y*eye(n) x; x' y]
+
+soc(x,y) positive semi definite <=> || x ||_2 <= y
+
+";
+
+%feature("docstring") casadi::casadi_soc "
+
+Construct second-order-convex.
+
+Parameters:
+-----------
+
+x:  vector expression of size n
+
+y:  scalar expression
+
+soc(x,y) computes [y*eye(n) x; x' y]
+
+soc(x,y) positive semi definite <=> || x ||_2 <= y
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_soc "
+
+Construct second-order-convex.
+
+Parameters:
+-----------
+
+x:  vector expression of size n
+
+y:  scalar expression
+
+soc(x,y) computes [y*eye(n) x; x' y]
+
+soc(x,y) positive semi definite <=> || x ||_2 <= y
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::soc(const MatType &x,
+const MatType &y) "
+
+Functions called by friend functions defined here
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_square() const  "
+
+Check if the matrix expression is square.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::jtimes(const MatType
+&ex, const MatType &arg, const MatType &v, bool tr=false) "
+
+Functions called by friend functions defined here
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::jtimes(const MatType
+&ex, const MatType &arg, const MatType &v, bool tr=false) "
 
 Calculate the Jacobian and multiply by a vector from the right This is
 equivalent to mul(jacobian(ex, arg), v) or mul(jacobian(ex, arg).T, v) for
@@ -30926,274 +31513,98 @@ more efficient if the complete Jacobian is not needed and v has few rows.
 
 ";
 
-%feature("docstring")  substitute(const MatType &ex, const MatType &v, const
-MatType &vdef) "
+%feature("docstring") casadi::casadi_jtimes "
 
-Substitute variable v with expression vdef in an expression ex.
-
-";
-
-%feature("docstring")  substitute(const std::vector< MatType > &ex, const
-std::vector< MatType > &v, const std::vector< MatType > &vdef) "
-
-Substitute variable var with expression expr in multiple expressions.
+Calculate the Jacobian and multiply by a vector from the right This is
+equivalent to mul(jacobian(ex, arg), v) or mul(jacobian(ex, arg).T, v) for
+tr set to false and true respectively. If contrast to these expressions, it
+will use directional derivatives which is typically (but not necessarily)
+more efficient if the complete Jacobian is not needed and v has few rows.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::bilin(const MatType
-&A, const MatType &x, const MatType &y) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_jtimes "
 
-Calculate bilinear form x^T A y.
-
-";
-
-%feature("docstring")  mldivide(const MatType &x, const MatType &n) "
-
-Matrix divide (cf. backslash '\\\\' in MATLAB)
+Calculate the Jacobian and multiply by a vector from the right This is
+equivalent to mul(jacobian(ex, arg), v) or mul(jacobian(ex, arg).T, v) for
+tr set to false and true respectively. If contrast to these expressions, it
+will use directional derivatives which is typically (but not necessarily)
+more efficient if the complete Jacobian is not needed and v has few rows.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::get_colind() const
-"
-
-Get the sparsity pattern. See the Sparsity class for details.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::cross(const MatType
-&a, const MatType &b, casadi_int dim=-1) "
-
-Matlab's cross command.
-
-";
-
-%feature("docstring")  shared(std::vector< MatType > &ex, std::vector<
-MatType > &v, std::vector< MatType > &vdef, const std::string
-&v_prefix="v_", const std::string &v_suffix="") "
-
-Extract shared subexpressions from an set of expressions.
-
-";
-
-%feature("docstring")  shared(const std::vector< MatType > &ex, std::vector<
-MatType > &ex_output, std::vector< MatType > &v, std::vector< MatType >
-&vdef, const std::string &v_prefix="v_", const std::string &v_suffix="") "
-
-Extract shared subexpressions from an set of expressions.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::is_linear(const
-MatType &expr, const MatType &var) "
-
-Is expr linear in var?
-
-False negatives are possible (an expression may not be recognised as linear
-while it really is), false positives not.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::is_empty(bool
-both=false) const  "
-
-Check if the sparsity is empty, i.e. if one of the dimensions is zero (or
-optionally both dimensions)
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::is_row() const  "
-
-Check if the matrix is a row vector (i.e. size1()==1)
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::rank1(const MatType
-&A, const MatType &alpha, const MatType &x, const MatType &y) "
-
-Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::inv_skew(const
-MatType &a) "
-
-Generate the 3-vector progenitor of a skew symmetric matrix.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::tangent(const
-MatType &ex, const MatType &arg) "
-
-Calculate Jacobian.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::is_square() const
-"
-
-Check if the matrix expression is square.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::bilin(const MatType
-&A, const MatType &x, const MatType &y) "
-
-Calculate bilinear form x^T A y.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::jtimes(const
-MatType &ex, const MatType &arg, const MatType &v, bool tr=false) "
-
-Functions called by friend functions defined here
-
-";
-
-%feature("docstring")  simplify(const MatType &x) "
-
-Simplify an expression.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::numel() const  "
+%feature("docstring")  casadi::GenericMatrixCommon::numel() const  "
 
 Get the number of elements.
 
 ";
 
-%feature("docstring")  which_depends(const MatType &expr, const MatType
-&var, casadi_int order, bool tr) "
+%feature("docstring")  casadi::GenericMatrixCommon::linear_coeff(const
+MatType &expr, const MatType &var, MatType &A, MatType &b) "
 
-Find out which variables enter with some order.
+Recognizes linear form in vector expression.
 
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::linspace(const
-MatType &a, const MatType &b, casadi_int nsteps) "
-
-Matlab's linspace command.
+A x + b
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::nnz() const  "
+%feature("docstring") casadi::casadi_linear_coeff "
 
-Get the number of (structural) non-zero elements.
+Recognizes linear form in vector expression.
 
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::sym(const
-std::string &name, casadi_int nrow=1, casadi_int ncol=1) "
-
-Create an nrow-by-ncol symbolic primitive.
+A x + b
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::sym(const
-std::string &name, const std::pair< casadi_int, casadi_int > &rc) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_linear_coeff "
 
-Construct a symbolic primitive with given dimensions.
+Recognizes linear form in vector expression.
 
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::sym(const
-std::string &name, const Sparsity &sp) "
-
-Create symbolic primitive with a given sparsity pattern.
+A x + b
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::sym(const
-std::string &name, const Sparsity &sp, casadi_int p) "
+%feature("docstring")  casadi::GenericMatrixCommon::repsum(const MatType &A,
+casadi_int n, casadi_int m=1) "
 
-Create a vector of length p with with matrices with symbolic primitives of
-given sparsity.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::sym(const
-std::string &name, casadi_int nrow, casadi_int ncol, casadi_int p) "
-
-Create a vector of length p with nrow-by-ncol symbolic primitives.
+Given a repeated matrix, computes the sum of repeated parts.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::sym(const
-std::string &name, const Sparsity &sp, casadi_int p, casadi_int r) "
+%feature("docstring") casadi::casadi_repsum "
 
-Create a vector of length r of vectors of length p with symbolic primitives
-with given sparsity.
+Given a repeated matrix, computes the sum of repeated parts.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::sym(const
-std::string &name, casadi_int nrow, casadi_int ncol, casadi_int p,
-casadi_int r) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_repsum "
 
-Create a vector of length r of vectors of length p with nrow-by-ncol
-symbolic primitives.
+Given a repeated matrix, computes the sum of repeated parts.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::is_quadratic(const
-MatType &expr, const MatType &var) "
+%feature("docstring")  casadi::GenericMatrixCommon::einstein(const MatType
+&A, const MatType &B, const MatType &C, const std::vector< casadi_int >
+&dim_a, const std::vector< casadi_int > &dim_b, const std::vector<
+casadi_int > &dim_c, const std::vector< casadi_int > &a, const std::vector<
+casadi_int > &b, const std::vector< casadi_int > &c) "
 
-Is expr quadratic in var?
+[INTERNAL]  Compute any contraction of two dense tensors, using
+index/einstein notation einstein(A, B, a, b, c) -> C.
 
-False negatives are possible (an expression may not be recognised as
-quadratic while it really is), false positives not.
+Given two tensors, A and B, computes a third tensor C such that:
 
-";
+C_c = A_a * B_b
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::row(casadi_int el)
-const  "
+With a, b, c representing einstein indices. Instead of the classical index
+labels i,j,k,... we employ -1,-2,-3,...
 
-Get the sparsity pattern. See the Sparsity class for details.
-
-";
-
-%feature("docstring")  inv_minor(const MatType &A) "
-
-Matrix inverse (experimental)
+A, B, C are represented as CasADi vectors, with dim_a, dim_b, dim_c
+indictating theire tensorial dimensions.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::nnz_upper() const
-"
-
-Get the number of non-zeros in the upper triangular half.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::sparsity() const  "
-
-Get the sparsity pattern.
-
-";
-
-%feature("docstring")  norm_inf(const MatType &x) "
-
-Infinity-norm.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::mpower(const
-MatType &x, const MatType &y) "
-
-Functions called by friend functions defined here
-
-";
-
-%feature("docstring")  trace(const MatType &x) "
-
-Matrix trace.
-
-";
-
-%feature("docstring")  einstein(const MatType &A, const MatType &B, const
-MatType &C, const std::vector< casadi_int > &dim_a, const std::vector<
-casadi_int > &dim_b, const std::vector< casadi_int > &dim_c, const
-std::vector< casadi_int > &a, const std::vector< casadi_int > &b, const
-std::vector< casadi_int > &c) "
+%feature("docstring") casadi::casadi_einstein "
 
 Compute any contraction of two dense tensors, using index/einstein notation
 einstein(A, B, a, b, c) -> C.
@@ -31210,10 +31621,37 @@ indictating theire tensorial dimensions.
 
 ";
 
-%feature("docstring")  einstein(const MatType &A, const MatType &B, const
-std::vector< casadi_int > &dim_a, const std::vector< casadi_int > &dim_b,
-const std::vector< casadi_int > &dim_c, const std::vector< casadi_int > &a,
-const std::vector< casadi_int > &b, const std::vector< casadi_int > &c) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_einstein "
+
+Compute any contraction of two dense tensors, using index/einstein notation
+einstein(A, B, a, b, c) -> C.
+
+Given two tensors, A and B, computes a third tensor C such that:
+
+C_c = A_a * B_b
+
+With a, b, c representing einstein indices. Instead of the classical index
+labels i,j,k,... we employ -1,-2,-3,...
+
+A, B, C are represented as CasADi vectors, with dim_a, dim_b, dim_c
+indictating theire tensorial dimensions.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::einstein(const MatType
+&A, const MatType &B, const std::vector< casadi_int > &dim_a, const
+std::vector< casadi_int > &dim_b, const std::vector< casadi_int > &dim_c,
+const std::vector< casadi_int > &a, const std::vector< casadi_int > &b,
+const std::vector< casadi_int > &c) "
+
+[INTERNAL]  Performs 1d linear interpolation.
+
+The data-points to be interpolated are given as (x[i], v[i]). xq[j] is used
+as interplating value
+
+";
+
+%feature("docstring") casadi::casadi_einstein "
 
 Performs 1d linear interpolation.
 
@@ -31222,33 +31660,392 @@ as interplating value
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::repsum(const
-MatType &A, casadi_int n, casadi_int m=1) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_einstein "
 
-Given a repeated matrix, computes the sum of repeated parts.
+Performs 1d linear interpolation.
 
-";
-
-%feature("docstring")  dot(const MatType &x, const MatType &y) "
-
-Inner product of two matrices with x and y matrices of the same dimension.
+The data-points to be interpolated are given as (x[i], v[i]). xq[j] is used
+as interplating value
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::size() const  "
+%feature("docstring")  casadi::GenericMatrixCommon::polyval(const MatType
+&p, const MatType &x) "
+
+[INTERNAL]  Evaluate a polynomial with coefficients p in x.
+
+";
+
+%feature("docstring") casadi::casadi_polyval "
+
+Evaluate a polynomial with coefficients p in x.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_polyval "
+
+Evaluate a polynomial with coefficients p in x.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::nnz() const  "
+
+Get the number of (structural) non-zero elements.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, casadi_int nrow=1, casadi_int ncol=1) "
+
+Create an nrow-by-ncol symbolic primitive.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, const std::pair< casadi_int, casadi_int > &rc) "
+
+Construct a symbolic primitive with given dimensions.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, const Sparsity &sp) "
+
+Create symbolic primitive with a given sparsity pattern.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, const Sparsity &sp, casadi_int p) "
+
+Create a vector of length p with with matrices with symbolic primitives of
+given sparsity.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, casadi_int nrow, casadi_int ncol, casadi_int p) "
+
+Create a vector of length p with nrow-by-ncol symbolic primitives.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, const Sparsity &sp, casadi_int p, casadi_int r) "
+
+Create a vector of length r of vectors of length p with symbolic primitives
+with given sparsity.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, casadi_int nrow, casadi_int ncol, casadi_int p, casadi_int r) "
+
+Create a vector of length r of vectors of length p with nrow-by-ncol
+symbolic primitives.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::row(casadi_int el) const
+"
+
+Get the sparsity pattern. See the Sparsity class for details.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::diff(const MatType &x,
+casadi_int n=1, casadi_int axis=-1) "
+
+Returns difference (n-th order) along given axis (MATLAB convention)
+
+";
+
+%feature("docstring") casadi::casadi_diff "
+
+Returns difference (n-th order) along given axis (MATLAB convention)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_diff "
+
+Returns difference (n-th order) along given axis (MATLAB convention)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::nullspace(const MatType
+&A) "
+
+[INTERNAL]  Computes the nullspace of a matrix A.
+
+Finds Z m-by-(m-n) such that AZ = 0 with A n-by-m with m > n
+
+Assumes A is full rank
+
+Inspired by Numerical Methods in Scientific Computing by Ake Bjorck
+
+";
+
+%feature("docstring") casadi::casadi_nullspace "
+
+Computes the nullspace of a matrix A.
+
+Finds Z m-by-(m-n) such that AZ = 0 with A n-by-m with m > n
+
+Assumes A is full rank
+
+Inspired by Numerical Methods in Scientific Computing by Ake Bjorck
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_nullspace "
+
+Computes the nullspace of a matrix A.
+
+Finds Z m-by-(m-n) such that AZ = 0 with A n-by-m with m > n
+
+Assumes A is full rank
+
+Inspired by Numerical Methods in Scientific Computing by Ake Bjorck
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::nnz_upper() const  "
+
+Get the number of non-zeros in the upper triangular half.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::sumsqr(const MatType &x)
+"
+
+[INTERNAL]  Calculate sum of squares: sum_ij X_ij^2.
+
+";
+
+%feature("docstring") casadi::casadi_sumsqr "
+
+Calculate sum of squares: sum_ij X_ij^2.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_sumsqr "
+
+Calculate sum of squares: sum_ij X_ij^2.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::norm_fro(const MatType
+&x) "
+
+[INTERNAL]  Frobenius norm.
+
+";
+
+%feature("docstring") casadi::casadi_norm_fro "
+
+Frobenius norm.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_norm_fro "
+
+Frobenius norm.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::sparsity() const  "
+
+Get the sparsity pattern.
+
+";
+
+%feature("docstring") casadi::casadi_sparsity "
+
+Get the sparsity pattern.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_sparsity "
+
+Get the sparsity pattern.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::inv(const MatType &A) "
+
+[INTERNAL]   Matrix inverse.
+
+";
+
+%feature("docstring") casadi::casadi_inv "
+
+Matrix inverse.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_inv "
+
+Matrix inverse.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::inv(const MatType &A,
+const std::string &lsolver, const Dict &options=Dict()) "
+
+[INTERNAL]   Matrix inverse.
+
+";
+
+%feature("docstring") casadi::casadi_inv "
+
+Matrix inverse.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_inv "
+
+Matrix inverse.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::interp1d(const
+std::vector< double > &x, const MatType &v, const std::vector< double > &xq,
+const std::string &mode, bool equidistant=false) "
+
+Performs 1d linear interpolation.
+
+The data-points to be interpolated are given as (x[i], v[i]). xq[j] is used
+as interplating value
+
+";
+
+%feature("docstring") casadi::casadi_interp1d "
+
+Performs 1d linear interpolation.
+
+The data-points to be interpolated are given as (x[i], v[i]). xq[j] is used
+as interplating value
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_interp1d "
+
+Performs 1d linear interpolation.
+
+The data-points to be interpolated are given as (x[i], v[i]). xq[j] is used
+as interplating value
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::mpower(const MatType &x,
+const MatType &n) "
+
+Matrix power x^n.
+
+";
+
+%feature("docstring") casadi::casadi_mpower "
+
+Matrix power x^n.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_mpower "
+
+Matrix power x^n.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::mpower(const MatType &x,
+const MatType &y) "
+
+Functions called by friend functions defined here
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::hessian(const MatType
+&ex, const MatType &arg) "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::GenericMatrixCommon::hessian(const MatType
+&ex, const MatType &arg, MatType &output_g) "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::GenericMatrixCommon::reverse(const
+std::vector< MatType > &ex, const std::vector< MatType > &arg, const
+std::vector< std::vector< MatType > > &v, const Dict &opts=Dict()) "
+
+[INTERNAL]  Reverse directional derivative.
+
+";
+
+%feature("docstring") casadi::casadi_reverse "
+
+Reverse directional derivative.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_reverse "
+
+Reverse directional derivative.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::which_depends(const
+MatType &expr, const MatType &var, casadi_int order, bool tr) "
+
+[INTERNAL]   Find out which variables enter with some order.
+
+";
+
+%feature("docstring") casadi::casadi_which_depends "
+
+Find out which variables enter with some order.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_which_depends "
+
+Find out which variables enter with some order.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::forward(const
+std::vector< MatType > &ex, const std::vector< MatType > &arg, const
+std::vector< std::vector< MatType > > &v, const Dict &opts=Dict()) "
+
+[INTERNAL]  Forward directional derivative.
+
+";
+
+%feature("docstring") casadi::casadi_forward "
+
+Forward directional derivative.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_forward "
+
+Forward directional derivative.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::size() const  "
 
 Get the shape.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::size(casadi_int
-axis) const  "
+%feature("docstring")  casadi::GenericMatrixCommon::size(casadi_int axis)
+const  "
 
 Get the size along a particular dimensions.
 
 ";
 
-%feature("docstring") casadi::GenericMatrix "
+%feature("docstring") casadi::GenericMatrixCommon "
 
 Matrix base class.
 
@@ -31268,162 +32065,230 @@ with Sparsity& sparsity() Joel Andersson
 
 C++ includes: generic_matrix.hpp ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::tangent(const
-MatType &ex, const MatType &arg) "
+%feature("docstring")  casadi::GenericMatrixCommon::project(const MatType
+&A, const Sparsity &sp, bool intersect=false) "
 
-Functions called by friend functions defined here
-
-";
-
-%feature("docstring")  polyval(const MatType &p, const MatType &x) "
-
-Evaluate a polynomial with coefficients p in x.
+[INTERNAL]  Create a new matrix with a given sparsity pattern but with the
+nonzeros taken from an existing matrix.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::triu2symm(const
-MatType &a) "
+%feature("docstring") casadi::casadi_project "
 
-Convert a upper triangular matrix to a symmetric one.
-
-";
-
-%feature("docstring")  depends_on(const MatType &f, const MatType &arg) "
-
-Check if expression depends on the argument The argument must be symbolic.
+Create a new matrix with a given sparsity pattern but with the nonzeros
+taken from an existing matrix.
 
 ";
 
-%feature("docstring")  symvar(const MatType &x) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_project "
 
-Get all symbols contained in the supplied expression Get all symbols on
-which the supplied expression depends.
-
-See:  SXFunction::getFree(), MXFunction::getFree()
+Create a new matrix with a given sparsity pattern but with the nonzeros
+taken from an existing matrix.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::is_vector() const
-"
+%feature("docstring")  casadi::GenericMatrixCommon::expm(const MatType &A) "
 
-Check if the matrix is a row or column vector.
+[INTERNAL] ";
 
-";
+%feature("docstring")  casadi::GenericMatrixCommon::densify(const MatType
+&x) "
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::mpower(const
-MatType &x, const MatType &n) "
-
-Matrix power x^n.
+[INTERNAL]  Make the matrix dense if not already.
 
 ";
 
-%feature("docstring")  norm_fro(const MatType &x) "
-
-Frobenius norm.
-
-";
-
-%feature("docstring")  sumsqr(const MatType &x) "
-
-Calculate sum of squares: sum_ij X_ij^2.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::zeros(casadi_int
-nrow=1, casadi_int ncol=1) "
-
-Create a dense matrix or a matrix with specified sparsity with all entries
-zero.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::zeros(const
-Sparsity &sp) "
-
-Create a dense matrix or a matrix with specified sparsity with all entries
-zero.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::zeros(const
-std::pair< casadi_int, casadi_int > &rc) "
-
-Create a dense matrix or a matrix with specified sparsity with all entries
-zero.
-
-";
-
-%feature("docstring")  reverse(const std::vector< MatType > &ex, const
-std::vector< MatType > &arg, const std::vector< std::vector< MatType > > &v,
-const Dict &opts=Dict()) "
-
-Reverse directional derivative.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType
->::quadratic_coeff(const MatType &expr, const MatType &var, MatType &A,
-MatType &b, MatType &c) "
-
-Recognizes quadratic form in scalar expression.
-
-1/2*x' A x + b' x + c
-
-e = 0.5*bilin(A,x,x)+dot(b,x)+c
-
-";
-
-%feature("docstring")  expm_const(const MatType &A, const MatType &t) "
-
-";
-
-%feature("docstring")  expm(const MatType &A) "
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MatType >::rows() const  "
-
-Get the number of rows, Octave-style syntax.
-
-";
-
-%feature("docstring")  densify(const MatType &x) "
+%feature("docstring") casadi::casadi_densify "
 
 Make the matrix dense if not already.
 
 ";
 
-%feature("docstring")  densify(const MatType &x, const MatType &val) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_densify "
+
+Make the matrix dense if not already.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::densify(const MatType
+&x, const MatType &val) "
+
+[INTERNAL]  Make the matrix dense and assign nonzeros to a value.
+
+";
+
+%feature("docstring") casadi::casadi_densify "
 
 Make the matrix dense and assign nonzeros to a value.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::linearize(const
-MatType &f, const MatType &x, const MatType &x0) "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_densify "
+
+Make the matrix dense and assign nonzeros to a value.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_vector() const  "
+
+Check if the matrix is a row or column vector.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::det(const MatType &A) "
+
+[INTERNAL]   Matrix determinant (experimental)
+
+";
+
+%feature("docstring") casadi::casadi_det "
+
+Matrix determinant (experimental)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_det "
+
+Matrix determinant (experimental)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::shared(std::vector<
+MatType > &ex, std::vector< MatType > &v, std::vector< MatType > &vdef,
+const std::string &v_prefix="v_", const std::string &v_suffix="") "
+
+[INTERNAL]  Extract shared subexpressions from an set of expressions.
+
+";
+
+%feature("docstring") casadi::casadi_shared "
+
+Extract shared subexpressions from an set of expressions.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_shared "
+
+Extract shared subexpressions from an set of expressions.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::shared(const
+std::vector< MatType > &ex, std::vector< MatType > &ex_output, std::vector<
+MatType > &v, std::vector< MatType > &vdef, const std::string
+&v_prefix="v_", const std::string &v_suffix="") "
+
+[INTERNAL]  Extract shared subexpressions from an set of expressions.
+
+";
+
+%feature("docstring") casadi::casadi_shared "
+
+Extract shared subexpressions from an set of expressions.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_shared "
+
+Extract shared subexpressions from an set of expressions.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::zeros(casadi_int nrow=1,
+casadi_int ncol=1) "
+
+Create a dense matrix or a matrix with specified sparsity with all entries
+zero.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::zeros(const Sparsity
+&sp) "
+
+Create a dense matrix or a matrix with specified sparsity with all entries
+zero.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::zeros(const std::pair<
+casadi_int, casadi_int > &rc) "
+
+Create a dense matrix or a matrix with specified sparsity with all entries
+zero.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::if_else(const MatType
+&cond, const MatType &if_true, const MatType &if_false, bool
+short_circuit=false) "
+
+[INTERNAL]  Branching on MX nodes Ternary operator, \"cond ? if_true :
+if_false\".
+
+";
+
+%feature("docstring") casadi::casadi_if_else "
+
+Branching on MX nodes Ternary operator, \"cond ? if_true : if_false\".
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_if_else "
+
+Branching on MX nodes Ternary operator, \"cond ? if_true : if_false\".
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::rows() const  "
+
+Get the number of rows, Octave-style syntax.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::linearize(const MatType
+&f, const MatType &x, const MatType &x0) "
 
 Functions called by friend functions defined here
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::ones(casadi_int
-nrow=1, casadi_int ncol=1) "
+%feature("docstring")  casadi::GenericMatrixCommon::linearize(const MatType
+&f, const MatType &x, const MatType &x0) "
+
+Linearize an expression.
+
+";
+
+%feature("docstring") casadi::casadi_linearize "
+
+Linearize an expression.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_linearize "
+
+Linearize an expression.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::ones(casadi_int nrow=1,
+casadi_int ncol=1) "
 
 Create a dense matrix or a matrix with specified sparsity with all entries
 one.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::ones(const Sparsity
-&sp) "
+%feature("docstring")  casadi::GenericMatrixCommon::ones(const Sparsity &sp)
+"
 
 Create a dense matrix or a matrix with specified sparsity with all entries
 one.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MatType >::ones(const
-std::pair< casadi_int, casadi_int > &rc) "
+%feature("docstring")  casadi::GenericMatrixCommon::ones(const std::pair<
+casadi_int, casadi_int > &rc) "
 
 Create a dense matrix or a matrix with specified sparsity with all entries
 one.
@@ -31545,15 +32410,16 @@ double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -31642,11 +32508,16 @@ propagation.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::Integrator::getDerivativeOptions(bool fwd)
 const  "
@@ -31696,7 +32567,7 @@ std::string &name, std::ostream &stream) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -31854,7 +32725,7 @@ symmetric, bool allow_forward, bool allow_reverse) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -32065,7 +32936,7 @@ original
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -32496,11 +33367,16 @@ std::string > &s_out, const Function::AuxOut &aux, const Dict &opts) const
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::sz_res() const  "
 
@@ -32515,7 +33391,7 @@ std::vector< std::vector< M > > &aseed) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -32611,6 +33487,13 @@ always_inline, bool never_inline) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::free_mx() const  "
 
 [INTERNAL]  Get free variables ( MX)
@@ -32684,7 +33567,7 @@ get_reverse(casadi_int nadj) if no cached version is available.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -32803,6 +33686,13 @@ classes.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::size_out(casadi_int ind)
 const  "
 
@@ -32837,7 +33727,7 @@ problem)
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -32922,6 +33812,13 @@ elements.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::numel_out(casadi_int ind)
 const  "
 
@@ -32936,7 +33833,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -33025,7 +33922,7 @@ std::vector< MX > &arg, const std::string &parallelization) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -33034,6 +33931,18 @@ std::vector< M > &arg) const  "
 %feature("docstring")  casadi::ImplicitToNlp::solve(void *mem) const  "
 
 [INTERNAL]   Solve the system of equations and calculate derivatives.
+
+";
+
+%feature("docstring") casadi::casadi_solve "
+
+Solve the system of equations and calculate derivatives.
+
+";
+
+%feature("docstring")  casadi::ImplicitToNlp::casadi_solve "
+
+Solve the system of equations and calculate derivatives.
 
 ";
 
@@ -33084,11 +33993,16 @@ ind) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::sparsity_out(casadi_int
 ind) const  "
@@ -33124,22 +34038,23 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -33293,6 +34208,13 @@ Joris Gillis
 |                   |              | > 0.0, -2: ui <   |                   |
 |                   |              | 0.0.              |                   |
 +-------------------+--------------+-------------------+-------------------+
+| error_on_fail     | OT_BOOL      | When the          | casadi::Rootfinde |
+|                   |              | numerical process | r                 |
+|                   |              | returns           |                   |
+|                   |              | unsuccessfully,   |                   |
+|                   |              | raise an error    |                   |
+|                   |              | (default false).  |                   |
++-------------------+--------------+-------------------+-------------------+
 | implicit_input    | OT_INT       | Index of the      | casadi::Rootfinde |
 |                   |              | input that        | r                 |
 |                   |              | corresponds to    |                   |
@@ -33438,7 +34360,7 @@ iind, casadi_int oind, bool compact, bool symmetric) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -33631,15 +34553,22 @@ structure recognition for symmetric Jacobians
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -33813,11 +34742,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")
 casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
@@ -33827,7 +34761,7 @@ casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -33854,7 +34788,7 @@ SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -33970,10 +34904,17 @@ casadi::FunctionInternal::instruction_input(casadi_int k) const  "
 
 ";
 
-%feature("docstring")
-casadi::FunctionInternal::codegen_decref(CodeGenerator &g) const  "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Codegen decref for dependencies.
+[INTERNAL]  Get function in cache.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -34068,6 +35009,13 @@ symmetric, bool allow_forward, bool allow_reverse) const  "
 const std::string &fname) const  "
 
 [INTERNAL]  Generate code the function.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::codegen_decref(CodeGenerator &g) const  "
+
+[INTERNAL]  Codegen decref for dependencies.
 
 ";
 
@@ -34447,11 +35395,6 @@ Query plugin name.
 
 ";
 
-%feature("docstring")  casadi::Importer::has_function(const std::string
-&symname) const  "
-
-";
-
 %feature("docstring") casadi::Importer::Importer() "
 
 Default constructor.
@@ -34509,7 +35452,7 @@ std::string &fname) const  "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -34564,11 +35507,16 @@ std::vector< MX > &arg) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::Integrator::aug_fwd(casadi_int nfwd) const  "
 
@@ -34630,6 +35578,13 @@ const  "
 
 [INTERNAL] ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::eval_sx(const SXElem **arg,
 SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
 
@@ -34664,7 +35619,7 @@ multiplying.
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -34825,7 +35780,7 @@ persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -34981,7 +35936,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -35366,7 +36321,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -35393,11 +36348,16 @@ casadi::FunctionInternal::instruction_input(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::generate_lifted(Function
 &vdef_fcn, Function &vinit_fcn) const  "
@@ -35538,15 +36498,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -35559,6 +36520,13 @@ ind) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::info() const  "
 
 [INTERNAL]  Obtain information about function
@@ -35566,7 +36534,7 @@ ind) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -35750,6 +36718,13 @@ multiplying.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::which_depends(const
 std::string &s_in, const std::vector< std::string > &s_out, casadi_int
 order, bool tr=false) const  "
@@ -35896,7 +36871,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -35953,6 +36928,13 @@ elements.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::has_jac() const  "
 
 [INTERNAL]  Return Jacobian of all input elements with respect to all output
@@ -35970,7 +36952,7 @@ std::string &name) const  "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -36153,7 +37135,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -36275,7 +37257,7 @@ casadi::FunctionInternal::codegen_decref(CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -36437,11 +37419,16 @@ casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")
 casadi::FunctionInternal::instruction_output(casadi_int k) const  "
@@ -36559,7 +37546,7 @@ get_forward(casadi_int nfwd) if no cached version is available.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -36634,6 +37621,12 @@ double **res, casadi_int *iw, double *w, void *mem) const  "
 
 ";
 
+%feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
+
+[INTERNAL]  Construct Prepares the function for evaluation.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::fwd_seed(casadi_int nfwd)
 const  "
 
@@ -36649,7 +37642,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -37040,7 +38033,7 @@ always_inline, bool never_inline) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -37082,15 +38075,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -37113,6 +38107,13 @@ bool never_inline) const  "
 %feature("docstring")  casadi::FunctionInternal::sz_arg() const  "
 
 [INTERNAL]  Get required length of arg field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -37313,9 +38314,10 @@ const  "
 
 [INTERNAL] ";
 
-%feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Construct Prepares the function for evaluation.
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -37341,11 +38343,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::numel_out(casadi_int ind)
 const  "
@@ -37570,7 +38577,7 @@ DM > &arg) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -38122,6 +39129,13 @@ bool persistent=false) "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::mapsum_mx(const
 std::vector< MX > &arg, const std::string &parallelization) "
 
@@ -38181,7 +39195,7 @@ get_reverse(casadi_int nadj) if no cached version is available.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -38195,15 +39209,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -38495,6 +39510,13 @@ symmetric, bool allow_forward, bool allow_reverse) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::sparsity_jac(casadi_int
 iind, casadi_int oind, bool compact, bool symmetric) const  "
 
@@ -38516,9 +39538,16 @@ iind, casadi_int oind, bool compact, bool symmetric) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -38711,11 +39740,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::jac() const  "
 
@@ -38765,7 +39799,7 @@ casadi::FunctionInternal::codegen_declarations(CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -38779,7 +39813,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -38800,7 +39834,7 @@ persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -38854,11 +39888,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::get_sparsity_in(casadi_int
 i) "
@@ -39880,15 +40919,15 @@ const  "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::is_a(const std::string
-&type, bool recursive) const  "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Check if the function is of a particular type.
+[INTERNAL]  Get function in cache.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -39910,7 +40949,7 @@ original
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -40010,11 +41049,16 @@ std::vector< std::string > &onames, const Dict &opts) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::instruction_id(casadi_int
 k) const  "
@@ -40307,6 +41351,13 @@ casadi::FunctionInternal::instruction_input(casadi_int k) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
 
 [INTERNAL]  Construct Prepares the function for evaluation.
@@ -40339,7 +41390,7 @@ double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -40361,6 +41412,13 @@ bool persistent=false) "
 %feature("docstring")  casadi::LinearInterpolant::init(const Dict &opts)  "
 
 [INTERNAL]  Initialize.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -40464,11 +41522,16 @@ casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::ad_weight() const  "
 
@@ -40676,6 +41739,13 @@ always_inline, bool never_inline) const  "
 
 [INTERNAL]  Forward mode AD, virtual functions overloaded in derived
 classes.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::is_a(const std::string
+&type, bool recursive) const  "
+
+[INTERNAL]  Check if the function is of a particular type.
 
 ";
 
@@ -40888,15 +41958,16 @@ CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -40945,7 +42016,7 @@ generated function.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -40964,7 +42035,7 @@ std::vector< M > &res) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -41090,7 +42161,7 @@ multiplying.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -41101,6 +42172,13 @@ std::vector< M > &arg) const  "
 %feature("docstring")  casadi::FunctionInternal::get_options() const  "
 
 [INTERNAL]  Options.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -41141,7 +42219,7 @@ const std::string &fname) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -41216,15 +42294,16 @@ casadi::FunctionInternal::instruction_output(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -41251,11 +42330,16 @@ std::string &fname) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::has_function(const
 std::string &fname) const  "
@@ -41586,7 +42670,7 @@ CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -41627,7 +42711,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -41835,6 +42919,13 @@ iind, casadi_int oind, bool compact, bool symmetric) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::sx_out(casadi_int ind)
 const  "
 
@@ -41863,7 +42954,7 @@ DM > &arg) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -41968,7 +43059,7 @@ Diagrams
 C++ includes: linear_interpolant.hpp ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -42029,6 +43120,13 @@ std::vector< MX > &arg, const std::string &parallelization) "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::has_forward(casadi_int
 nfwd) const  "
 
@@ -42059,7 +43157,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -42229,11 +43327,16 @@ std::string &fname, const Dict &opts) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::set_work(void *mem, const
 double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
@@ -42348,8 +43451,32 @@ Solve linear system of equations
 
 ";
 
+%feature("docstring") casadi::casadi_solve "
+
+Solve linear system of equations
+
+";
+
+%feature("docstring")  casadi::Linsol::casadi_solve "
+
+Solve linear system of equations
+
+";
+
 %feature("docstring")  casadi::Linsol::solve(const MX &A, const MX &B, bool
 tr=false) const  "
+
+Solve linear system of equations
+
+";
+
+%feature("docstring") casadi::casadi_solve "
+
+Solve linear system of equations
+
+";
+
+%feature("docstring")  casadi::Linsol::casadi_solve "
 
 Solve linear system of equations
 
@@ -42602,6 +43729,18 @@ Query plugin name.
 ";
 
 %feature("docstring")  casadi::Linsol::sparsity() const  "
+
+Get linear system sparsity.
+
+";
+
+%feature("docstring") casadi::casadi_sparsity "
+
+Get linear system sparsity.
+
+";
+
+%feature("docstring")  casadi::Linsol::casadi_sparsity "
 
 Get linear system sparsity.
 
@@ -43276,7 +44415,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -43364,7 +44503,7 @@ bool more) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -43462,7 +44601,7 @@ original
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -43584,6 +44723,13 @@ casadi_int *iw, bvec_t *w, void *mem) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::Map::codegen_body(CodeGenerator &g) const  "
 
 [INTERNAL]  Generate code for the body of the C function.
@@ -43591,15 +44737,16 @@ casadi_int *iw, bvec_t *w, void *mem) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -43673,11 +44820,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::Map::get_default_in(casadi_int ind) const  "
 
@@ -43782,9 +44934,10 @@ casadi::FunctionInternal::codegen_decref(CodeGenerator &g) const  "
 
 ";
 
-%feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Construct Prepares the function for evaluation.
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -43863,7 +45016,7 @@ std::string &name) const  "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -44014,7 +45167,7 @@ std::vector< std::string > &onames, const Dict &opts) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -44159,7 +45312,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -44199,7 +45352,7 @@ std::vector< M > &res) const  "
 ";
 
 %feature("docstring")  casadi::Map::eval_gen(const T **arg, T **res,
-casadi_int *iw, T *w) const  "
+casadi_int *iw, T *w, casadi_int mem=0) const  "
 
 [INTERNAL]  Evaluate or propagate sparsities.
 
@@ -44278,6 +45431,13 @@ const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::Map::info() const  "
 
 [INTERNAL]  Obtain information about node
@@ -44285,11 +45445,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")
 casadi::FunctionInternal::instruction_output(casadi_int k) const  "
@@ -44376,2074 +45541,6 @@ const std::string &fname) const  "
 double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
 
 [INTERNAL]  Set the (persistent) work vectors.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::jac() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::print_option(const
-std::string &name, std::ostream &stream) const  "
-
-[INTERNAL]  Print all information there is to know about a certain option.
-
-";
-
-
-// File: classcasadi_1_1MapOmp.xml
-%feature("docstring")  casadi::FunctionInternal::set_work(void *mem, const
-double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
-
-[INTERNAL]  Set the (persistent) work vectors.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::symbolic_output(const
-std::vector< MX > &arg) const  "
-
-[INTERNAL]  Get a vector of symbolic variables corresponding to the outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::generate_lifted(Function
-&vdef_fcn, Function &vinit_fcn) const  "
-
-[INTERNAL]  Extract the functions needed for the Lifted Newton method.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::getAdaptorSolverName()
-const  "
-
-[INTERNAL]  Obtain solver name from Adaptor.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::disp(std::ostream &stream,
-bool more) const  "
-
-[INTERNAL]  Display object.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_w() const  "
-
-[INTERNAL]  Get required length of w field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::index_in(const std::string
-&name) const  "
-
-[INTERNAL]  Get input scheme index by name.
-
-";
-
-%feature("docstring")  casadi::SharedObjectInternal::getCount() const  "
-
-[INTERNAL]  Get the reference count.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::getJacSparsityGen(casadi_int iind, casadi_int
-oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
-
-[INTERNAL]  Get the sparsity pattern, forward mode.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::free_mx() const  "
-
-[INTERNAL]  Get free variables ( MX)
-
-";
-
-%feature("docstring")  casadi::Map::has_reverse(casadi_int nadj) const  "
-
-[INTERNAL]  Generate a function that calculates nadj adjoint derivatives.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sparsity_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output sparsity.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_jac() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::codegen_meta(CodeGenerator
-&g) const  "
-
-[INTERNAL]  Generate meta-information allowing a user to evaluate a
-generated function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::slice(const std::string
-&name, const std::vector< casadi_int > &order_in, const std::vector<
-casadi_int > &order_out, const Dict &opts) const  "
-
-[INTERNAL]  returns a new function with a selection of inputs/outputs of the
-original
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_gen(const double
-**arg, double **res, casadi_int *iw, double *w, void *mem) const  "
-
-[INTERNAL]  Evaluate numerically.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_gen(const SXElem
-**arg, SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
-
-[INTERNAL]  Evaluate a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_gen(const bvec_t
-**arg, bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
-
-[INTERNAL]  Evaluate a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::Map::eval_gen(const T **arg, T **res,
-casadi_int *iw, T *w) const  "
-
-[INTERNAL]  Evaluate or propagate sparsities.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::factory(const std::string
-&name, const std::vector< std::string > &s_in, const std::vector<
-std::string > &s_out, const Function::AuxOut &aux, const Dict &opts) const
-"
-
-[INTERNAL] ";
-
-%feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Check if output arguments that needs to be replaced.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_arg(size_t sz_arg,
-bool persistent=false) "
-
-[INTERNAL]  Ensure required length of arg field.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::getJacSparsityHierarchicalSymm(casadi_int iind,
-casadi_int oind) const  "
-
-[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
-structure recognition for symmetric Jacobians
-
-";
-
-%feature("docstring")  casadi::Map::get_forward(casadi_int nfwd, const
-std::string &name, const std::vector< std::string > &inames, const
-std::vector< std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Generate a function that calculates nfwd forward derivatives.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
-
-[INTERNAL]  Print dimensions of inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_out() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_out() const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Check if input arguments have correct length and dimensions.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::getJacSparsityHierarchical(casadi_int iind,
-casadi_int oind) const  "
-
-[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
-structure recognition.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::instruction_input(casadi_int k) const  "
-
-[INTERNAL]  Get the (integer) input arguments of an atomic operation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::n_nodes() const  "
-
-[INTERNAL]  Number of nodes in the algorithm.
-
-";
-
-%feature("docstring")  casadi::SharedObjectInternal::weak() "
-
-[INTERNAL]  Get a weak reference to the object.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
-
-[INTERNAL]  Replace 0-by-0 forward seeds.
-
-";
-
-%feature("docstring")  casadi::Map::sp_reverse(bvec_t **arg, bvec_t **res,
-casadi_int *iw, bvec_t *w, void *mem) const  "
-
-[INTERNAL]  Propagate sparsity backwards.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_mx(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
-
-[INTERNAL]  Evaluate with symbolic matrices.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::free_sx() const  "
-
-[INTERNAL]  Get free variables (SX)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_free() const  "
-
-[INTERNAL]  Print free variables.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mapsum_mx(const
-std::vector< MX > &arg, const std::string &parallelization) "
-
-[INTERNAL]  Parallel evaluation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::print_option(const
-std::string &name, std::ostream &stream) const  "
-
-[INTERNAL]  Print all information there is to know about a certain option.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc(const Function &f,
-bool persistent=false) "
-
-[INTERNAL]  Ensure work vectors long enough to evaluate function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
-
-[INTERNAL]  Replace 0-by-0 reverse seeds.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_out() const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
-
-[INTERNAL]  Codegen incref for dependencies.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::checkout() const  "
-
-[INTERNAL]  Checkout a memory object.
-
-";
-
-%feature("docstring")  casadi::Map::get_n_in()  "
-
-[INTERNAL]  Number of function inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_in() const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::generate_dependencies(const
-std::string &fname, const Dict &opts) const  "
-
-[INTERNAL]  Export / Generate C code for the dependency function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_abstol() const  "
-
-[INTERNAL]  Get absolute tolerance.
-
-";
-
-%feature("docstring")  casadi::Map::get_n_out()  "
-
-[INTERNAL]  Number of function inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
-
-[INTERNAL]   Call a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
-
-[INTERNAL]   Call a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::serialize(std::ostream
-&stream) const  "
-
-[INTERNAL]  Serialize.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sp_weight() const  "
-
-[INTERNAL]  Weighting factor for chosing forward/reverse mode, sparsity
-propagation.
-
-";
-
-%feature("docstring")  casadi::Map::get_default_in(casadi_int ind) const  "
-
-[INTERNAL]  Get default input value.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_in(casadi_int ind) const
-"
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_in() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::print_options(std::ostream
-&stream) const  "
-
-[INTERNAL]  Print list of options.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::finalize(const Dict &opts)
-"
-
-[INTERNAL]  Finalize the object creation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::symbolicAdjSeed(casadi_int
-nadj, const std::vector< MatType > &v) const  "
-
-[INTERNAL]  Symbolic expressions for the adjoint seeds.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::instruction_id(casadi_int
-k) const  "
-
-[INTERNAL]  Get an atomic operation operator index.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::codegen_name(const
-CodeGenerator &g) const  "
-
-[INTERNAL]  Get name in codegen.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::instruction_MX(casadi_int
-k) const  "
-
-[INTERNAL]  get MX expression associated with instruction
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::disp_more(std::ostream
-&stream) const  "
-
-[INTERNAL]  Print more.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::instruction_output(casadi_int k) const  "
-
-[INTERNAL]  Get the (integer) output argument of an atomic operation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_partition(casadi_int
-iind, casadi_int oind, Sparsity &D1, Sparsity &D2, bool compact, bool
-symmetric, bool allow_forward, bool allow_reverse) const  "
-
-[INTERNAL]  Get the unidirectional or bidirectional partition.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_arg() const  "
-
-[INTERNAL]  Get required length of arg field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
-
-[INTERNAL]  Check if output arguments have correct length and dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::which_depends(const
-std::string &s_in, const std::vector< std::string > &s_out, casadi_int
-order, bool tr=false) const  "
-
-[INTERNAL]  Which variables enter with some order.
-
-Parameters:
------------
-
-s_in:   Input name
-
-s_out:   Output name(s)
-
-order:  Only 1 (linear) and 2 (nonlinear) allowed
-
-tr:  Flip the relationship. Return which expressions contain the variables
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::jit_dependencies(const
-std::string &fname) "
-
-[INTERNAL]  Jit dependencies.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_max_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Get largest input value.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Check if input arguments that needs to be replaced.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_in(casadi_int ind) const
-"
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_in() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::self() const  "
-
-[INTERNAL]  Get a public class instance.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_jacobian_sparsity()
-const  "
-
-[INTERNAL]  Get Jacobian sparsity.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::adjViaJac(casadi_int nadj)
-const  "
-
-[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
-multiplying.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::fwd_seed(casadi_int nfwd)
-const  "
-
-[INTERNAL]  Symbolic expressions for the forward seeds.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size1_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::Map::codegen_declarations(CodeGenerator &g)
-const  "
-
-[INTERNAL]  Generate code for the declarations of the C function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::codegen(CodeGenerator &g,
-const std::string &fname) const  "
-
-[INTERNAL]  Generate code the function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_jac(const std::string
-&name, const std::vector< std::string > &inames, const std::vector<
-std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::jac() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_jacobian() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::memory(casadi_int ind) const
-"
-
-[INTERNAL]  Memory objects.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::wrap() const  "
-
-[INTERNAL]  Wrap in an Function instance consisting of only one MX call.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::uses_output() const  "
-
-[INTERNAL]  Do the derivative functions need nondifferentiated outputs?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_iw(size_t sz_iw, bool
-persistent=false) "
-
-[INTERNAL]  Ensure required length of iw field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::forward(casadi_int nfwd)
-const  "
-
-[INTERNAL]  Return function that calculates forward derivatives
-forward(nfwd) returns a cached instance if available, and calls  Function
-get_forward(casadi_int nfwd) if no cached version is available.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::oracle() const  "
-
-[INTERNAL]  Get oracle.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sparsity_out(casadi_int
-ind) const  "
-
-[INTERNAL]  Input/output sparsity.
-
-";
-
-%feature("docstring")  casadi::Map::has_codegen() const  "
-
-[INTERNAL]  Is codegen supported?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::all_scalar() const  "
-
-[INTERNAL]  Are all inputs and outputs scalar.
-
-";
-
-%feature("docstring")  casadi::Map::get_sparsity_out(casadi_int i)  "
-
-[INTERNAL]  Sparsities of function inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_iw() const  "
-
-[INTERNAL]  Get required length of iw field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_reverse(const
-std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
-std::vector< MX > > &aseed, std::vector< std::vector< MX > > &asens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_reverse(const
-std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
-std::vector< SX > > &aseed, std::vector< std::vector< SX > > &asens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
-
-";
-
-%feature("docstring") casadi::MapOmp "
-
-[INTERNAL]  A map Evaluate in parallel using OpenMP Note: Do not use this
-class with much more than the intended number of threads for the parallel
-evaluation as it will cause excessive memory use.
-
-Joel Andersson
-
-C++ includes: map.hpp ";
-
-%feature("docstring")  casadi::FunctionInternal::getJacSparsity(casadi_int
-iind, casadi_int oind, bool symmetric) const  "
-
-[INTERNAL]  Generate the sparsity of a Jacobian block.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_out() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size1_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::definition() const  "
-
-[INTERNAL]  Get function signature: name:(inputs)->(outputs)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_res(size_t sz_res,
-bool persistent=false) "
-
-[INTERNAL]  Ensure required length of res field.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
-
-[INTERNAL]  Serialize function header.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::codegen_decref(CodeGenerator &g) const  "
-
-[INTERNAL]  Codegen decref for dependencies.
-
-";
-
-%feature("docstring")  casadi::Map::get_sparsity_in(casadi_int i)  "
-
-[INTERNAL]  Sparsities of function inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::Map::get_name_in(casadi_int i)  "
-
-[INTERNAL]  Names of function input and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_min_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Get smallest input value.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_stats(void *mem) const
-"
-
-[INTERNAL]  Get all statistics.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
-
-[INTERNAL]  Get the floating point output argument of an atomic operation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_res() const  "
-
-[INTERNAL]  Get required length of res field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_free() const  "
-
-[INTERNAL]  Does the function have free variables.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::codegen_sparsities(CodeGenerator &g) const  "
-
-[INTERNAL]  Codegen sparsities.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::init_mem(void *mem) const  "
-
-[INTERNAL]  Initalize memory block.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::free_mem(void *mem) const  "
-
-[INTERNAL]  Free memory block.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::ad_weight() const  "
-
-[INTERNAL]  Weighting factor for chosing forward/reverse mode.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::set_temp(void *mem, const
-double **arg, double **res, casadi_int *iw, double *w) const  "
-
-[INTERNAL]  Set the (temporary) work vectors.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
-
-[INTERNAL]  Replace 0-by-0 outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sprint(char *buf, size_t
-buf_sz, const char *fmt,...) const  "
-
-[INTERNAL]  C-style formatted printing to string.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_forward(const
-std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
-std::vector< MX > > &fseed, std::vector< std::vector< MX > > &fsens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
-classes.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_forward(const
-std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
-std::vector< SX > > &fseed, std::vector< std::vector< SX > > &fsens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
-classes.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::n_instructions() const  "
-
-[INTERNAL]  Get the number of atomic operations.
-
-";
-
-%feature("docstring")  casadi::Map::info() const  "
-
-[INTERNAL]  Obtain information about node
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size2_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::setup(void *mem, const
-double **arg, double **res, casadi_int *iw, double *w) const  "
-
-[INTERNAL]  Set the (persistent and temporary) work vectors.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::signature(const std::string
-&fname) const  "
-
-[INTERNAL]  Code generate the function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_work(size_t &sz_arg,
-size_t &sz_res, size_t &sz_iw, size_t &sz_w) const  "
-
-[INTERNAL]  Get number of temporary variables needed.
-
-";
-
-%feature("docstring")  casadi::Map::has_sprev() const  "
-
-[INTERNAL]  Is the class able to propagate seeds through the algorithm?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_jacobian(const
-std::string &name, const std::vector< std::string > &inames, const
-std::vector< std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::Map::get_name_out(casadi_int i)  "
-
-[INTERNAL]  Names of function input and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sparsity_jac(casadi_int
-iind, casadi_int oind, bool compact, bool symmetric) const  "
-
-[INTERNAL]  Get, if necessary generate, the sparsity of a Jacobian block.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::reverse(casadi_int nadj)
-const  "
-
-[INTERNAL]  Return function that calculates adjoint derivatives
-reverse(nadj) returns a cached instance if available, and calls  Function
-get_reverse(casadi_int nadj) if no cached version is available.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::fwdViaJac(casadi_int nfwd)
-const  "
-
-[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
-multiplying.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size2_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::Map::has_spfwd() const  "
-
-[INTERNAL]  Is the class able to propagate seeds through the algorithm?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::index_out(const std::string
-&name) const  "
-
-[INTERNAL]  Get output scheme index by name.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_function() const  "
-
-[INTERNAL] ";
-
-%feature("docstring")  casadi::FunctionInternal::get_function(const
-std::string &name) const  "
-
-[INTERNAL] ";
-
-%feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
-
-[INTERNAL]  Construct Prepares the function for evaluation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::export_code(const
-std::string &lang, std::ostream &stream, const Dict &options) const  "
-
-[INTERNAL]  Export function in a specific language.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::alloc_mem() const  "
-
-[INTERNAL]  Create memory block.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_in() const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring")  casadi::Map::has_forward(casadi_int nfwd) const  "
-
-[INTERNAL]  Generate a function that calculates nfwd forward derivatives.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::is_a(const std::string
-&type, bool recursive) const  "
-
-[INTERNAL]  Check if the function is of a particular type.
-
-";
-
-%feature("docstring")  casadi::Map::get_reverse(casadi_int nadj, const
-std::string &name, const std::vector< std::string > &inames, const
-std::vector< std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Generate a function that calculates nadj adjoint derivatives.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_dm(const std::vector<
-DM > &arg) const  "
-
-[INTERNAL]  Evaluate with DM matrices.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_options() const  "
-
-[INTERNAL]  Options.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Replace 0-by-0 inputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_derivative() const  "
-
-[INTERNAL]  Can derivatives be calculated in any way?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_w(size_t sz_w, bool
-persistent=false) "
-
-[INTERNAL]  Ensure required length of w field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_function(const
-std::string &fname) const  "
-
-[INTERNAL] ";
-
-%feature("docstring")  casadi::Map::sp_forward(const bvec_t **arg, bvec_t
-**res, casadi_int *iw, bvec_t *w, void *mem) const  "
-
-[INTERNAL]  Propagate sparsity forward.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::release(casadi_int mem) const
-"
-
-[INTERNAL]  Release a memory object.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::jacobian() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::clear_mem() "
-
-[INTERNAL]  Clear all memory (called from destructor)
-
-";
-
-%feature("docstring")  casadi::Map::eval_sx(const SXElem **arg, SXElem
-**res, casadi_int *iw, SXElem *w, void *mem) const  "
-
-[INTERNAL]  evaluate symbolically while also propagating directional
-derivatives
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call(const std::vector< M >
-&arg, std::vector< M > &res, bool always_inline, bool never_inline) const  "
-
-[INTERNAL]   Call a function, templated.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_reltol() const  "
-
-[INTERNAL]  Get relative tolerance.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::print(const char *fmt,...)
-const  "
-
-[INTERNAL]  C-style formatted printing during evaluation.
-
-";
-
-
-// File: classcasadi_1_1MapThread.xml
-%feature("docstring")  casadi::FunctionInternal::size1_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::Map::get_sparsity_out(casadi_int i)  "
-
-[INTERNAL]  Sparsities of function inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::adjViaJac(casadi_int nadj)
-const  "
-
-[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
-multiplying.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::release(casadi_int mem) const
-"
-
-[INTERNAL]  Release a memory object.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_function(const
-std::string &fname) const  "
-
-[INTERNAL] ";
-
-%feature("docstring")  casadi::FunctionInternal::all_scalar() const  "
-
-[INTERNAL]  Are all inputs and outputs scalar.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_iw() const  "
-
-[INTERNAL]  Get required length of iw field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::factory(const std::string
-&name, const std::vector< std::string > &s_in, const std::vector<
-std::string > &s_out, const Function::AuxOut &aux, const Dict &opts) const
-"
-
-[INTERNAL] ";
-
-%feature("docstring")  casadi::FunctionInternal::sz_work(size_t &sz_arg,
-size_t &sz_res, size_t &sz_iw, size_t &sz_w) const  "
-
-[INTERNAL]  Get number of temporary variables needed.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_jacobian_sparsity()
-const  "
-
-[INTERNAL]  Get Jacobian sparsity.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_res(size_t sz_res,
-bool persistent=false) "
-
-[INTERNAL]  Ensure required length of res field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::print_option(const
-std::string &name, std::ostream &stream) const  "
-
-[INTERNAL]  Print all information there is to know about a certain option.
-
-";
-
-%feature("docstring")  casadi::Map::sp_reverse(bvec_t **arg, bvec_t **res,
-casadi_int *iw, bvec_t *w, void *mem) const  "
-
-[INTERNAL]  Propagate sparsity backwards.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::export_code(const
-std::string &lang, std::ostream &stream, const Dict &options) const  "
-
-[INTERNAL]  Export function in a specific language.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::wrap() const  "
-
-[INTERNAL]  Wrap in an Function instance consisting of only one MX call.
-
-";
-
-%feature("docstring") casadi::MapThread "
-
-[INTERNAL]  A map Evaluate in parallel using std::thread Note: Do not use
-this class with much more than the intended number of threads for the
-parallel evaluation as it will cause excessive memory use.
-
-Joris Gillis
-
-C++ includes: map.hpp ";
-
-%feature("docstring")
-casadi::FunctionInternal::codegen_sparsities(CodeGenerator &g) const  "
-
-[INTERNAL]  Codegen sparsities.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::set_temp(void *mem, const
-double **arg, double **res, casadi_int *iw, double *w) const  "
-
-[INTERNAL]  Set the (temporary) work vectors.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::symbolicAdjSeed(casadi_int
-nadj, const std::vector< MatType > &v) const  "
-
-[INTERNAL]  Symbolic expressions for the adjoint seeds.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::finalize(const Dict &opts)
-"
-
-[INTERNAL]  Finalize the object creation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::serialize(std::ostream
-&stream) const  "
-
-[INTERNAL]  Serialize.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::disp(std::ostream &stream,
-bool more) const  "
-
-[INTERNAL]  Display object.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
-
-[INTERNAL]  Replace 0-by-0 outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_jacobian(const
-std::string &name, const std::vector< std::string > &inames, const
-std::vector< std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_arg(size_t sz_arg,
-bool persistent=false) "
-
-[INTERNAL]  Ensure required length of arg field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sparsity_jac(casadi_int
-iind, casadi_int oind, bool compact, bool symmetric) const  "
-
-[INTERNAL]  Get, if necessary generate, the sparsity of a Jacobian block.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::instruction_MX(casadi_int
-k) const  "
-
-[INTERNAL]  get MX expression associated with instruction
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_stats(void *mem) const
-"
-
-[INTERNAL]  Get all statistics.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::codegen(CodeGenerator &g,
-const std::string &fname) const  "
-
-[INTERNAL]  Generate code the function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::jac() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::fwdViaJac(casadi_int nfwd)
-const  "
-
-[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
-multiplying.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_arg() const  "
-
-[INTERNAL]  Get required length of arg field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_w(size_t sz_w, bool
-persistent=false) "
-
-[INTERNAL]  Ensure required length of w field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_reverse(const
-std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
-std::vector< MX > > &aseed, std::vector< std::vector< MX > > &asens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_reverse(const
-std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
-std::vector< SX > > &aseed, std::vector< std::vector< SX > > &asens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::codegen_name(const
-CodeGenerator &g) const  "
-
-[INTERNAL]  Get name in codegen.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_mx(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
-
-[INTERNAL]  Evaluate with symbolic matrices.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::free_sx() const  "
-
-[INTERNAL]  Get free variables (SX)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_jacobian() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::fwd_seed(casadi_int nfwd)
-const  "
-
-[INTERNAL]  Symbolic expressions for the forward seeds.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::instruction_input(casadi_int k) const  "
-
-[INTERNAL]  Get the (integer) input arguments of an atomic operation.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::checkout() const  "
-
-[INTERNAL]  Checkout a memory object.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sp_weight() const  "
-
-[INTERNAL]  Weighting factor for chosing forward/reverse mode, sparsity
-propagation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::jit_dependencies(const
-std::string &fname) "
-
-[INTERNAL]  Jit dependencies.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::set_work(void *mem, const
-double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
-
-[INTERNAL]  Set the (persistent) work vectors.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_out() const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_gen(const double
-**arg, double **res, casadi_int *iw, double *w, void *mem) const  "
-
-[INTERNAL]  Evaluate numerically.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_gen(const SXElem
-**arg, SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
-
-[INTERNAL]  Evaluate a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_gen(const bvec_t
-**arg, bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
-
-[INTERNAL]  Evaluate a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::Map::eval_gen(const T **arg, T **res,
-casadi_int *iw, T *w) const  "
-
-[INTERNAL]  Evaluate or propagate sparsities.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_partition(casadi_int
-iind, casadi_int oind, Sparsity &D1, Sparsity &D2, bool compact, bool
-symmetric, bool allow_forward, bool allow_reverse) const  "
-
-[INTERNAL]  Get the unidirectional or bidirectional partition.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_max_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Get largest input value.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::index_in(const std::string
-&name) const  "
-
-[INTERNAL]  Get input scheme index by name.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_min_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Get smallest input value.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
-
-[INTERNAL]  Check if output arguments have correct length and dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
-
-[INTERNAL]  Replace 0-by-0 reverse seeds.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::slice(const std::string
-&name, const std::vector< casadi_int > &order_in, const std::vector<
-casadi_int > &order_out, const Dict &opts) const  "
-
-[INTERNAL]  returns a new function with a selection of inputs/outputs of the
-original
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::is_a(const std::string
-&type, bool recursive) const  "
-
-[INTERNAL]  Check if the function is of a particular type.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_jac() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_jac(const std::string
-&name, const std::vector< std::string > &inames, const std::vector<
-std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
-
-[INTERNAL]  Replace 0-by-0 forward seeds.
-
-";
-
-%feature("docstring")  casadi::Map::get_default_in(casadi_int ind) const  "
-
-[INTERNAL]  Get default input value.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::print_options(std::ostream
-&stream) const  "
-
-[INTERNAL]  Print list of options.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_derivative() const  "
-
-[INTERNAL]  Can derivatives be calculated in any way?
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::free_mem(void *mem) const  "
-
-[INTERNAL]  Free memory block.
-
-";
-
-%feature("docstring")  casadi::SharedObjectInternal::getCount() const  "
-
-[INTERNAL]  Get the reference count.
-
-";
-
-%feature("docstring")  casadi::Map::eval_sx(const SXElem **arg, SXElem
-**res, casadi_int *iw, SXElem *w, void *mem) const  "
-
-[INTERNAL]  evaluate symbolically while also propagating directional
-derivatives
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sprint(char *buf, size_t
-buf_sz, const char *fmt,...) const  "
-
-[INTERNAL]  C-style formatted printing to string.
-
-";
-
-%feature("docstring")  casadi::Map::codegen_declarations(CodeGenerator &g)
-const  "
-
-[INTERNAL]  Generate code for the declarations of the C function.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::alloc_mem() const  "
-
-[INTERNAL]  Create memory block.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
-
-[INTERNAL]  Get the floating point output argument of an atomic operation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::disp_more(std::ostream
-&stream) const  "
-
-[INTERNAL]  Print more.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size2_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::has_free() const  "
-
-[INTERNAL]  Does the function have free variables.
-
-";
-
-%feature("docstring")  casadi::Map::get_reverse(casadi_int nadj, const
-std::string &name, const std::vector< std::string > &inames, const
-std::vector< std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Generate a function that calculates nadj adjoint derivatives.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::jacobian() const  "
-
-[INTERNAL]  Return Jacobian of all input elements with respect to all output
-elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_in(casadi_int ind) const
-"
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_in() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_w() const  "
-
-[INTERNAL]  Get required length of w field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::codegen_meta(CodeGenerator
-&g) const  "
-
-[INTERNAL]  Generate meta-information allowing a user to evaluate a
-generated function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::setup(void *mem, const
-double **arg, double **res, casadi_int *iw, double *w) const  "
-
-[INTERNAL]  Set the (persistent and temporary) work vectors.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::print(const char *fmt,...)
-const  "
-
-[INTERNAL]  C-style formatted printing during evaluation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::generate_lifted(Function
-&vdef_fcn, Function &vinit_fcn) const  "
-
-[INTERNAL]  Extract the functions needed for the Lifted Newton method.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_in(casadi_int ind) const
-"
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_in() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::uses_output() const  "
-
-[INTERNAL]  Do the derivative functions need nondifferentiated outputs?
-
-";
-
-%feature("docstring")  casadi::Map::has_sprev() const  "
-
-[INTERNAL]  Is the class able to propagate seeds through the algorithm?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_in() const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_reltol() const  "
-
-[INTERNAL]  Get relative tolerance.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::instruction_id(casadi_int
-k) const  "
-
-[INTERNAL]  Get an atomic operation operator index.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::symbolic_output(const
-std::vector< MX > &arg) const  "
-
-[INTERNAL]  Get a vector of symbolic variables corresponding to the outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size1_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_forward(const
-std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
-std::vector< MX > > &fseed, std::vector< std::vector< MX > > &fsens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
-classes.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_forward(const
-std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
-std::vector< SX > > &fseed, std::vector< std::vector< SX > > &fsens, bool
-always_inline, bool never_inline) const  "
-
-[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
-classes.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::generate_dependencies(const
-std::string &fname, const Dict &opts) const  "
-
-[INTERNAL]  Export / Generate C code for the dependency function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::index_out(const std::string
-&name) const  "
-
-[INTERNAL]  Get output scheme index by name.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_function() const  "
-
-[INTERNAL] ";
-
-%feature("docstring")  casadi::FunctionInternal::get_function(const
-std::string &name) const  "
-
-[INTERNAL] ";
-
-%feature("docstring")
-casadi::FunctionInternal::getJacSparsityGen(casadi_int iind, casadi_int
-oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
-
-[INTERNAL]  Get the sparsity pattern, forward mode.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sparsity_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output sparsity.
-
-";
-
-%feature("docstring")  casadi::Map::get_sparsity_in(casadi_int i)  "
-
-[INTERNAL]  Sparsities of function inputs and outputs.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::getJacSparsityHierarchicalSymm(casadi_int iind,
-casadi_int oind) const  "
-
-[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
-structure recognition for symmetric Jacobians
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
-
-[INTERNAL]  Serialize function header.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_free() const  "
-
-[INTERNAL]  Print free variables.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc_iw(size_t sz_iw, bool
-persistent=false) "
-
-[INTERNAL]  Ensure required length of iw field.
-
-";
-
-%feature("docstring")  casadi::Map::get_forward(casadi_int nfwd, const
-std::string &name, const std::vector< std::string > &inames, const
-std::vector< std::string > &onames, const Dict &opts) const  "
-
-[INTERNAL]  Generate a function that calculates nfwd forward derivatives.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::getJacSparsityHierarchical(casadi_int iind,
-casadi_int oind) const  "
-
-[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
-structure recognition.
-
-";
-
-%feature("docstring")  casadi::Map::sp_forward(const bvec_t **arg, bvec_t
-**res, casadi_int *iw, bvec_t *w, void *mem) const  "
-
-[INTERNAL]  Propagate sparsity forward.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sx_out() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sparsity_out(casadi_int
-ind) const  "
-
-[INTERNAL]  Input/output sparsity.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::get_abstol() const  "
-
-[INTERNAL]  Get absolute tolerance.
-
-";
-
-%feature("docstring")  casadi::SharedObjectInternal::weak() "
-
-[INTERNAL]  Get a weak reference to the object.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Check if input arguments have correct length and dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::ad_weight() const  "
-
-[INTERNAL]  Weighting factor for chosing forward/reverse mode.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Replace 0-by-0 inputs.
-
-";
-
-%feature("docstring")  casadi::Map::get_n_in()  "
-
-[INTERNAL]  Number of function inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::definition() const  "
-
-[INTERNAL]  Get function signature: name:(inputs)->(outputs)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::signature(const std::string
-&fname) const  "
-
-[INTERNAL]  Code generate the function.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::getJacSparsity(casadi_int
-iind, casadi_int oind, bool symmetric) const  "
-
-[INTERNAL]  Generate the sparsity of a Jacobian block.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::eval_dm(const std::vector<
-DM > &arg) const  "
-
-[INTERNAL]  Evaluate with DM matrices.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
-
-[INTERNAL]  Print dimensions of inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::n_instructions() const  "
-
-[INTERNAL]  Get the number of atomic operations.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::codegen_decref(CodeGenerator &g) const  "
-
-[INTERNAL]  Codegen decref for dependencies.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::alloc(const Function &f,
-bool persistent=false) "
-
-[INTERNAL]  Ensure work vectors long enough to evaluate function.
 
 ";
 
@@ -46453,253 +45550,17 @@ bool persistent=false) "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::get_options() const  "
+%feature("docstring")  casadi::FunctionInternal::jac() const  "
 
-[INTERNAL]  Options.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call(const std::vector< M >
-&arg, std::vector< M > &res, bool always_inline, bool never_inline) const  "
-
-[INTERNAL]   Call a function, templated.
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
 
 ";
 
-%feature("docstring")  casadi::Map::info() const  "
+%feature("docstring")  casadi::FunctionInternal::print_option(const
+std::string &name, std::ostream &stream) const  "
 
-[INTERNAL]  Obtain information about node
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::size2_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Input/output dimensions.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
-
-[INTERNAL]   Call a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
-
-[INTERNAL]   Call a function, overloaded.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Check if input arguments that needs to be replaced.
-
-";
-
-%feature("docstring")  casadi::Map::get_name_out(casadi_int i)  "
-
-[INTERNAL]  Names of function input and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_in() const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::numel_in(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output elements.
-
-";
-
-%feature("docstring")  casadi::Map::get_n_out()  "
-
-[INTERNAL]  Number of function inputs and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
-
-[INTERNAL]  Check if output arguments that needs to be replaced.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::getAdaptorSolverName()
-const  "
-
-[INTERNAL]  Obtain solver name from Adaptor.
-
-";
-
-%feature("docstring")  casadi::Map::has_forward(casadi_int nfwd) const  "
-
-[INTERNAL]  Generate a function that calculates nfwd forward derivatives.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::which_depends(const
-std::string &s_in, const std::vector< std::string > &s_out, casadi_int
-order, bool tr=false) const  "
-
-[INTERNAL]  Which variables enter with some order.
-
-Parameters:
------------
-
-s_in:   Input name
-
-s_out:   Output name(s)
-
-order:  Only 1 (linear) and 2 (nonlinear) allowed
-
-tr:  Flip the relationship. Return which expressions contain the variables
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::sz_res() const  "
-
-[INTERNAL]  Get required length of res field.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::forward(casadi_int nfwd)
-const  "
-
-[INTERNAL]  Return function that calculates forward derivatives
-forward(nfwd) returns a cached instance if available, and calls  Function
-get_forward(casadi_int nfwd) if no cached version is available.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
-
-[INTERNAL]  Codegen incref for dependencies.
-
-";
-
-%feature("docstring")
-casadi::FunctionInternal::instruction_output(casadi_int k) const  "
-
-[INTERNAL]  Get the (integer) output argument of an atomic operation.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mx_out() const  "
-
-[INTERNAL]  Get function input(s) and output(s)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::reverse(casadi_int nadj)
-const  "
-
-[INTERNAL]  Return function that calculates adjoint derivatives
-reverse(nadj) returns a cached instance if available, and calls  Function
-get_reverse(casadi_int nadj) if no cached version is available.
-
-";
-
-%feature("docstring")  casadi::Map::has_reverse(casadi_int nadj) const  "
-
-[INTERNAL]  Generate a function that calculates nadj adjoint derivatives.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::init_mem(void *mem) const  "
-
-[INTERNAL]  Initalize memory block.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_out() const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::nnz_out(casadi_int ind)
-const  "
-
-[INTERNAL]  Number of input/output nonzeros.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::free_mx() const  "
-
-[INTERNAL]  Get free variables ( MX)
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::oracle() const  "
-
-[INTERNAL]  Get oracle.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::memory(casadi_int ind) const
-"
-
-[INTERNAL]  Memory objects.
-
-";
-
-%feature("docstring")  casadi::Map::has_spfwd() const  "
-
-[INTERNAL]  Is the class able to propagate seeds through the algorithm?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::self() const  "
-
-[INTERNAL]  Get a public class instance.
-
-";
-
-%feature("docstring")  casadi::Map::get_name_in(casadi_int i)  "
-
-[INTERNAL]  Names of function input and outputs.
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::mapsum_mx(const
-std::vector< MX > &arg, const std::string &parallelization) "
-
-[INTERNAL]  Parallel evaluation.
-
-";
-
-%feature("docstring")  casadi::Map::has_codegen() const  "
-
-[INTERNAL]  Is codegen supported?
-
-";
-
-%feature("docstring")  casadi::FunctionInternal::n_nodes() const  "
-
-[INTERNAL]  Number of nodes in the algorithm.
-
-";
-
-%feature("docstring")  casadi::ProtoFunction::clear_mem() "
-
-[INTERNAL]  Clear all memory (called from destructor)
+[INTERNAL]  Print all information there is to know about a certain option.
 
 ";
 
@@ -46713,43 +45574,159 @@ std::vector< MX > &arg, const std::string &parallelization) "
 in the Symbolic Toolbox for Matlab but instead creating a CasADi symbolic
 primitive.
 
-*/ %feature("docstring")  casadi::Matrix< T >::print_scalar(std::ostream
+*/ %feature("docstring")  casadi::MatrixCommon::taylor(const MatrixCommon
+&ex, const MatrixCommon &x, const MatrixCommon &a, casadi_int order=1) "
+
+[INTERNAL]  univariate Taylor series expansion
+
+Calculate the Taylor expansion of expression 'ex' up to order 'order' with
+respect to variable 'x' around the point 'a'
+
+$(x)=f(a)+f'(a)(x-a)+f''(a)\\\\frac
+{(x-a)^2}{2!}+f'''(a)\\\\frac{(x-a)^3}{3!}+\\\\ldots$
+
+Example usage:
+
+::
+
+>>   x
+
+
+
+";
+
+%feature("docstring") casadi::casadi_taylor "
+
+univariate Taylor series expansion
+
+Calculate the Taylor expansion of expression 'ex' up to order 'order' with
+respect to variable 'x' around the point 'a'
+
+$(x)=f(a)+f'(a)(x-a)+f''(a)\\\\frac
+{(x-a)^2}{2!}+f'''(a)\\\\frac{(x-a)^3}{3!}+\\\\ldots$
+
+Example usage:
+
+::
+
+>>   x
+
+
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_taylor "
+
+univariate Taylor series expansion
+
+Calculate the Taylor expansion of expression 'ex' up to order 'order' with
+respect to variable 'x' around the point 'a'
+
+$(x)=f(a)+f'(a)(x-a)+f''(a)\\\\frac
+{(x-a)^2}{2!}+f'''(a)\\\\frac{(x-a)^3}{3!}+\\\\ldots$
+
+Example usage:
+
+::
+
+>>   x
+
+
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::taylor(const MatrixCommon &ex,
+const MatrixCommon &x) "
+
+[INTERNAL]  univariate Taylor series expansion
+
+Calculate the Taylor expansion of expression 'ex' up to order 'order' with
+respect to variable 'x' around the point 'a'
+
+$(x)=f(a)+f'(a)(x-a)+f''(a)\\\\frac
+{(x-a)^2}{2!}+f'''(a)\\\\frac{(x-a)^3}{3!}+\\\\ldots$
+
+Example usage:
+
+::
+
+>>   x
+
+
+
+";
+
+%feature("docstring") casadi::casadi_taylor "
+
+univariate Taylor series expansion
+
+Calculate the Taylor expansion of expression 'ex' up to order 'order' with
+respect to variable 'x' around the point 'a'
+
+$(x)=f(a)+f'(a)(x-a)+f''(a)\\\\frac
+{(x-a)^2}{2!}+f'''(a)\\\\frac{(x-a)^3}{3!}+\\\\ldots$
+
+Example usage:
+
+::
+
+>>   x
+
+
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_taylor "
+
+univariate Taylor series expansion
+
+Calculate the Taylor expansion of expression 'ex' up to order 'order' with
+respect to variable 'x' around the point 'a'
+
+$(x)=f(a)+f'(a)(x-a)+f''(a)\\\\frac
+{(x-a)^2}{2!}+f'''(a)\\\\frac{(x-a)^3}{3!}+\\\\ldots$
+
+Example usage:
+
+::
+
+>>   x
+
+
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::print_scalar(std::ostream
 &stream) const  "
 
 Print scalar.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::nnz_upper() const "
+%feature("docstring")  casadi::GenericMatrixCommon::nnz_upper() const "
 
 Get the number of non-zeros in the upper triangular half.
 
 ";
 
-%feature("docstring")  minor(const Matrix< Scalar > &x, casadi_int i,
-casadi_int j) "
-
-Get the (i,j) minor matrix.
-
-";
-
-%feature("docstring")  expand(const Matrix< Scalar > &ex, Matrix< Scalar >
-&weights, Matrix< Scalar > &terms) "
-
-Expand the expression as a weighted sum (with constant weights)
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::is_constant() const  "
+%feature("docstring")  casadi::MatrixCommon::is_constant() const  "
 
 Check if the matrix is constant (note that false negative answers are
 possible)
 
 ";
 
-%feature("docstring")  mtaylor(const Matrix< Scalar > &ex, const Matrix<
-Scalar > &x, const Matrix< Scalar > &a, casadi_int order=1) "
+%feature("docstring")  casadi::MatrixCommon::mtaylor(const MatrixCommon &ex,
+const MatrixCommon &x, const MatrixCommon &a, casadi_int order=1) "
+
+[INTERNAL]  multivariate Taylor series expansion
+
+Do Taylor expansions until the aggregated order of a term is equal to
+'order'. The aggregated order of $x^n y^m$ equals $n+m$.
+
+";
+
+%feature("docstring") casadi::casadi_mtaylor "
 
 multivariate Taylor series expansion
 
@@ -46758,9 +45735,36 @@ Do Taylor expansions until the aggregated order of a term is equal to
 
 ";
 
-%feature("docstring")  mtaylor(const Matrix< Scalar > &ex, const Matrix<
-Scalar > &x, const Matrix< Scalar > &a, casadi_int order, const std::vector<
-casadi_int > &order_contributions) "
+%feature("docstring")  casadi::MatrixCommon::casadi_mtaylor "
+
+multivariate Taylor series expansion
+
+Do Taylor expansions until the aggregated order of a term is equal to
+'order'. The aggregated order of $x^n y^m$ equals $n+m$.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::mtaylor(const MatrixCommon &ex,
+const MatrixCommon &x, const MatrixCommon &a, casadi_int order, const
+std::vector< casadi_int > &order_contributions) "
+
+[INTERNAL]  multivariate Taylor series expansion
+
+Do Taylor expansions until the aggregated order of a term is equal to
+'order'. The aggregated order of $x^n y^m$ equals $n+m$.
+
+The argument order_contributions can denote how match each variable
+contributes to the aggregated order. If x=[x, y] and order_contributions=[1,
+2], then the aggregated order of $x^n y^m$ equals $1n+2m$.
+
+Example usage
+
+$ \\\\sin(b+a)+\\\\cos(b+a)(x-a)+\\\\cos(b+a)(y-b) $ $ y+x-(x^3+3y x^2+3 y^2
+x+y^3)/6 $ $ (-3 x^2 y-x^3)/6+y+x $
+
+";
+
+%feature("docstring") casadi::casadi_mtaylor "
 
 multivariate Taylor series expansion
 
@@ -46778,135 +45782,142 @@ x+y^3)/6 $ $ (-3 x^2 y-x^3)/6+y+x $
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::get_elements() const  "
+%feature("docstring")  casadi::MatrixCommon::casadi_mtaylor "
+
+multivariate Taylor series expansion
+
+Do Taylor expansions until the aggregated order of a term is equal to
+'order'. The aggregated order of $x^n y^m$ equals $n+m$.
+
+The argument order_contributions can denote how match each variable
+contributes to the aggregated order. If x=[x, y] and order_contributions=[1,
+2], then the aggregated order of $x^n y^m$ equals $1n+2m$.
+
+Example usage
+
+$ \\\\sin(b+a)+\\\\cos(b+a)(x-a)+\\\\cos(b+a)(y-b) $ $ y+x-(x^3+3y x^2+3 y^2
+x+y^3)/6 $ $ (-3 x^2 y-x^3)/6+y+x $
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::get_elements() const  "
 
 Get all elements.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::set(const Matrix< Scalar > &m,
-bool ind1, const Slice &rr) "
+%feature("docstring")  casadi::MatrixCommon::set(const MatrixCommon &m, bool
+ind1, const Slice &rr) "
 
 Set a submatrix, single argument
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::set(const Matrix< Scalar > &m,
-bool ind1, const Matrix< casadi_int > &rr) "
+%feature("docstring")  casadi::MatrixCommon::set(const MatrixCommon &m, bool
+ind1, const MatrixCommon &rr) "
 
 Set a submatrix, single argument
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::set(const Matrix< Scalar > &m,
-bool ind1, const Sparsity &sp) "
+%feature("docstring")  casadi::MatrixCommon::set(const MatrixCommon &m, bool
+ind1, const Sparsity &sp) "
 
 Set a submatrix, single argument
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::set(const Matrix< Scalar > &m,
-bool ind1, const Slice &rr, const Slice &cc) "
+%feature("docstring")  casadi::MatrixCommon::set(const MatrixCommon &m, bool
+ind1, const Slice &rr, const Slice &cc) "
 
 Set a submatrix, two arguments
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::set(const Matrix< Scalar > &m,
-bool ind1, const Slice &rr, const Matrix< casadi_int > &cc) "
+%feature("docstring")  casadi::MatrixCommon::set(const MatrixCommon &m, bool
+ind1, const Slice &rr, const MatrixCommon &cc) "
 
 Set a submatrix, two arguments
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::set(const Matrix< Scalar > &m,
-bool ind1, const Matrix< casadi_int > &rr, const Slice &cc) "
+%feature("docstring")  casadi::MatrixCommon::set(const MatrixCommon &m, bool
+ind1, const MatrixCommon &rr, const Slice &cc) "
 
 Set a submatrix, two arguments
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::set(const Matrix< Scalar > &m,
-bool ind1, const Matrix< casadi_int > &rr, const Matrix< casadi_int > &cc) "
+%feature("docstring")  casadi::MatrixCommon::set(const MatrixCommon &m, bool
+ind1, const MatrixCommon &rr, const MatrixCommon &cc) "
 
 Set a submatrix, two arguments
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::nnz()
-const "
+%feature("docstring")  casadi::GenericMatrixCommon::nnz() const "
 
 Get the number of (structural) non-zero elements.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::remove(const std::vector<
+%feature("docstring")  casadi::MatrixCommon::remove(const std::vector<
 casadi_int > &rr, const std::vector< casadi_int > &cc) "
 
 Remove columns and rows Remove/delete rows and/or columns of a matrix.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::get(Matrix< Scalar > &output_m,
+%feature("docstring")  casadi::MatrixCommon::get(MatrixCommon &output_m,
 bool ind1, const Slice &rr) const  "
 
 Get a submatrix, single argument
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::get(Matrix< Scalar > &output_m,
-bool ind1, const Matrix< casadi_int > &rr) const  "
+%feature("docstring")  casadi::MatrixCommon::get(MatrixCommon &output_m,
+bool ind1, const MatrixCommon &rr) const  "
 
 Get a submatrix, single argument
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::get(Matrix< Scalar > &output_m,
+%feature("docstring")  casadi::MatrixCommon::get(MatrixCommon &output_m,
 bool ind1, const Sparsity &sp) const  "
 
 Get a submatrix, single argument
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::get(Matrix< Scalar > &output_m,
+%feature("docstring")  casadi::MatrixCommon::get(MatrixCommon &output_m,
 bool ind1, const Slice &rr, const Slice &cc) const  "
 
 Get a submatrix, two arguments
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::get(Matrix< Scalar > &output_m,
-bool ind1, const Slice &rr, const Matrix< casadi_int > &cc) const  "
+%feature("docstring")  casadi::MatrixCommon::get(MatrixCommon &output_m,
+bool ind1, const Slice &rr, const MatrixCommon &cc) const  "
 
 Get a submatrix, two arguments
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::get(Matrix< Scalar > &output_m,
-bool ind1, const Matrix< casadi_int > &rr, const Slice &cc) const  "
+%feature("docstring")  casadi::MatrixCommon::get(MatrixCommon &output_m,
+bool ind1, const MatrixCommon &rr, const Slice &cc) const  "
 
 Get a submatrix, two arguments
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::get(Matrix< Scalar > &output_m,
-bool ind1, const Matrix< casadi_int > &rr, const Matrix< casadi_int > &cc)
-const  "
+%feature("docstring")  casadi::MatrixCommon::get(MatrixCommon &output_m,
+bool ind1, const MatrixCommon &rr, const MatrixCommon &cc) const  "
 
 Get a submatrix, two arguments
 
 ";
 
-%feature("docstring")  triangle(const Matrix< Scalar > &x) "
-
-triangle function
-
-\\\\[ \\\\begin {cases} \\\\Lambda(x) = 0 & |x| >= 1 \\\\\\\\ \\\\Lambda(x)
-= 1-|x| & |x| < 1 \\\\end {cases} \\\\]
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::export_code(const std::string
+%feature("docstring")  casadi::MatrixCommon::export_code(const std::string
 &lang, std::ostream &stream=casadi::uout(), const Dict &options=Dict())
 const  "
 
@@ -46929,51 +45940,37 @@ lang: only 'matlab' supported for now
 
 ";
 
-%feature("docstring")  adj(const Matrix< Scalar > &A) "
-
-Matrix adjoint.
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::triplet(const std::vector<
-casadi_int > &row, const std::vector< casadi_int > &col, const Matrix<
-Scalar > &d) "
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::triplet(const std::vector<
-casadi_int > &row, const std::vector< casadi_int > &col, const Matrix<
-Scalar > &d, casadi_int nrow, casadi_int ncol) "
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::triplet(const std::vector<
-casadi_int > &row, const std::vector< casadi_int > &col, const Matrix<
-Scalar > &d, const std::pair< casadi_int, casadi_int > &rc) "
-
-";
-
-%feature("docstring")  qr(const Matrix< Scalar > &A, Matrix< Scalar > &Q,
-Matrix< Scalar > &R) "
-
-QR factorization using the modified Gram-Schmidt algorithm More stable than
-the classical Gram-Schmidt, but may break down if the rows of A are nearly
-linearly dependent See J. Demmel: Applied Numerical Linear Algebra
-(algorithm 3.1.). Note that in SWIG, Q and R are returned by value.
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::set_width(casadi_int width) "
+%feature("docstring")  casadi::MatrixCommon::set_width(casadi_int width) "
 
 Set the 'precision, width & scientific' used in printing and serializing to
 streams.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::sanity_check(bool
+%feature("docstring")  casadi::MatrixCommon::sanity_check(bool
 complete=false) const  "
 
 [DEPRECATED] Correctness is checked during construction
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::rand(casadi_int nrow=1,
+casadi_int ncol=1) "
+
+Create a matrix with uniformly distributed random numbers.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::rand(const Sparsity &sp) "
+
+Create a matrix with uniformly distributed random numbers.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::rand(const std::pair<
+casadi_int, casadi_int > &rc) "
+
+Create a matrix with uniformly distributed random numbers.
 
 ";
 
@@ -46985,23 +45982,28 @@ interdependencies.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::unary(casadi_int op, const
-Matrix< Scalar > &x) "
+%feature("docstring")  casadi::MatrixCommon::chol(const MatrixCommon &A) "
 
-[INTERNAL]  Create nodes by their ID.
-
-";
-
-%feature("docstring")  qr_solve(const Matrix< Scalar > &b, const Matrix<
-Scalar > &v, const Matrix< Scalar > &r, const Matrix< Scalar > &beta, const
-std::vector< casadi_int > &prinv, const std::vector< casadi_int > &pc, bool
-tr=false) "
-
-Solve using a sparse QR factorization.
+[INTERNAL]  Obtain a Cholesky factorisation of a matrix Performs and LDL
+transformation [L,D] = ldl(A) and returns diag(sqrt(D))*L'.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::set_precision(casadi_int
+%feature("docstring") casadi::casadi_chol "
+
+Obtain a Cholesky factorisation of a matrix Performs and LDL transformation
+[L,D] = ldl(A) and returns diag(sqrt(D))*L'.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_chol "
+
+Obtain a Cholesky factorisation of a matrix Performs and LDL transformation
+[L,D] = ldl(A) and returns diag(sqrt(D))*L'.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::set_precision(casadi_int
 precision) "
 
 Set the 'precision, width & scientific' used in printing and serializing to
@@ -47009,36 +46011,26 @@ streams.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::is_tril()
-const "
+%feature("docstring")  casadi::GenericMatrixCommon::is_tril() const "
 
 Check if the matrix is lower triangular.
 
 ";
 
-%feature("docstring")  norm_inf_mul(const Matrix< Scalar > &x, const Matrix<
-Scalar > &y) "
-
-Inf-norm of a Matrix-Matrix product.
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::is_integer() const  "
+%feature("docstring")  casadi::MatrixCommon::is_integer() const  "
 
 Check if the matrix is integer-valued (note that false negative answers are
 possible)
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::numel()
-const "
+%feature("docstring")  casadi::GenericMatrixCommon::numel() const "
 
 Get the number of elements.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::is_triu()
-const "
+%feature("docstring")  casadi::GenericMatrixCommon::is_triu() const "
 
 Check if the matrix is upper triangular.
 
@@ -47050,41 +46042,34 @@ Check if the matrix is upper triangular.
 
 ";
 
-%feature("docstring")  all(const Matrix< Scalar > &x) "
-
-Returns true only if every element in the matrix is true.
-
-";
-
 %feature("docstring")  casadi::SX::is_regular() const  "
 
 [INTERNAL]  Checks if expression does not contain NaN or Inf.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::set_nz(const Matrix< Scalar >
-&m, bool ind1, const Slice &k) "
+%feature("docstring")  casadi::MatrixCommon::set_nz(const MatrixCommon &m,
+bool ind1, const Slice &k) "
 
 Set a set of nonzeros
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::set_nz(const Matrix< Scalar >
-&m, bool ind1, const Matrix< casadi_int > &k) "
+%feature("docstring")  casadi::MatrixCommon::set_nz(const MatrixCommon &m,
+bool ind1, const MatrixCommon &k) "
 
 Set a set of nonzeros
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::nnz_diag() const "
+%feature("docstring")  casadi::GenericMatrixCommon::nnz_diag() const "
 
 Get get the number of non-zeros on the diagonal.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::gradient(const Matrix< Scalar > &ex, const Matrix< Scalar > &arg) "
+%feature("docstring")  casadi::GenericMatrixCommon::gradient(const
+MatrixCommon &ex, const MatrixCommon &arg) "
 
 Functions called by friend functions defined here
 
@@ -47096,80 +46081,190 @@ Functions called by friend functions defined here
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::sparsity() const "
+%feature("docstring")  casadi::MatrixCommon::pw_const(const MatrixCommon &t,
+const MatrixCommon &tval, const MatrixCommon &val) "
+
+[INTERNAL]  Create a piecewise constant function Create a piecewise constant
+function with n=val.size() intervals.
+
+Inputs:
+
+Parameters:
+-----------
+
+t:  a scalar variable (e.g. time)
+
+tval:  vector with the discrete values of t at the interval transitions
+(length n-1)
+
+val:  vector with the value of the function for each interval (length n)
+
+";
+
+%feature("docstring") casadi::casadi_pw_const "
+
+Create a piecewise constant function Create a piecewise constant function
+with n=val.size() intervals.
+
+Inputs:
+
+Parameters:
+-----------
+
+t:  a scalar variable (e.g. time)
+
+tval:  vector with the discrete values of t at the interval transitions
+(length n-1)
+
+val:  vector with the value of the function for each interval (length n)
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_pw_const "
+
+Create a piecewise constant function Create a piecewise constant function
+with n=val.size() intervals.
+
+Inputs:
+
+Parameters:
+-----------
+
+t:  a scalar variable (e.g. time)
+
+tval:  vector with the discrete values of t at the interval transitions
+(length n-1)
+
+val:  vector with the value of the function for each interval (length n)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::sparsity() const "
 
 Get the sparsity pattern.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::get_row()
-const "
+%feature("docstring") casadi::casadi_sparsity "
 
-Get the sparsity pattern. See the Sparsity class for details.
+Get the sparsity pattern.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::get_sparsity() const  "
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_sparsity "
+
+Get the sparsity pattern.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::ldl(const MatrixCommon &A,
+MatrixCommon &D, MatrixCommon &LT, std::vector< casadi_int > &p, bool
+amd=true) "
+
+[INTERNAL]  Sparse LDL^T factorization Returns D and the strictly upper
+triangular entries of L^T I.e. ones on the diagonal are ignored. Only
+guarenteed to work for positive definite matrices.
+
+";
+
+%feature("docstring") casadi::casadi_ldl "
+
+Sparse LDL^T factorization Returns D and the strictly upper triangular
+entries of L^T I.e. ones on the diagonal are ignored. Only guarenteed to
+work for positive definite matrices.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_ldl "
+
+Sparse LDL^T factorization Returns D and the strictly upper triangular
+entries of L^T I.e. ones on the diagonal are ignored. Only guarenteed to
+work for positive definite matrices.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::get_sparsity() const  "
 
 Get an owning reference to the sparsity pattern.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::bilin(const Matrix< Scalar > &A, const Matrix< Scalar > &x, const Matrix<
-Scalar > &y) "
+%feature("docstring")  casadi::GenericMatrixCommon::bilin(const MatrixCommon
+&A, const MatrixCommon &x, const MatrixCommon &y) "
 
 Calculate bilinear form x^T A y.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::jtimes(const Matrix< Scalar > &ex, const Matrix< Scalar > &arg, const
-Matrix< Scalar > &v, bool tr=false) "
+%feature("docstring") casadi::casadi_bilin "
+
+Calculate bilinear form x^T A y.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_bilin "
+
+Calculate bilinear form x^T A y.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::expand(const MatrixCommon &ex,
+MatrixCommon &weights, MatrixCommon &terms) "
+
+[INTERNAL]  Expand the expression as a weighted sum (with constant weights)
+
+";
+
+%feature("docstring") casadi::casadi_expand "
+
+Expand the expression as a weighted sum (with constant weights)
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_expand "
+
+Expand the expression as a weighted sum (with constant weights)
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::mpower(const
+MatrixCommon &x, const MatrixCommon &y) "
 
 Functions called by friend functions defined here
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::dim(bool
-with_nz=false) const "
+%feature("docstring")  casadi::GenericMatrixCommon::dim(bool with_nz=false)
+const "
 
 Get string representation of dimensions. The representation is e.g. \"4x5\"
 or \"4x5,10nz\".
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::get_nz(Matrix< Scalar >
-&output_m, bool ind1, const Slice &k) const  "
+%feature("docstring")  casadi::MatrixCommon::get_nz(MatrixCommon &output_m,
+bool ind1, const Slice &k) const  "
 
 Get a set of nonzeros
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::get_nz(Matrix< Scalar >
-&output_m, bool ind1, const Matrix< casadi_int > &k) const  "
+%feature("docstring")  casadi::MatrixCommon::get_nz(MatrixCommon &output_m,
+bool ind1, const MatrixCommon &k) const  "
 
 Get a set of nonzeros
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::columns()
-const "
+%feature("docstring")  casadi::GenericMatrixCommon::columns() const "
 
 Get the number of columns, Octave-style syntax.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::T() const  "
+%feature("docstring")  casadi::MatrixCommon::T() const  "
 
 Transpose the matrix.
-
-";
-
-%feature("docstring")  any(const Matrix< Scalar > &x) "
-
-Returns true only if any element in the matrix is true.
 
 ";
 
@@ -47179,35 +46274,90 @@ Returns true only if any element in the matrix is true.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::clear() "
+%feature("docstring")  casadi::MatrixCommon::norm_inf_mul(const MatrixCommon
+&x, const MatrixCommon &y) "
+
+[INTERNAL]  Inf-norm of a Matrix-Matrix product.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::rows()
-const "
+%feature("docstring") casadi::casadi_norm_inf_mul "
+
+Inf-norm of a Matrix-Matrix product.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_norm_inf_mul "
+
+Inf-norm of a Matrix-Matrix product.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::rows() const "
 
 Get the number of rows, Octave-style syntax.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::is_minus_one() const  "
+%feature("docstring")  casadi::MatrixCommon::is_minus_one() const  "
 
 check if the matrix is -1 (note that false negative answers are possible)
 
 ";
 
-%feature("docstring")  poly_roots(const Matrix< Scalar > &p) "
+%feature("docstring")  casadi::MatrixCommon::eig_symbolic(const MatrixCommon
+&m) "
 
-Attempts to find the roots of a polynomial.
-
-This will only work for polynomials up to order 3 It is assumed that the
-roots are real.
+[INTERNAL]  Attempts to find the eigenvalues of a symbolic matrix This will
+only work for up to 3x3 matrices.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::info() const  "
+%feature("docstring") casadi::casadi_eig_symbolic "
+
+Attempts to find the eigenvalues of a symbolic matrix This will only work
+for up to 3x3 matrices.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_eig_symbolic "
+
+Attempts to find the eigenvalues of a symbolic matrix This will only work
+for up to 3x3 matrices.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::info() const  "
 
 Obtain information about sparsity
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::triangle(const MatrixCommon &x)
+"
+
+[INTERNAL]  triangle function
+
+\\\\[ \\\\begin {cases} \\\\Lambda(x) = 0 & |x| >= 1 \\\\\\\\ \\\\Lambda(x)
+= 1-|x| & |x| < 1 \\\\end {cases} \\\\]
+
+";
+
+%feature("docstring") casadi::casadi_triangle "
+
+triangle function
+
+\\\\[ \\\\begin {cases} \\\\Lambda(x) = 0 & |x| >= 1 \\\\\\\\ \\\\Lambda(x)
+= 1-|x| & |x| < 1 \\\\end {cases} \\\\]
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_triangle "
+
+triangle function
+
+\\\\[ \\\\begin {cases} \\\\Lambda(x) = 0 & |x| >= 1 \\\\\\\\ \\\\Lambda(x)
+= 1-|x| & |x| < 1 \\\\end {cases} \\\\]
 
 ";
 
@@ -47218,44 +46368,26 @@ if symbolic scalar.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::is_dense() const "
+%feature("docstring")  casadi::GenericMatrixCommon::is_dense() const "
 
 Check if the matrix expression is dense.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::print_sparse(std::ostream
+%feature("docstring")  casadi::MatrixCommon::print_sparse(std::ostream
 &stream, bool truncate=true) const  "
 
 Print sparse matrix style.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::nnz_lower() const "
+%feature("docstring")  casadi::GenericMatrixCommon::nnz_lower() const "
 
 Get the number of non-zeros in the lower triangular half.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::reserve(casadi_int nnz) "
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::reserve(casadi_int nnz,
-casadi_int ncol) "
-
-";
-
-%feature("docstring")  eig_symbolic(const Matrix< Scalar > &m) "
-
-Attempts to find the eigenvalues of a symbolic matrix This will only work
-for up to 3x3 matrices.
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::erase(const std::vector<
+%feature("docstring")  casadi::MatrixCommon::erase(const std::vector<
 casadi_int > &rr, const std::vector< casadi_int > &cc, bool ind1=false) "
 
 Erase a submatrix (leaving structural zeros in its place) Erase rows and/or
@@ -47263,7 +46395,7 @@ columns of a matrix.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::erase(const std::vector<
+%feature("docstring")  casadi::MatrixCommon::erase(const std::vector<
 casadi_int > &rr, bool ind1=false) "
 
 Erase a submatrix (leaving structural zeros in its place) Erase elements of
@@ -47271,21 +46403,39 @@ a matrix.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::inf(const Sparsity &sp) "
+%feature("docstring")  casadi::MatrixCommon::any(const MatrixCommon &x) "
+
+[INTERNAL]  Returns true only if any element in the matrix is true.
+
+";
+
+%feature("docstring") casadi::casadi_any "
+
+Returns true only if any element in the matrix is true.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_any "
+
+Returns true only if any element in the matrix is true.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::inf(const Sparsity &sp) "
 
 create a matrix with all inf
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::inf(casadi_int nrow=1,
+%feature("docstring")  casadi::MatrixCommon::inf(casadi_int nrow=1,
 casadi_int ncol=1) "
 
 create a matrix with all inf
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::inf(const std::pair< casadi_int,
-casadi_int > &rc) "
+%feature("docstring")  casadi::MatrixCommon::inf(const std::pair<
+casadi_int, casadi_int > &rc) "
 
 create a matrix with all inf
 
@@ -47299,120 +46449,183 @@ Only defined if symbolic scalar.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::scalar_matrix(casadi_int op,
-const Matrix< Scalar > &x, const Matrix< Scalar > &y) "
+%feature("docstring")  casadi::MatrixCommon::scalar_matrix(casadi_int op,
+const MatrixCommon &x, const MatrixCommon &y) "
 
 [INTERNAL]  Create nodes by their ID.
 
 ";
 
-%feature("docstring")  ramp(const Matrix< Scalar > &x) "
-
-ramp function
-
-\\\\[ \\\\begin {cases} R(x) = 0 & x <= 1 \\\\\\\\ R(x) = x & x > 1 \\\\\\\\
-\\\\end {cases} \\\\]
-
-Also called: slope function
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::print_vector(std::ostream
+%feature("docstring")  casadi::MatrixCommon::print_vector(std::ostream
 &stream, bool truncate=true) const  "
 
 Print vector-style.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::ones(casadi_int nrow=1, casadi_int ncol=1) "
-
-Create a dense matrix or a matrix with specified sparsity with all entries
-one.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::ones(const Sparsity &sp) "
-
-Create a dense matrix or a matrix with specified sparsity with all entries
-one.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::ones(const std::pair< casadi_int, casadi_int > &rc) "
-
-Create a dense matrix or a matrix with specified sparsity with all entries
-one.
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::resize(casadi_int nrow,
-casadi_int ncol) "
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::rand(casadi_int nrow=1,
+%feature("docstring")  casadi::GenericMatrixCommon::ones(casadi_int nrow=1,
 casadi_int ncol=1) "
 
-Create a matrix with uniformly distributed random numbers.
+Create a dense matrix or a matrix with specified sparsity with all entries
+one.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::rand(const Sparsity &sp) "
+%feature("docstring")  casadi::GenericMatrixCommon::ones(const Sparsity &sp)
+"
 
-Create a matrix with uniformly distributed random numbers.
+Create a dense matrix or a matrix with specified sparsity with all entries
+one.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::rand(const std::pair<
+%feature("docstring")  casadi::GenericMatrixCommon::ones(const std::pair<
 casadi_int, casadi_int > &rc) "
 
-Create a matrix with uniformly distributed random numbers.
+Create a dense matrix or a matrix with specified sparsity with all entries
+one.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::row(casadi_int el) const "
+%feature("docstring")  casadi::MatrixCommon::evalf(const MatrixCommon &expr)
+"
+
+[INTERNAL]  Evaluates the expression numerically.
+
+An error is raised when the expression contains symbols
+
+";
+
+%feature("docstring") casadi::casadi_evalf "
+
+Evaluates the expression numerically.
+
+An error is raised when the expression contains symbols
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_evalf "
+
+Evaluates the expression numerically.
+
+An error is raised when the expression contains symbols
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::has_zeros() const  "
+
+Check if the matrix has any zero entries which are not structural zeros.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::heaviside(const MatrixCommon
+&x) "
+
+[INTERNAL]  Heaviside function.
+
+\\\\[ \\\\begin {cases} H(x) = 0 & x<0 \\\\\\\\ H(x) = 1/2 & x=0 \\\\\\\\
+H(x) = 1 & x>0 \\\\\\\\ \\\\end {cases} \\\\]
+
+";
+
+%feature("docstring") casadi::casadi_heaviside "
+
+Heaviside function.
+
+\\\\[ \\\\begin {cases} H(x) = 0 & x<0 \\\\\\\\ H(x) = 1/2 & x=0 \\\\\\\\
+H(x) = 1 & x>0 \\\\\\\\ \\\\end {cases} \\\\]
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_heaviside "
+
+Heaviside function.
+
+\\\\[ \\\\begin {cases} H(x) = 0 & x<0 \\\\\\\\ H(x) = 1/2 & x=0 \\\\\\\\
+H(x) = 1 & x>0 \\\\\\\\ \\\\end {cases} \\\\]
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::poly_roots(const MatrixCommon
+&p) "
+
+[INTERNAL]  Attempts to find the roots of a polynomial.
+
+This will only work for polynomials up to order 3 It is assumed that the
+roots are real.
+
+";
+
+%feature("docstring") casadi::casadi_poly_roots "
+
+Attempts to find the roots of a polynomial.
+
+This will only work for polynomials up to order 3 It is assumed that the
+roots are real.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_poly_roots "
+
+Attempts to find the roots of a polynomial.
+
+This will only work for polynomials up to order 3 It is assumed that the
+roots are real.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::row(casadi_int el) const
+"
 
 Get the sparsity pattern. See the Sparsity class for details.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::zeros(casadi_int nrow=1, casadi_int ncol=1) "
+%feature("docstring")  casadi::GenericMatrixCommon::zeros(casadi_int nrow=1,
+casadi_int ncol=1) "
 
 Create a dense matrix or a matrix with specified sparsity with all entries
 zero.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::zeros(const Sparsity &sp) "
+%feature("docstring")  casadi::GenericMatrixCommon::zeros(const Sparsity
+&sp) "
 
 Create a dense matrix or a matrix with specified sparsity with all entries
 zero.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::zeros(const std::pair< casadi_int, casadi_int > &rc) "
+%feature("docstring")  casadi::GenericMatrixCommon::zeros(const std::pair<
+casadi_int, casadi_int > &rc) "
 
 Create a dense matrix or a matrix with specified sparsity with all entries
 zero.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::rank1(const Matrix< Scalar > &A, const Matrix< Scalar > &alpha, const
-Matrix< Scalar > &x, const Matrix< Scalar > &y) "
+%feature("docstring")  casadi::GenericMatrixCommon::rank1(const MatrixCommon
+&A, const MatrixCommon &alpha, const MatrixCommon &x, const MatrixCommon &y)
+"
 
 Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
 
 ";
 
-%feature("docstring") casadi::Matrix "
+%feature("docstring") casadi::casadi_rank1 "
+
+Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_rank1 "
+
+Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
+
+";
+
+%feature("docstring") casadi::MatrixCommon "
 
 Sparse matrix class. SX and DM are specializations.
 
@@ -47436,73 +46649,64 @@ if symbolic scalar. Wraps SXElem SXElem::dep(casadi_int ch=0) const.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::sym(const
-std::string &name, casadi_int nrow=1, casadi_int ncol=1) "
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, casadi_int nrow=1, casadi_int ncol=1) "
 
 Create an nrow-by-ncol symbolic primitive.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::sym(const
-std::string &name, const std::pair< casadi_int, casadi_int > &rc) "
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, const std::pair< casadi_int, casadi_int > &rc) "
 
 Construct a symbolic primitive with given dimensions.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::sym(const
-std::string &name, const Sparsity &sp) "
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, const Sparsity &sp) "
 
 Create symbolic primitive with a given sparsity pattern.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::sym(const
-std::string &name, const Sparsity &sp, casadi_int p) "
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, const Sparsity &sp, casadi_int p) "
 
 Create a vector of length p with with matrices with symbolic primitives of
 given sparsity.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::sym(const
-std::string &name, casadi_int nrow, casadi_int ncol, casadi_int p) "
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, casadi_int nrow, casadi_int ncol, casadi_int p) "
 
 Create a vector of length p with nrow-by-ncol symbolic primitives.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::sym(const
-std::string &name, const Sparsity &sp, casadi_int p, casadi_int r) "
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, const Sparsity &sp, casadi_int p, casadi_int r) "
 
 Create a vector of length r of vectors of length p with symbolic primitives
 with given sparsity.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::sym(const
-std::string &name, casadi_int nrow, casadi_int ncol, casadi_int p,
-casadi_int r) "
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
+&name, casadi_int nrow, casadi_int ncol, casadi_int p, casadi_int r) "
 
 Create a vector of length r of vectors of length p with nrow-by-ncol
 symbolic primitives.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::to_file(const std::string
+%feature("docstring")  casadi::MatrixCommon::to_file(const std::string
 &filename, const std::string &format="") const  "
 
 Export numerical matrix to file
 
 Supported formats: .mtx Matrix Market
-
-";
-
-%feature("docstring")  evalf(const Matrix< Scalar > &expr) "
-
-Evaluates the expression numerically.
-
-An error is raised when the expression contains symbols
 
 ";
 
@@ -47514,64 +46718,117 @@ Only defined if symbolic scalar.
 
 ";
 
-%feature("docstring")  sparsify(const Matrix< Scalar > &A, double tol=0) "
+%feature("docstring")  casadi::MatrixCommon::qr(const MatrixCommon &A,
+MatrixCommon &Q, MatrixCommon &R) "
 
-Make a matrix sparse by removing numerical zeros.
-
-";
-
-%feature("docstring")  cofactor(const Matrix< Scalar > &x, casadi_int i,
-casadi_int j) "
-
-Get the (i,j) cofactor matrix.
+[INTERNAL]  QR factorization using the modified Gram-Schmidt algorithm More
+stable than the classical Gram-Schmidt, but may break down if the rows of A
+are nearly linearly dependent See J. Demmel: Applied Numerical Linear
+Algebra (algorithm 3.1.). Note that in SWIG, Q and R are returned by value.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::colind(casadi_int col) const "
+%feature("docstring") casadi::casadi_qr "
+
+QR factorization using the modified Gram-Schmidt algorithm More stable than
+the classical Gram-Schmidt, but may break down if the rows of A are nearly
+linearly dependent See J. Demmel: Applied Numerical Linear Algebra
+(algorithm 3.1.). Note that in SWIG, Q and R are returned by value.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_qr "
+
+QR factorization using the modified Gram-Schmidt algorithm More stable than
+the classical Gram-Schmidt, but may break down if the rows of A are nearly
+linearly dependent See J. Demmel: Applied Numerical Linear Algebra
+(algorithm 3.1.). Note that in SWIG, Q and R are returned by value.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::colind(casadi_int col)
+const "
 
 Get the sparsity pattern. See the Sparsity class for details.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::print_dense(std::ostream
+%feature("docstring")  casadi::MatrixCommon::poly_coeff(const MatrixCommon
+&f, const MatrixCommon &x) "
+
+[INTERNAL]  extracts polynomial coefficients from an expression
+
+Parameters:
+-----------
+
+ex:  Scalar expression that represents a polynomial
+
+x:  Scalar symbol that the polynomial is build up with
+
+";
+
+%feature("docstring") casadi::casadi_poly_coeff "
+
+extracts polynomial coefficients from an expression
+
+Parameters:
+-----------
+
+ex:  Scalar expression that represents a polynomial
+
+x:  Scalar symbol that the polynomial is build up with
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_poly_coeff "
+
+extracts polynomial coefficients from an expression
+
+Parameters:
+-----------
+
+ex:  Scalar expression that represents a polynomial
+
+x:  Scalar symbol that the polynomial is build up with
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::print_dense(std::ostream
 &stream, bool truncate=true) const  "
 
 Print dense matrix-stype.
 
 ";
 
-%feature("docstring")  ldl(const Matrix< Scalar > &A, Matrix< Scalar > &D,
-Matrix< Scalar > &LT, std::vector< casadi_int > &p, bool amd=true) "
+%feature("docstring")  casadi::MatrixCommon::has_nz(casadi_int rr,
+casadi_int cc) const  "
 
-Sparse LDL^T factorization Returns D and the strictly upper triangular
-entries of L^T I.e. ones on the diagonal are ignored. Only guarenteed to
-work for positive definite matrices.
+Returns true if the matrix has a non-zero at location rr, cc.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::matrix_scalar(casadi_int op,
-const Matrix< Scalar > &x, const Matrix< Scalar > &y) "
+%feature("docstring")  casadi::MatrixCommon::matrix_scalar(casadi_int op,
+const MatrixCommon &x, const MatrixCommon &y) "
 
 [INTERNAL]  Create nodes by their ID.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::nan(const Sparsity &sp) "
+%feature("docstring")  casadi::MatrixCommon::nan(const Sparsity &sp) "
 
 create a matrix with all nan
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::nan(casadi_int nrow=1,
+%feature("docstring")  casadi::MatrixCommon::nan(casadi_int nrow=1,
 casadi_int ncol=1) "
 
 create a matrix with all nan
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::nan(const std::pair< casadi_int,
-casadi_int > &rc) "
+%feature("docstring")  casadi::MatrixCommon::nan(const std::pair<
+casadi_int, casadi_int > &rc) "
 
 create a matrix with all nan
 
@@ -47592,262 +46849,39 @@ matrices can return true if all non-zero elements are symbolic.
 
 ";
 
-%feature("docstring")  heaviside(const Matrix< Scalar > &x) "
-
-Heaviside function.
-
-\\\\[ \\\\begin {cases} H(x) = 0 & x<0 \\\\\\\\ H(x) = 1/2 & x=0 \\\\\\\\
-H(x) = 1 & x>0 \\\\\\\\ \\\\end {cases} \\\\]
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::size()
-const "
-
-Get the shape.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::size(casadi_int axis) const "
-
-Get the size along a particular dimensions.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::mpower(const Matrix< Scalar > &x, const Matrix< Scalar > &y) "
-
-Functions called by friend functions defined here
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::size1()
-const "
-
-Get the first dimension (i.e. number of rows)
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::is_one() const  "
-
-check if the matrix is 1 (note that false negative answers are possible)
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::is_row()
-const "
-
-Check if the matrix is a row vector (i.e. size1()==1)
-
-";
-
-%feature("docstring") casadi::Matrix::__nonzero__ "
-
-Returns the truth value of a Matrix.
-
-";
-
-%feature("docstring") casadi::Matrix::__nonzero__ "
-
-[INTERNAL] ";
-
-%feature("docstring")  taylor(const Matrix< Scalar > &ex, const Matrix<
-Scalar > &x, const Matrix< Scalar > &a, casadi_int order=1) "
-
-univariate Taylor series expansion
-
-Calculate the Taylor expansion of expression 'ex' up to order 'order' with
-respect to variable 'x' around the point 'a'
-
-$(x)=f(a)+f'(a)(x-a)+f''(a)\\\\frac
-{(x-a)^2}{2!}+f'''(a)\\\\frac{(x-a)^3}{3!}+\\\\ldots$
-
-Example usage:
-
-::
-
->>   x
-
-
-
-";
-
-%feature("docstring")  taylor(const Matrix< Scalar > &ex, const Matrix<
-Scalar > &x) "
-
-univariate Taylor series expansion
-
-Calculate the Taylor expansion of expression 'ex' up to order 'order' with
-respect to variable 'x' around the point 'a'
-
-$(x)=f(a)+f'(a)(x-a)+f''(a)\\\\frac
-{(x-a)^2}{2!}+f'''(a)\\\\frac{(x-a)^3}{3!}+\\\\ldots$
-
-Example usage:
-
-::
-
->>   x
-
-
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >  >::size2()
-const "
+%feature("docstring")  casadi::GenericMatrixCommon::size2() const "
 
 Get the second dimension (i.e. number of columns)
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::is_square() const "
+%feature("docstring")  casadi::GenericMatrixCommon::size() const "
 
-Check if the matrix expression is square.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::tangent(const Matrix< Scalar > &ex, const Matrix< Scalar > &arg) "
-
-Functions called by friend functions defined here
+Get the shape.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::has_nz(casadi_int rr, casadi_int
-cc) const  "
+%feature("docstring")  casadi::GenericMatrixCommon::size(casadi_int axis)
+const "
 
-Returns true if the matrix has a non-zero at location rr, cc.
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::is_eye() const  "
-
-check if the matrix is an identity matrix (note that false negative answers
-are possible)
+Get the size along a particular dimensions.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::is_empty(bool both=false) const "
+%feature("docstring")  casadi::MatrixCommon::pw_lin(const MatrixCommon &t,
+const MatrixCommon &tval, const MatrixCommon &val) "
 
-Check if the sparsity is empty, i.e. if one of the dimensions is zero (or
-optionally both dimensions)
+[INTERNAL]  t a scalar variable (e.g. time)
 
-";
+Create a piecewise linear function Create a piecewise linear function:
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::linearize(const Matrix< Scalar > &f, const Matrix< Scalar > &x, const
-Matrix< Scalar > &x0) "
-
-Functions called by friend functions defined here
+Inputs: tval vector with the the discrete values of t (monotonically
+increasing) val vector with the corresponding function values (same length
+as tval)
 
 ";
 
-%feature("docstring")  casadi::SX::reset_input() const  "
-
-[INTERNAL]  Reset the marker for an input expression.
-
-";
-
-%feature("docstring")  poly_coeff(const Matrix< Scalar > &f, const Matrix<
-Scalar > &x) "
-
-extracts polynomial coefficients from an expression
-
-Parameters:
------------
-
-ex:  Scalar expression that represents a polynomial
-
-x:  Scalar symbol that the polynomial is build up with
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::printme(const Matrix< Scalar >
-&y) const  "
-
-";
-
-%feature("docstring")  gauss_quadrature(const Matrix< Scalar > &f, const
-Matrix< Scalar > &x, const Matrix< Scalar > &a, const Matrix< Scalar > &b,
-casadi_int order=5) "
-
-Integrate f from a to b using Gaussian quadrature with n points.
-
-";
-
-%feature("docstring")  gauss_quadrature(const Matrix< Scalar > &f, const
-Matrix< Scalar > &x, const Matrix< Scalar > &a, const Matrix< Scalar > &b,
-casadi_int order, const Matrix< Scalar > &w) "
-
-Matrix adjoint.
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::set_scientific(bool scientific)
-"
-
-Set the 'precision, width & scientific' used in printing and serializing to
-streams.
-
-";
-
-%feature("docstring")  qr_sparse(const Matrix< Scalar > &A, Matrix< Scalar >
-&V, Matrix< Scalar > &R, Matrix< Scalar > &beta, std::vector< casadi_int >
-&prinv, std::vector< casadi_int > &pc, bool amd=true) "
-
-Sparse direct QR factorization See T. Davis: Direct Methods for Sparse
-Linear Systems.
-
-";
-
-%feature("docstring")  pw_const(const Matrix< Scalar > &t, const Matrix<
-Scalar > &tval, const Matrix< Scalar > &val) "
-
-Create a piecewise constant function Create a piecewise constant function
-with n=val.size() intervals.
-
-Inputs:
-
-Parameters:
------------
-
-t:  a scalar variable (e.g. time)
-
-tval:  vector with the discrete values of t at the interval transitions
-(length n-1)
-
-val:  vector with the value of the function for each interval (length n)
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::enlarge(casadi_int nrow,
-casadi_int ncol, const std::vector< casadi_int > &rr, const std::vector<
-casadi_int > &cc, bool ind1=false) "
-
-Enlarge matrix Make the matrix larger by inserting empty rows and columns,
-keeping the existing non-zeros.
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::get_str(bool more=false) const
-"
-
-Get string representation.
-
-";
-
-%feature("docstring")  casadi::SX::is_symbolic() const  "
-
-[INTERNAL]  Check if symbolic (Dense) Sparse matrices invariable return
-false.
-
-";
-
-%feature("docstring")  pw_lin(const Matrix< Scalar > &t, const Matrix<
-Scalar > &tval, const Matrix< Scalar > &val) "
+%feature("docstring") casadi::casadi_pw_lin "
 
 t a scalar variable (e.g. time)
 
@@ -47859,84 +46893,258 @@ as tval)
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::is_column() const "
+%feature("docstring")  casadi::MatrixCommon::casadi_pw_lin "
 
-Check if the matrix is a column vector (i.e. size2()==1)
+t a scalar variable (e.g. time)
 
-";
+Create a piecewise linear function Create a piecewise linear function:
 
-%feature("docstring") casadi::Matrix< T >::Matrix() "
-
-constructors
-
-empty 0-by-0 matrix constructor
+Inputs: tval vector with the the discrete values of t (monotonically
+increasing) val vector with the corresponding function values (same length
+as tval)
 
 ";
 
-%feature("docstring") casadi::Matrix< T >::Matrix(const Matrix< Scalar > &m)
-"
+%feature("docstring")  casadi::GenericMatrixCommon::jtimes(const
+MatrixCommon &ex, const MatrixCommon &arg, const MatrixCommon &v, bool
+tr=false) "
 
-Copy constructor.
-
-";
-
-%feature("docstring") casadi::Matrix< T >::Matrix(casadi_int nrow,
-casadi_int ncol) "
-
-Create a sparse matrix with all structural zeros.
+Functions called by friend functions defined here
 
 ";
 
-%feature("docstring") casadi::Matrix< T >::Matrix(const Sparsity &sp) "
+%feature("docstring")  casadi::GenericMatrixCommon::size1() const "
 
-Create a sparse matrix from a sparsity pattern. Same as
-Matrix::ones(sparsity)
-
-";
-
-%feature("docstring") casadi::Matrix< T >::Matrix(const Sparsity &sp, const
-Matrix< Scalar > &d) "
-
-Construct matrix with a given sparsity and nonzeros.
+Get the first dimension (i.e. number of rows)
 
 ";
 
-%feature("docstring") casadi::Matrix< T >::Matrix(double val) "
+%feature("docstring")  casadi::MatrixCommon::is_one() const  "
 
-This constructor enables implicit type conversion from a numeric type.
-
-";
-
-%feature("docstring") casadi::Matrix< T >::Matrix(const std::vector<
-std::vector< double > > &m) "
-
-Dense matrix constructor with data given as vector of vectors.
+check if the matrix is 1 (note that false negative answers are possible)
 
 ";
 
-%feature("docstring") casadi::Matrix< T >::Matrix(const std::vector< A > &x)
-"
+%feature("docstring")  casadi::GenericMatrixCommon::is_row() const "
 
-Create an expression from a vector.
-
-";
-
-%feature("docstring") casadi::Matrix< T >::Matrix(const Matrix< A > &x) "
-
-Create a matrix from another matrix with a different entry type Assumes that
-the scalar conversion is valid.
+Check if the matrix is a row vector (i.e. size1()==1)
 
 ";
 
-%feature("docstring")  chol(const Matrix< Scalar > &A) "
+%feature("docstring") casadi::MatrixCommon::__nonzero__ "
 
-Obtain a Cholesky factorisation of a matrix Performs and LDL transformation
-[L,D] = ldl(A) and returns diag(sqrt(D))*L'.
+Returns the truth value of a Matrix.
 
 ";
 
-%feature("docstring")  rectangle(const Matrix< Scalar > &x) "
+%feature("docstring") casadi::MatrixCommon::__nonzero__ "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::MatrixCommon::all(const MatrixCommon &x) "
+
+[INTERNAL]  Returns true only if every element in the matrix is true.
+
+";
+
+%feature("docstring") casadi::casadi_all "
+
+Returns true only if every element in the matrix is true.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_all "
+
+Returns true only if every element in the matrix is true.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::soc(const MatrixCommon
+&x, const MatrixCommon &y) "
+
+Functions called by friend functions defined here
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_square() const "
+
+Check if the matrix expression is square.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::tangent(const
+MatrixCommon &ex, const MatrixCommon &arg) "
+
+Functions called by friend functions defined here
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::qr_solve(const MatrixCommon &b,
+const MatrixCommon &v, const MatrixCommon &r, const MatrixCommon &beta,
+const std::vector< casadi_int > &prinv, const std::vector< casadi_int > &pc,
+bool tr=false) "
+
+[INTERNAL]   Solve using a sparse QR factorization.
+
+";
+
+%feature("docstring") casadi::casadi_qr_solve "
+
+Solve using a sparse QR factorization.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_qr_solve "
+
+Solve using a sparse QR factorization.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::is_eye() const  "
+
+check if the matrix is an identity matrix (note that false negative answers
+are possible)
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::adj(const MatrixCommon &A) "
+
+[INTERNAL]   Matrix adjoint.
+
+";
+
+%feature("docstring") casadi::casadi_adj "
+
+Matrix adjoint.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_adj "
+
+Matrix adjoint.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_empty(bool
+both=false) const "
+
+Check if the sparsity is empty, i.e. if one of the dimensions is zero (or
+optionally both dimensions)
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::gauss_quadrature(const
+MatrixCommon &f, const MatrixCommon &x, const MatrixCommon &a, const
+MatrixCommon &b, casadi_int order=5) "
+
+[INTERNAL]  Integrate f from a to b using Gaussian quadrature with n points.
+
+";
+
+%feature("docstring") casadi::casadi_gauss_quadrature "
+
+Integrate f from a to b using Gaussian quadrature with n points.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_gauss_quadrature "
+
+Integrate f from a to b using Gaussian quadrature with n points.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::gauss_quadrature(const
+MatrixCommon &f, const MatrixCommon &x, const MatrixCommon &a, const
+MatrixCommon &b, casadi_int order, const MatrixCommon &w) "
+
+[INTERNAL]   Matrix adjoint.
+
+";
+
+%feature("docstring") casadi::casadi_gauss_quadrature "
+
+Matrix adjoint.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_gauss_quadrature "
+
+Matrix adjoint.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::linearize(const
+MatrixCommon &f, const MatrixCommon &x, const MatrixCommon &x0) "
+
+Functions called by friend functions defined here
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::unary(casadi_int op, const
+MatrixCommon &x) "
+
+[INTERNAL]  Create nodes by their ID.
+
+";
+
+%feature("docstring")  casadi::SX::reset_input() const  "
+
+[INTERNAL]  Reset the marker for an input expression.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::qr_sparse(const MatrixCommon
+&A, MatrixCommon &V, MatrixCommon &R, MatrixCommon &beta, std::vector<
+casadi_int > &prinv, std::vector< casadi_int > &pc, bool amd=true) "
+
+[INTERNAL]  Sparse direct QR factorization See T. Davis: Direct Methods for
+Sparse Linear Systems.
+
+";
+
+%feature("docstring") casadi::casadi_qr_sparse "
+
+Sparse direct QR factorization See T. Davis: Direct Methods for Sparse
+Linear Systems.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_qr_sparse "
+
+Sparse direct QR factorization See T. Davis: Direct Methods for Sparse
+Linear Systems.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::get_row() const "
+
+Get the sparsity pattern. See the Sparsity class for details.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::enlarge(casadi_int nrow,
+casadi_int ncol, const std::vector< casadi_int > &rr, const std::vector<
+casadi_int > &cc, bool ind1=false) "
+
+Enlarge matrix Make the matrix larger by inserting empty rows and columns,
+keeping the existing non-zeros.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::rectangle(const MatrixCommon
+&x) "
+
+[INTERNAL]  rectangle function
+
+\\\\[ \\\\begin {cases} \\\\Pi(x) = 1 & |x| < 1/2 \\\\\\\\ \\\\Pi(x) = 1/2 &
+|x| = 1/2 \\\\\\\\ \\\\Pi(x) = 0 & |x| > 1/2 \\\\\\\\ \\\\end {cases} \\\\]
+
+Also called: gate function, block function, band function, pulse function,
+window function
+
+";
+
+%feature("docstring") casadi::casadi_rectangle "
 
 rectangle function
 
@@ -47948,34 +47156,209 @@ window function
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::is_zero() const  "
+%feature("docstring")  casadi::MatrixCommon::casadi_rectangle "
+
+rectangle function
+
+\\\\[ \\\\begin {cases} \\\\Pi(x) = 1 & |x| < 1/2 \\\\\\\\ \\\\Pi(x) = 1/2 &
+|x| = 1/2 \\\\\\\\ \\\\Pi(x) = 0 & |x| > 1/2 \\\\\\\\ \\\\end {cases} \\\\]
+
+Also called: gate function, block function, band function, pulse function,
+window function
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::get_str(bool more=false) const
+"
+
+Get string representation.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::minor(const MatrixCommon &x,
+casadi_int i, casadi_int j) "
+
+[INTERNAL]  Get the (i,j) minor matrix.
+
+";
+
+%feature("docstring") casadi::casadi_minor "
+
+Get the (i,j) minor matrix.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_minor "
+
+Get the (i,j) minor matrix.
+
+";
+
+%feature("docstring")  casadi::SX::is_symbolic() const  "
+
+[INTERNAL]  Check if symbolic (Dense) Sparse matrices invariable return
+false.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_column() const "
+
+Check if the matrix is a column vector (i.e. size2()==1)
+
+";
+
+%feature("docstring") casadi::MatrixCommon::MatrixCommon() "
+
+constructors
+
+empty 0-by-0 matrix constructor
+
+";
+
+%feature("docstring") casadi::MatrixCommon::MatrixCommon(const MatrixCommon
+&m) "
+
+Copy constructor.
+
+";
+
+%feature("docstring") casadi::MatrixCommon::MatrixCommon(casadi_int nrow,
+casadi_int ncol) "
+
+Create a sparse matrix with all structural zeros.
+
+";
+
+%feature("docstring") casadi::MatrixCommon::MatrixCommon(const Sparsity &sp)
+"
+
+Create a sparse matrix from a sparsity pattern. Same as
+Matrix::ones(sparsity)
+
+";
+
+%feature("docstring") casadi::MatrixCommon::MatrixCommon(const Sparsity &sp,
+const MatrixCommon &d) "
+
+Construct matrix with a given sparsity and nonzeros.
+
+";
+
+%feature("docstring") casadi::MatrixCommon::MatrixCommon(double val) "
+
+This constructor enables implicit type conversion from a numeric type.
+
+";
+
+%feature("docstring") casadi::MatrixCommon::MatrixCommon(const std::vector<
+std::vector< double > > &m) "
+
+Dense matrix constructor with data given as vector of vectors.
+
+";
+
+%feature("docstring") casadi::MatrixCommon::MatrixCommon(const std::vector<
+A > &x) "
+
+Create an expression from a vector.
+
+";
+
+%feature("docstring") casadi::MatrixCommon::MatrixCommon(const MatrixCommon
+&x) "
+
+Create a matrix from another matrix with a different entry type Assumes that
+the scalar conversion is valid.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::cofactor(const MatrixCommon &x,
+casadi_int i, casadi_int j) "
+
+[INTERNAL]  Get the (i,j) cofactor matrix.
+
+";
+
+%feature("docstring") casadi::casadi_cofactor "
+
+Get the (i,j) cofactor matrix.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_cofactor "
+
+Get the (i,j) cofactor matrix.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::ramp(const MatrixCommon &x) "
+
+[INTERNAL]  ramp function
+
+\\\\[ \\\\begin {cases} R(x) = 0 & x <= 1 \\\\\\\\ R(x) = x & x > 1 \\\\\\\\
+\\\\end {cases} \\\\]
+
+Also called: slope function
+
+";
+
+%feature("docstring") casadi::casadi_ramp "
+
+ramp function
+
+\\\\[ \\\\begin {cases} R(x) = 0 & x <= 1 \\\\\\\\ R(x) = x & x > 1 \\\\\\\\
+\\\\end {cases} \\\\]
+
+Also called: slope function
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_ramp "
+
+ramp function
+
+\\\\[ \\\\begin {cases} R(x) = 0 & x <= 1 \\\\\\\\ R(x) = x & x > 1 \\\\\\\\
+\\\\end {cases} \\\\]
+
+Also called: slope function
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::is_zero() const  "
 
 check if the matrix is 0 (note that false negative answers are possible)
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::is_vector() const "
+%feature("docstring")  casadi::GenericMatrixCommon::is_vector() const "
 
 Check if the matrix is a row or column vector.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::matrix_matrix(casadi_int op,
-const Matrix< Scalar > &x, const Matrix< Scalar > &y) "
+%feature("docstring")  casadi::MatrixCommon::matrix_matrix(casadi_int op,
+const MatrixCommon &x, const MatrixCommon &y) "
 
 [INTERNAL]  Create nodes by their ID.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::binary(casadi_int op, const
-Matrix< Scalar > &x, const Matrix< Scalar > &y) "
+%feature("docstring")  casadi::MatrixCommon::binary(casadi_int op, const
+MatrixCommon &x, const MatrixCommon &y) "
 
 [INTERNAL]  Create nodes by their ID.
 
 ";
 
-%feature("docstring")  casadi::Matrix< Scalar >::get_nonzeros() const  "
+%feature("docstring")  casadi::MatrixCommon::set_scientific(bool scientific)
+"
+
+Set the 'precision, width & scientific' used in printing and serializing to
+streams.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::get_nonzeros() const  "
 
 Get all nonzeros.
 
@@ -47983,15 +47366,7 @@ Implementation of Matrix::get_nonzeros (in public API)
 
 ";
 
-%feature("docstring")  ldl_solve(const Matrix< Scalar > &b, const Matrix<
-Scalar > &D, const Matrix< Scalar > &LT, const std::vector< casadi_int > &p)
-"
-
-Solve using a sparse LDL^T factorization.
-
-";
-
-%feature("docstring")  casadi::Matrix< T >::disp(std::ostream &stream, bool
+%feature("docstring")  casadi::MatrixCommon::disp(std::ostream &stream, bool
 more=false) const  "
 
 Print a representation of the object.
@@ -48014,23 +47389,55 @@ after usage.
 
 ";
 
-%feature("docstring")  casadi::Matrix< T >::has_zeros() const  "
+%feature("docstring")  casadi::MatrixCommon::sparsify(const MatrixCommon &A,
+double tol=0) "
 
-Check if the matrix has any zero entries which are not structural zeros.
+[INTERNAL]  Make a matrix sparse by removing numerical zeros.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::is_scalar(bool scalar_and_dense=false) const "
+%feature("docstring") casadi::casadi_sparsify "
+
+Make a matrix sparse by removing numerical zeros.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_sparsify "
+
+Make a matrix sparse by removing numerical zeros.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_scalar(bool
+scalar_and_dense=false) const "
 
 Check if the matrix expression is scalar.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< Matrix< Scalar >
->::get_colind() const "
+%feature("docstring")  casadi::GenericMatrixCommon::get_colind() const "
 
 Get the sparsity pattern. See the Sparsity class for details.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::ldl_solve(const MatrixCommon
+&b, const MatrixCommon &D, const MatrixCommon &LT, const std::vector<
+casadi_int > &p) "
+
+[INTERNAL]   Solve using a sparse LDL^T factorization.
+
+";
+
+%feature("docstring") casadi::casadi_ldl_solve "
+
+Solve using a sparse LDL^T factorization.
+
+";
+
+%feature("docstring")  casadi::MatrixCommon::casadi_ldl_solve "
+
+Solve using a sparse LDL^T factorization.
 
 ";
 
@@ -48087,16 +47494,10 @@ If y does not evaluate to 1, a runtime error is raised
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::jtimes(const MX &ex,
+%feature("docstring")  casadi::GenericMatrixCommon::jtimes(const MX &ex,
 const MX &arg, const MX &v, bool tr=false) "
 
 Functions called by friend functions defined here
-
-";
-
-%feature("docstring")  inv_node(const MX &x) "
-
-Inverse node.
 
 ";
 
@@ -48124,7 +47525,7 @@ Joel Andersson
 
 C++ includes: mx.hpp ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::is_scalar(bool
+%feature("docstring")  casadi::GenericMatrixCommon::is_scalar(bool
 scalar_and_dense=false) const "
 
 Check if the matrix expression is scalar.
@@ -48168,7 +47569,7 @@ Get primitives.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::columns() const "
+%feature("docstring")  casadi::GenericMatrixCommon::columns() const "
 
 Get the number of columns, Octave-style syntax.
 
@@ -48193,8 +47594,8 @@ Set a submatrix, single argument
 
 ";
 
-%feature("docstring")  casadi::MX::set(const MX &m, bool ind1, const Matrix<
-casadi_int > &rr) "
+%feature("docstring")  casadi::MX::set(const MX &m, bool ind1, const
+MatrixCommon &rr) "
 
 Set a submatrix, single argument
 
@@ -48207,30 +47608,52 @@ Set a submatrix, single argument
 
 ";
 
-%feature("docstring")  casadi::MX::set(const MX &m, bool ind1, const Slice
-&rr, const Slice &cc) "
-
-";
-
-%feature("docstring")  casadi::MX::set(const MX &m, bool ind1, const Slice
-&rr, const Matrix< casadi_int > &cc) "
-
-";
-
-%feature("docstring")  casadi::MX::set(const MX &m, bool ind1, const Matrix<
-casadi_int > &rr, const Slice &cc) "
-
-";
-
-%feature("docstring")  casadi::MX::set(const MX &m, bool ind1, const Matrix<
-casadi_int > &rr, const Matrix< casadi_int > &cc) "
-
-";
-
 %feature("docstring")  casadi::MX::is_valid_input() const  "
 
 Check if matrix can be used to define function inputs. Valid inputs for
 MXFunctions are combinations of Reshape, concatenations and SymbolicMX.
+
+";
+
+%feature("docstring")  casadi::MX::evalf(const MX &expr) "
+
+[INTERNAL]  Evaluates the expression numerically.
+
+An error is raised when the expression contains symbols
+
+";
+
+%feature("docstring") casadi::casadi_evalf "
+
+Evaluates the expression numerically.
+
+An error is raised when the expression contains symbols
+
+";
+
+%feature("docstring")  casadi::MX::casadi_evalf "
+
+Evaluates the expression numerically.
+
+An error is raised when the expression contains symbols
+
+";
+
+%feature("docstring")  casadi::MX::inv_node(const MX &x) "
+
+[INTERNAL]   Inverse node.
+
+";
+
+%feature("docstring") casadi::casadi_inv_node "
+
+Inverse node.
+
+";
+
+%feature("docstring")  casadi::MX::casadi_inv_node "
+
+Inverse node.
 
 ";
 
@@ -48241,44 +47664,50 @@ Create nodes by their ID.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::sparsity() const "
+%feature("docstring")  casadi::GenericMatrixCommon::sparsity() const "
 
 Get the sparsity pattern.
 
 ";
 
-%feature("docstring")  lift(const MX &x, const MX &x_guess) "
+%feature("docstring") casadi::casadi_sparsity "
 
-Lift the expression Experimental feature.
+Get the sparsity pattern.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::gradient(const MX &ex,
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_sparsity "
+
+Get the sparsity pattern.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_tril() const "
+
+Check if the matrix is lower triangular.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::gradient(const MX &ex,
 const MX &arg) "
 
 Functions called by friend functions defined here
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::is_tril() const "
-
-Check if the matrix is lower triangular.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MX  >::size2() const "
+%feature("docstring")  casadi::GenericMatrixCommon::size2() const "
 
 Get the second dimension (i.e. number of columns)
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::size1() const "
+%feature("docstring")  casadi::GenericMatrixCommon::size1() const "
 
 Get the first dimension (i.e. number of rows)
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::linearize(const MX &f,
+%feature("docstring")  casadi::GenericMatrixCommon::linearize(const MX &f,
 const MX &x, const MX &x0) "
 
 Functions called by friend functions defined here
@@ -48291,7 +47720,7 @@ Is it a certain operation.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::is_triu() const "
+%feature("docstring")  casadi::GenericMatrixCommon::is_triu() const "
 
 Check if the matrix is upper triangular.
 
@@ -48303,6 +47732,12 @@ Check if the matrix is upper triangular.
 
 ";
 
+%feature("docstring")  casadi::MX::lift(const MX &x, const MX &x_guess) "
+
+[INTERNAL]  Lift the expression Experimental feature.
+
+";
+
 %feature("docstring")  casadi::MX::set_nz(const MX &m, bool ind1, const
 Slice &kk) "
 
@@ -48311,7 +47746,7 @@ Set a set of nonzeros
 ";
 
 %feature("docstring")  casadi::MX::set_nz(const MX &m, bool ind1, const
-Matrix< casadi_int > &kk) "
+MatrixCommon &kk) "
 
 Set a set of nonzeros
 
@@ -48329,7 +47764,7 @@ Number of outputs.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::rows() const "
+%feature("docstring")  casadi::GenericMatrixCommon::rows() const "
 
 Get the number of rows, Octave-style syntax.
 
@@ -48341,7 +47776,7 @@ check if zero (note that false negative answers are possible)
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::is_empty(bool
+%feature("docstring")  casadi::GenericMatrixCommon::is_empty(bool
 both=false) const "
 
 Check if the sparsity is empty, i.e. if one of the dimensions is zero (or
@@ -48357,13 +47792,13 @@ Get a set of nonzeros
 ";
 
 %feature("docstring")  casadi::MX::get_nz(MX &output_m, bool ind1, const
-Matrix< casadi_int > &kk) const  "
+MatrixCommon &kk) const  "
 
 Get a set of nonzeros
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::ones(casadi_int nrow=1,
+%feature("docstring")  casadi::GenericMatrixCommon::ones(casadi_int nrow=1,
 casadi_int ncol=1) "
 
 Create a dense matrix or a matrix with specified sparsity with all entries
@@ -48371,15 +47806,15 @@ one.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::ones(const Sparsity
-&sp) "
+%feature("docstring")  casadi::GenericMatrixCommon::ones(const Sparsity &sp)
+"
 
 Create a dense matrix or a matrix with specified sparsity with all entries
 one.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::ones(const std::pair<
+%feature("docstring")  casadi::GenericMatrixCommon::ones(const std::pair<
 casadi_int, casadi_int > &rc) "
 
 Create a dense matrix or a matrix with specified sparsity with all entries
@@ -48419,28 +47854,7 @@ create a matrix with all inf
 
 ";
 
-%feature("docstring")  matrix_expand(const MX &e, const std::vector< MX >
-&boundary=std::vector< MX >(), const Dict &options=Dict()) "
-
-Expand MX graph to SXFunction call.
-
-Expand the given expression e, optionally supplying expressions contained in
-it at which expansion should stop.
-
-";
-
-%feature("docstring")  matrix_expand(const std::vector< MX > &e, const
-std::vector< MX > &boundary=std::vector< MX >(), const Dict &options=Dict())
-"
-
-Expand MX graph to SXFunction call.
-
-Expand the given expression e, optionally supplying expressions contained in
-it at which expansion should stop.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MX  >::colind(casadi_int col)
+%feature("docstring")  casadi::GenericMatrixCommon::colind(casadi_int col)
 const "
 
 Get the sparsity pattern. See the Sparsity class for details.
@@ -48472,7 +47886,7 @@ Join an expression along symbolic primitives.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::get_colind() const "
+%feature("docstring")  casadi::GenericMatrixCommon::get_colind() const "
 
 Get the sparsity pattern. See the Sparsity class for details.
 
@@ -48490,23 +47904,35 @@ Check if multiplication.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::nnz() const "
+%feature("docstring")  casadi::GenericMatrixCommon::nnz() const "
 
 Get the number of (structural) non-zero elements.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::dim(bool with_nz=false)
+%feature("docstring")  casadi::MX::find(const MX &x) "
+
+[INTERNAL]   Find first nonzero If failed, returns the number of rows.
+
+";
+
+%feature("docstring") casadi::casadi_find "
+
+Find first nonzero If failed, returns the number of rows.
+
+";
+
+%feature("docstring")  casadi::MX::casadi_find "
+
+Find first nonzero If failed, returns the number of rows.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::dim(bool with_nz=false)
 const "
 
 Get string representation of dimensions. The representation is e.g. \"4x5\"
 or \"4x5,10nz\".
-
-";
-
-%feature("docstring")  find(const MX &x) "
-
-Find first nonzero If failed, returns the number of rows.
 
 ";
 
@@ -48516,23 +47942,7 @@ check if zero (note that false negative answers are possible)
 
 ";
 
-%feature("docstring")  graph_substitute(const MX &ex, const std::vector< MX
-> &v, const std::vector< MX > &vdef) "
-
-Substitute single expression in graph Substitute variable v with expression
-vdef in an expression ex, preserving nodes.
-
-";
-
-%feature("docstring")  graph_substitute(const std::vector< MX > &ex, const
-std::vector< MX > &v, const std::vector< MX > &vdef) "
-
-Substitute multiple expressions in graph Substitute variable var with
-expression expr in multiple expressions, preserving nodes.
-
-";
-
-%feature("docstring")  casadi::GenericMatrix< MX  >::get_row() const "
+%feature("docstring")  casadi::GenericMatrixCommon::get_row() const "
 
 Get the sparsity pattern. See the Sparsity class for details.
 
@@ -48544,7 +47954,7 @@ Check if evaluation.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::nnz_upper() const "
+%feature("docstring")  casadi::GenericMatrixCommon::nnz_upper() const "
 
 Get the number of non-zeros in the upper triangular half.
 
@@ -48563,15 +47973,15 @@ point to any node, \"0\" is returned.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::zeros(casadi_int
-nrow=1, casadi_int ncol=1) "
+%feature("docstring")  casadi::GenericMatrixCommon::zeros(casadi_int nrow=1,
+casadi_int ncol=1) "
 
 Create a dense matrix or a matrix with specified sparsity with all entries
 zero.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::zeros(const Sparsity
+%feature("docstring")  casadi::GenericMatrixCommon::zeros(const Sparsity
 &sp) "
 
 Create a dense matrix or a matrix with specified sparsity with all entries
@@ -48579,19 +47989,11 @@ zero.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::zeros(const std::pair<
+%feature("docstring")  casadi::GenericMatrixCommon::zeros(const std::pair<
 casadi_int, casadi_int > &rc) "
 
 Create a dense matrix or a matrix with specified sparsity with all entries
 zero.
-
-";
-
-%feature("docstring")  evalf(const MX &expr) "
-
-Evaluates the expression numerically.
-
-An error is raised when the expression contains symbols
 
 ";
 
@@ -48608,13 +48010,13 @@ Get string representation.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::size() const "
+%feature("docstring")  casadi::GenericMatrixCommon::size() const "
 
 Get the shape.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::size(casadi_int axis)
+%feature("docstring")  casadi::GenericMatrixCommon::size(casadi_int axis)
 const "
 
 Get the size along a particular dimensions.
@@ -48627,13 +48029,67 @@ Transpose the matrix.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::is_vector() const "
+%feature("docstring")  casadi::GenericMatrixCommon::is_vector() const "
 
 Check if the matrix is a row or column vector.
 
 ";
 
-%feature("docstring")  casadi::MX::printme(const MX &y) const  "
+%feature("docstring")  casadi::MX::matrix_expand(const MX &e, const
+std::vector< MX > &boundary=std::vector< MX >(), const Dict &options=Dict())
+"
+
+[INTERNAL]  Expand MX graph to SXFunction call.
+
+Expand the given expression e, optionally supplying expressions contained in
+it at which expansion should stop.
+
+";
+
+%feature("docstring") casadi::casadi_matrix_expand "
+
+Expand MX graph to SXFunction call.
+
+Expand the given expression e, optionally supplying expressions contained in
+it at which expansion should stop.
+
+";
+
+%feature("docstring")  casadi::MX::casadi_matrix_expand "
+
+Expand MX graph to SXFunction call.
+
+Expand the given expression e, optionally supplying expressions contained in
+it at which expansion should stop.
+
+";
+
+%feature("docstring")  casadi::MX::matrix_expand(const std::vector< MX > &e,
+const std::vector< MX > &boundary=std::vector< MX >(), const Dict
+&options=Dict()) "
+
+[INTERNAL]  Expand MX graph to SXFunction call.
+
+Expand the given expression e, optionally supplying expressions contained in
+it at which expansion should stop.
+
+";
+
+%feature("docstring") casadi::casadi_matrix_expand "
+
+Expand MX graph to SXFunction call.
+
+Expand the given expression e, optionally supplying expressions contained in
+it at which expansion should stop.
+
+";
+
+%feature("docstring")  casadi::MX::casadi_matrix_expand "
+
+Expand MX graph to SXFunction call.
+
+Expand the given expression e, optionally supplying expressions contained in
+it at which expansion should stop.
 
 ";
 
@@ -48657,8 +48113,8 @@ create a matrix with all nan
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::row(casadi_int el)
-const "
+%feature("docstring")  casadi::GenericMatrixCommon::row(casadi_int el) const
+"
 
 Get the sparsity pattern. See the Sparsity class for details.
 
@@ -48692,14 +48148,14 @@ Check if norm.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::mpower(const MX &x,
+%feature("docstring")  casadi::GenericMatrixCommon::mpower(const MX &x,
 const MX &y) "
 
 Functions called by friend functions defined here
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::numel() const "
+%feature("docstring")  casadi::GenericMatrixCommon::numel() const "
 
 Get the number of elements.
 
@@ -48714,28 +48170,28 @@ keeping the existing non-zeros.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::sym(const std::string
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
 &name, casadi_int nrow=1, casadi_int ncol=1) "
 
 Create an nrow-by-ncol symbolic primitive.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::sym(const std::string
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
 &name, const std::pair< casadi_int, casadi_int > &rc) "
 
 Construct a symbolic primitive with given dimensions.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::sym(const std::string
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
 &name, const Sparsity &sp) "
 
 Create symbolic primitive with a given sparsity pattern.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::sym(const std::string
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
 &name, const Sparsity &sp, casadi_int p) "
 
 Create a vector of length p with with matrices with symbolic primitives of
@@ -48743,14 +48199,14 @@ given sparsity.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::sym(const std::string
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
 &name, casadi_int nrow, casadi_int ncol, casadi_int p) "
 
 Create a vector of length p with nrow-by-ncol symbolic primitives.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::sym(const std::string
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
 &name, const Sparsity &sp, casadi_int p, casadi_int r) "
 
 Create a vector of length r of vectors of length p with symbolic primitives
@@ -48758,7 +48214,7 @@ with given sparsity.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::sym(const std::string
+%feature("docstring")  casadi::GenericMatrixCommon::sym(const std::string
 &name, casadi_int nrow, casadi_int ncol, casadi_int p, casadi_int r) "
 
 Create a vector of length r of vectors of length p with nrow-by-ncol
@@ -48766,14 +48222,14 @@ symbolic primitives.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::tangent(const MX &ex,
+%feature("docstring")  casadi::GenericMatrixCommon::tangent(const MX &ex,
 const MX &arg) "
 
 Functions called by friend functions defined here
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::is_square() const "
+%feature("docstring")  casadi::GenericMatrixCommon::is_square() const "
 
 Check if the matrix expression is square.
 
@@ -48787,7 +48243,7 @@ Get a submatrix, single argument
 ";
 
 %feature("docstring")  casadi::MX::get(MX &output_m, bool ind1, const
-Matrix< casadi_int > &rr) const  "
+MatrixCommon &rr) const  "
 
 Get a submatrix, single argument
 
@@ -48808,21 +48264,21 @@ Get a submatrix, two arguments
 ";
 
 %feature("docstring")  casadi::MX::get(MX &output_m, bool ind1, const Slice
-&rr, const Matrix< casadi_int > &cc) const  "
+&rr, const MatrixCommon &cc) const  "
 
 Get a submatrix, two arguments
 
 ";
 
 %feature("docstring")  casadi::MX::get(MX &output_m, bool ind1, const
-Matrix< casadi_int > &rr, const Slice &cc) const  "
+MatrixCommon &rr, const Slice &cc) const  "
 
 Get a submatrix, two arguments
 
 ";
 
 %feature("docstring")  casadi::MX::get(MX &output_m, bool ind1, const
-Matrix< casadi_int > &rr, const Matrix< casadi_int > &cc) const  "
+MatrixCommon &rr, const MatrixCommon &cc) const  "
 
 Get a submatrix, two arguments
 
@@ -48833,6 +48289,34 @@ MX &C, const std::vector< casadi_int > &dim_a, const std::vector< casadi_int
 > &dim_b, const std::vector< casadi_int > &dim_c, const std::vector<
 casadi_int > &a, const std::vector< casadi_int > &b, const std::vector<
 casadi_int > &c) "
+
+Computes an einstein dense tensor contraction.
+
+Computes the product: C_c = A_a + B_b where a b c are index/einstein
+notation in an encoded form
+
+For example, an matrix-matrix product may be written as: C_ij = A_ik B_kj
+
+The encoded form uses strictly negative numbers to indicate labels. For the
+above example, we would have: a {-1, -3} b {-3, -2} c {-1 -2}
+
+";
+
+%feature("docstring") casadi::casadi_einstein "
+
+Computes an einstein dense tensor contraction.
+
+Computes the product: C_c = A_a + B_b where a b c are index/einstein
+notation in an encoded form
+
+For example, an matrix-matrix product may be written as: C_ij = A_ik B_kj
+
+The encoded form uses strictly negative numbers to indicate labels. For the
+above example, we would have: a {-1, -3} b {-3, -2} c {-1 -2}
+
+";
+
+%feature("docstring")  casadi::MX::casadi_einstein "
 
 Computes an einstein dense tensor contraction.
 
@@ -48863,7 +48347,35 @@ above example, we would have: a {-1, -3} b {-3, -2} c {-1 -2}
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::is_column() const "
+%feature("docstring") casadi::casadi_einstein "
+
+Computes an einstein dense tensor contraction.
+
+Computes the product: C_c = A_a + B_b where a b c are index/einstein
+notation in an encoded form
+
+For example, an matrix-matrix product may be written as: C_ij = A_ik B_kj
+
+The encoded form uses strictly negative numbers to indicate labels. For the
+above example, we would have: a {-1, -3} b {-3, -2} c {-1 -2}
+
+";
+
+%feature("docstring")  casadi::MX::casadi_einstein "
+
+Computes an einstein dense tensor contraction.
+
+Computes the product: C_c = A_a + B_b where a b c are index/einstein
+notation in an encoded form
+
+For example, an matrix-matrix product may be written as: C_ij = A_ik B_kj
+
+The encoded form uses strictly negative numbers to indicate labels. For the
+above example, we would have: a {-1, -3} b {-3, -2} c {-1 -2}
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_column() const "
 
 Check if the matrix is a column vector (i.e. size2()==1)
 
@@ -48935,27 +48447,58 @@ Create vector constant (also implicit type conversion)
 
 ";
 
-%feature("docstring") casadi::MX::MX(const Matrix< double > &x) "
+%feature("docstring") casadi::MX::MX(const MatrixCommon &x) "
 
 Create sparse matrix constant (also implicit type conversion)
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::rank1(const MX &A,
-const MX &alpha, const MX &x, const MX &y) "
+%feature("docstring")  casadi::GenericMatrixCommon::soc(const MX &x, const
+MX &y) "
+
+Functions called by friend functions defined here
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::rank1(const MX &A, const
+MX &alpha, const MX &x, const MX &y) "
 
 Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::bilin(const MX &A,
-const MX &x, const MX &y) "
+%feature("docstring") casadi::casadi_rank1 "
+
+Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_rank1 "
+
+Make a rank-1 update to a matrix A Calculates A + 1/2 * alpha * x*y'.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::bilin(const MX &A, const
+MX &x, const MX &y) "
 
 Calculate bilinear form x^T A y.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::nnz_lower() const "
+%feature("docstring") casadi::casadi_bilin "
+
+Calculate bilinear form x^T A y.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::casadi_bilin "
+
+Calculate bilinear form x^T A y.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::nnz_lower() const "
 
 Get the number of non-zeros in the lower triangular half.
 
@@ -48985,7 +48528,51 @@ Split up an expression along symbolic primitives.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::is_dense() const "
+%feature("docstring")  casadi::MX::graph_substitute(const MX &ex, const
+std::vector< MX > &v, const std::vector< MX > &vdef) "
+
+[INTERNAL]  Substitute single expression in graph Substitute variable v with
+expression vdef in an expression ex, preserving nodes.
+
+";
+
+%feature("docstring") casadi::casadi_graph_substitute "
+
+Substitute single expression in graph Substitute variable v with expression
+vdef in an expression ex, preserving nodes.
+
+";
+
+%feature("docstring")  casadi::MX::casadi_graph_substitute "
+
+Substitute single expression in graph Substitute variable v with expression
+vdef in an expression ex, preserving nodes.
+
+";
+
+%feature("docstring")  casadi::MX::graph_substitute(const std::vector< MX >
+&ex, const std::vector< MX > &v, const std::vector< MX > &vdef) "
+
+[INTERNAL]  Substitute multiple expressions in graph Substitute variable var
+with expression expr in multiple expressions, preserving nodes.
+
+";
+
+%feature("docstring") casadi::casadi_graph_substitute "
+
+Substitute multiple expressions in graph Substitute variable var with
+expression expr in multiple expressions, preserving nodes.
+
+";
+
+%feature("docstring")  casadi::MX::casadi_graph_substitute "
+
+Substitute multiple expressions in graph Substitute variable var with
+expression expr in multiple expressions, preserving nodes.
+
+";
+
+%feature("docstring")  casadi::GenericMatrixCommon::is_dense() const "
 
 Check if the matrix expression is dense.
 
@@ -49015,7 +48602,7 @@ Get an owning reference to the sparsity pattern.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::nnz_diag() const "
+%feature("docstring")  casadi::GenericMatrixCommon::nnz_diag() const "
 
 Get get the number of non-zeros on the diagonal.
 
@@ -49039,7 +48626,7 @@ Checks if expression does not contain NaN or Inf.
 
 ";
 
-%feature("docstring")  casadi::GenericMatrix< MX  >::is_row() const "
+%feature("docstring")  casadi::GenericMatrixCommon::is_row() const "
 
 Check if the matrix is a row vector (i.e. size1()==1)
 
@@ -49081,9 +48668,10 @@ std::string &fname)  "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::definition() const  "
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
 
-[INTERNAL]  Get function signature: name:(inputs)->(outputs)
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -49095,11 +48683,16 @@ std::vector< MX > &arg) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::ProtoFunction::clear_mem() "
 
@@ -49217,6 +48810,12 @@ std::string &lang, std::ostream &stream, const Dict &options) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::definition() const  "
+
+[INTERNAL]  Get function signature: name:(inputs)->(outputs)
+
+";
+
 %feature("docstring")
 casadi::FunctionInternal::instruction_input(casadi_int k) const  "
 
@@ -49238,7 +48837,7 @@ iind, casadi_int oind, bool symmetric) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -49349,6 +48948,13 @@ get_reverse(casadi_int nadj) if no cached version is available.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::alloc_iw(size_t sz_iw, bool
 persistent=false) "
 
@@ -49434,7 +49040,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -49493,11 +49099,16 @@ never_inline) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::getAdaptorSolverName()
 const  "
@@ -49614,6 +49225,13 @@ Joris Gillis
 |                   |              | ui <= 0.0, 2: ui  |                   |
 |                   |              | > 0.0, -2: ui <   |                   |
 |                   |              | 0.0.              |                   |
++-------------------+--------------+-------------------+-------------------+
+| error_on_fail     | OT_BOOL      | When the          | casadi::Rootfinde |
+|                   |              | numerical process | r                 |
+|                   |              | returns           |                   |
+|                   |              | unsuccessfully,   |                   |
+|                   |              | raise an error    |                   |
+|                   |              | (default false).  |                   |
 +-------------------+--------------+-------------------+-------------------+
 | implicit_input    | OT_INT       | Index of the      | casadi::Rootfinde |
 |                   |              | input that        | r                 |
@@ -49826,7 +49444,7 @@ k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -49887,7 +49505,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -50048,7 +49666,7 @@ casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
 
 ";
 
-%feature("docstring")  casadi::OracleFunction::get_stats(void *mem) const  "
+%feature("docstring")  casadi::Newton::get_stats(void *mem) const  "
 
 [INTERNAL]  Get all statistics.
 
@@ -50094,6 +49712,13 @@ oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
 %feature("docstring")  casadi::Rootfinder::get_name_out(casadi_int i)  "
 
 [INTERNAL]  Names of function input and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -50172,7 +49797,7 @@ casadi::FunctionInternal::instruction_output(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -50219,14 +49844,14 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -50325,15 +49950,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -50375,6 +50001,18 @@ const  "
 %feature("docstring")  casadi::Newton::solve(void *mem) const  "
 
 [INTERNAL]   Solve the system of equations and calculate derivatives.
+
+";
+
+%feature("docstring") casadi::casadi_solve "
+
+Solve the system of equations and calculate derivatives.
+
+";
+
+%feature("docstring")  casadi::Newton::casadi_solve "
+
+Solve the system of equations and calculate derivatives.
 
 ";
 
@@ -50521,7 +50159,7 @@ classes.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -50576,7 +50214,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -50777,6 +50415,13 @@ const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")
 casadi::FunctionInternal::getJacSparsityHierarchical(casadi_int iind,
 casadi_int oind) const  "
@@ -50841,7 +50486,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -50958,11 +50603,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")
 casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
@@ -51142,14 +50792,14 @@ const  "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -51209,7 +50859,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -51279,6 +50929,13 @@ Joel Andersson
 |                  |                 | are discrete,    |                  |
 |                  |                 | i.e. integer-    |                  |
 |                  |                 | valued           |                  |
++------------------+-----------------+------------------+------------------+
+| error_on_fail    | OT_BOOL         | When the         | casadi::Nlpsol   |
+|                  |                 | numerical        |                  |
+|                  |                 | process returns  |                  |
+|                  |                 | unsuccessfully,  |                  |
+|                  |                 | raise an error   |                  |
+|                  |                 | (default false). |                  |
 +------------------+-----------------+------------------+------------------+
 | eval_errors_fata | OT_BOOL         | When errors      | casadi::Nlpsol   |
 | l                |                 | occur during     |                  |
@@ -51428,7 +51085,7 @@ tr:  Flip the relationship. Return which expressions contain the variables
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -51512,6 +51169,13 @@ bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::index_in(const std::string
 &name) const  "
 
@@ -51520,15 +51184,16 @@ bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -51593,7 +51258,7 @@ const  "
 
 ";
 
-%feature("docstring")  casadi::OracleFunction::get_stats(void *mem) const  "
+%feature("docstring")  casadi::Nlpsol::get_stats(void *mem) const  "
 
 [INTERNAL]  Get all statistics.
 
@@ -51653,11 +51318,16 @@ persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::has_derivative() const  "
 
@@ -51771,6 +51441,14 @@ const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::get_partition(casadi_int
+iind, casadi_int oind, Sparsity &D1, Sparsity &D2, bool compact, bool
+symmetric, bool allow_forward, bool allow_reverse) const  "
+
+[INTERNAL]  Get the unidirectional or bidirectional partition.
+
+";
+
 %feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
 
 [INTERNAL]  Construct Prepares the function for evaluation.
@@ -51811,11 +51489,10 @@ const  "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::get_partition(casadi_int
-iind, casadi_int oind, Sparsity &D1, Sparsity &D2, bool compact, bool
-symmetric, bool allow_forward, bool allow_reverse) const  "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Get the unidirectional or bidirectional partition.
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -51859,6 +51536,1193 @@ C++ includes: nonzeros.hpp ";
 
 
 // File: classcasadi_1_1NormInf.xml
+
+
+// File: classcasadi_1_1OmpMap.xml
+%feature("docstring")  casadi::FunctionInternal::disp_more(std::ostream
+&stream) const  "
+
+[INTERNAL]  Print more.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::uses_output() const  "
+
+[INTERNAL]  Do the derivative functions need nondifferentiated outputs?
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::getJacSparsityGen(casadi_int iind, casadi_int
+oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
+
+[INTERNAL]  Get the sparsity pattern, forward mode.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_in(casadi_int ind) const
+"
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_in() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
+%feature("docstring")  casadi::Map::get_n_out()  "
+
+[INTERNAL]  Number of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::index_in(const std::string
+&name) const  "
+
+[INTERNAL]  Get input scheme index by name.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::getJacSparsityHierarchicalSymm(casadi_int iind,
+casadi_int oind) const  "
+
+[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
+structure recognition for symmetric Jacobians
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 forward seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::sz_work(size_t &sz_arg,
+size_t &sz_res, size_t &sz_iw, size_t &sz_w) const  "
+
+[INTERNAL]  Get number of temporary variables needed.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sp_weight() const  "
+
+[INTERNAL]  Weighting factor for chosing forward/reverse mode, sparsity
+propagation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::adjViaJac(casadi_int nadj)
+const  "
+
+[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
+multiplying.
+
+";
+
+%feature("docstring")  casadi::Map::eval_sx(const SXElem **arg, SXElem
+**res, casadi_int *iw, SXElem *w, void *mem) const  "
+
+[INTERNAL]  evaluate symbolically while also propagating directional
+derivatives
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::wrap() const  "
+
+[INTERNAL]  Wrap in an Function instance consisting of only one MX call.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::fwdViaJac(casadi_int nfwd)
+const  "
+
+[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
+multiplying.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size1_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::Map::has_spfwd() const  "
+
+[INTERNAL]  Is the class able to propagate seeds through the algorithm?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::getJacSparsity(casadi_int
+iind, casadi_int oind, bool symmetric) const  "
+
+[INTERNAL]  Generate the sparsity of a Jacobian block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_dm(const std::vector<
+DM > &arg) const  "
+
+[INTERNAL]  Evaluate with DM matrices.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::which_depends(const
+std::string &s_in, const std::vector< std::string > &s_out, casadi_int
+order, bool tr=false) const  "
+
+[INTERNAL]  Which variables enter with some order.
+
+Parameters:
+-----------
+
+s_in:   Input name
+
+s_out:   Output name(s)
+
+order:  Only 1 (linear) and 2 (nonlinear) allowed
+
+tr:  Flip the relationship. Return which expressions contain the variables
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_forward(const
+std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
+std::vector< MX > > &fseed, std::vector< std::vector< MX > > &fsens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
+classes.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_forward(const
+std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
+std::vector< SX > > &fseed, std::vector< std::vector< SX > > &fsens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
+classes.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc(const Function &f,
+bool persistent=false) "
+
+[INTERNAL]  Ensure work vectors long enough to evaluate function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_w(size_t sz_w, bool
+persistent=false) "
+
+[INTERNAL]  Ensure required length of w field.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::init_mem(void *mem) const  "
+
+[INTERNAL]  Initalize memory block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_arg(size_t sz_arg,
+bool persistent=false) "
+
+[INTERNAL]  Ensure required length of arg field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::disp(std::ostream &stream,
+bool more) const  "
+
+[INTERNAL]  Display object.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_function() const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::get_function(const
+std::string &name) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::export_code(const
+std::string &lang, std::ostream &stream, const Dict &options) const  "
+
+[INTERNAL]  Export function in a specific language.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::is_a(const std::string
+&type, bool recursive) const  "
+
+[INTERNAL]  Check if the function is of a particular type.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_jac() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::definition() const  "
+
+[INTERNAL]  Get function signature: name:(inputs)->(outputs)
+
+";
+
+%feature("docstring")  casadi::Map::codegen_declarations(CodeGenerator &g)
+const  "
+
+[INTERNAL]  Generate code for the declarations of the C function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::signature(const std::string
+&fname) const  "
+
+[INTERNAL]  Code generate the function.
+
+";
+
+%feature("docstring")  casadi::Map::sp_reverse(bvec_t **arg, bvec_t **res,
+casadi_int *iw, bvec_t *w, void *mem) const  "
+
+[INTERNAL]  Propagate sparsity backwards.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_arg(const
+std::vector< M > &arg, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 inputs.
+
+";
+
+%feature("docstring")  casadi::Map::get_name_in(casadi_int i)  "
+
+[INTERNAL]  Names of function input and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_min_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Get smallest input value.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::jac() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::generate_lifted(Function
+&vdef_fcn, Function &vinit_fcn) const  "
+
+[INTERNAL]  Extract the functions needed for the Lifted Newton method.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::serialize(std::ostream
+&stream) const  "
+
+[INTERNAL]  Serialize.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::codegen_decref(CodeGenerator &g) const  "
+
+[INTERNAL]  Codegen decref for dependencies.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_in() const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mapsum_mx(const
+std::vector< MX > &arg, const std::string &parallelization) "
+
+[INTERNAL]  Parallel evaluation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::codegen_meta(CodeGenerator
+&g) const  "
+
+[INTERNAL]  Generate meta-information allowing a user to evaluate a
+generated function.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::codegen_sparsities(CodeGenerator &g) const  "
+
+[INTERNAL]  Codegen sparsities.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
+
+[INTERNAL]  Codegen incref for dependencies.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_out() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_max_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Get largest input value.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::symbolic_output(const
+std::vector< MX > &arg) const  "
+
+[INTERNAL]  Get a vector of symbolic variables corresponding to the outputs.
+
+";
+
+%feature("docstring")  casadi::Map::has_codegen() const  "
+
+[INTERNAL]  Is codegen supported?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_partition(casadi_int
+iind, casadi_int oind, Sparsity &D1, Sparsity &D2, bool compact, bool
+symmetric, bool allow_forward, bool allow_reverse) const  "
+
+[INTERNAL]  Get the unidirectional or bidirectional partition.
+
+";
+
+%feature("docstring")  casadi::Map::has_forward(casadi_int nfwd) const  "
+
+[INTERNAL]  Generate a function that calculates nfwd forward derivatives.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
+
+[INTERNAL]  Construct Prepares the function for evaluation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_derivative() const  "
+
+[INTERNAL]  Can derivatives be calculated in any way?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_jacobian(const
+std::string &name, const std::vector< std::string > &inames, const
+std::vector< std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::instruction_input(casadi_int k) const  "
+
+[INTERNAL]  Get the (integer) input arguments of an atomic operation.
+
+";
+
+%feature("docstring")  casadi::Map::get_reverse(casadi_int nadj, const
+std::string &name, const std::vector< std::string > &inames, const
+std::vector< std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Generate a function that calculates nadj adjoint derivatives.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::print(const char *fmt,...)
+const  "
+
+[INTERNAL]  C-style formatted printing during evaluation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::symbolicAdjSeed(casadi_int
+nadj, const std::vector< MatType > &v) const  "
+
+[INTERNAL]  Symbolic expressions for the adjoint seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::factory(const std::string
+&name, const std::vector< std::string > &s_in, const std::vector<
+std::string > &s_out, const Function::AuxOut &aux, const Dict &opts) const
+"
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_iw(size_t sz_iw, bool
+persistent=false) "
+
+[INTERNAL]  Ensure required length of iw field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::finalize(const Dict &opts)
+"
+
+[INTERNAL]  Finalize the object creation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call(const std::vector< M >
+&arg, std::vector< M > &res, bool always_inline, bool never_inline) const  "
+
+[INTERNAL]   Call a function, templated.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::print_option(const
+std::string &name, std::ostream &stream) const  "
+
+[INTERNAL]  Print all information there is to know about a certain option.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_options() const  "
+
+[INTERNAL]  Options.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sparsity_jac(casadi_int
+iind, casadi_int oind, bool compact, bool symmetric) const  "
+
+[INTERNAL]  Get, if necessary generate, the sparsity of a Jacobian block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_arg() const  "
+
+[INTERNAL]  Get required length of arg field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::instruction_id(casadi_int
+k) const  "
+
+[INTERNAL]  Get an atomic operation operator index.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_jacobian_sparsity()
+const  "
+
+[INTERNAL]  Get Jacobian sparsity.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::forward(casadi_int nfwd)
+const  "
+
+[INTERNAL]  Return function that calculates forward derivatives
+forward(nfwd) returns a cached instance if available, and calls  Function
+get_forward(casadi_int nfwd) if no cached version is available.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size1_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::Map::get_sparsity_out(casadi_int i)  "
+
+[INTERNAL]  Sparsities of function inputs and outputs.
+
+";
+
+%feature("docstring") casadi::OmpMap "
+
+[INTERNAL]  A map Evaluate in parallel using OpenMP Note: Do not use this
+class with much more than the intended number of threads for the parallel
+evaluation as it will cause excessive memory use.
+
+Joel Andersson
+
+C++ includes: map.hpp ";
+
+%feature("docstring")  casadi::Map::sp_forward(const bvec_t **arg, bvec_t
+**res, casadi_int *iw, bvec_t *w, void *mem) const  "
+
+[INTERNAL]  Propagate sparsity forward.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_res(size_t sz_res,
+bool persistent=false) "
+
+[INTERNAL]  Ensure required length of res field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::free_mx() const  "
+
+[INTERNAL]  Get free variables ( MX)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_iw() const  "
+
+[INTERNAL]  Get required length of iw field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::Map::has_sprev() const  "
+
+[INTERNAL]  Is the class able to propagate seeds through the algorithm?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::generate_dependencies(const
+std::string &fname, const Dict &opts) const  "
+
+[INTERNAL]  Export / Generate C code for the dependency function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_reltol() const  "
+
+[INTERNAL]  Get relative tolerance.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_res(const
+std::vector< M > &res, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::jacobian() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mx_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mx_out() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::SharedObjectInternal::getCount() const  "
+
+[INTERNAL]  Get the reference count.
+
+";
+
+%feature("docstring")  casadi::Map::get_default_in(casadi_int ind) const  "
+
+[INTERNAL]  Get default input value.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::free_mem(void *mem) const  "
+
+[INTERNAL]  Free memory block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::print_options(std::ostream
+&stream) const  "
+
+[INTERNAL]  Print list of options.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::codegen(CodeGenerator &g,
+const std::string &fname) const  "
+
+[INTERNAL]  Generate code the function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::matching_arg(const
+std::vector< M > &arg, casadi_int &npar) const  "
+
+[INTERNAL]  Check if input arguments that needs to be replaced.
+
+";
+
+%feature("docstring")  casadi::Map::has_reverse(casadi_int nadj) const  "
+
+[INTERNAL]  Generate a function that calculates nadj adjoint derivatives.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_gen(const double
+**arg, double **res, casadi_int *iw, double *w, void *mem) const  "
+
+[INTERNAL]  Evaluate numerically.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_gen(const SXElem
+**arg, SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
+
+[INTERNAL]  Evaluate a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_gen(const bvec_t
+**arg, bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
+
+[INTERNAL]  Evaluate a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::Map::eval_gen(const T **arg, T **res,
+casadi_int *iw, T *w, casadi_int mem=0) const  "
+
+[INTERNAL]  Evaluate or propagate sparsities.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::jit_dependencies(const
+std::string &fname) "
+
+[INTERNAL]  Jit dependencies.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_in() const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_stats(void *mem) const
+"
+
+[INTERNAL]  Get all statistics.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::matching_res(const
+std::vector< M > &arg, casadi_int &npar) const  "
+
+[INTERNAL]  Check if output arguments that needs to be replaced.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_jac(const std::string
+&name, const std::vector< std::string > &inames, const std::vector<
+std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::release(casadi_int mem) const
+"
+
+[INTERNAL]  Release a memory object.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::fwd_seed(casadi_int nfwd)
+const  "
+
+[INTERNAL]  Symbolic expressions for the forward seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
+
+[INTERNAL]   Call a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]   Call a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::checkout() const  "
+
+[INTERNAL]  Checkout a memory object.
+
+";
+
+%feature("docstring")  casadi::SharedObjectInternal::weak() "
+
+[INTERNAL]  Get a weak reference to the object.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
+
+[INTERNAL]  Get the floating point output argument of an atomic operation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 reverse seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::has_free() const  "
+
+[INTERNAL]  Does the function have free variables.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
+
+[INTERNAL]  Print dimensions of inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::self() const  "
+
+[INTERNAL]  Get a public class instance.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sparsity_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output sparsity.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::getAdaptorSolverName()
+const  "
+
+[INTERNAL]  Obtain solver name from Adaptor.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::memory(casadi_int ind) const
+"
+
+[INTERNAL]  Memory objects.
+
+";
+
+%feature("docstring")  casadi::Map::get_sparsity_in(casadi_int i)  "
+
+[INTERNAL]  Sparsities of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size2_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::check_res(const
+std::vector< M > &res, casadi_int &npar) const  "
+
+[INTERNAL]  Check if output arguments have correct length and dimensions.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::getJacSparsityHierarchical(casadi_int iind,
+casadi_int oind) const  "
+
+[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
+structure recognition.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_w() const  "
+
+[INTERNAL]  Get required length of w field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::reverse(casadi_int nadj)
+const  "
+
+[INTERNAL]  Return function that calculates adjoint derivatives
+reverse(nadj) returns a cached instance if available, and calls  Function
+get_reverse(casadi_int nadj) if no cached version is available.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_free() const  "
+
+[INTERNAL]  Print free variables.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_jacobian() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::index_out(const std::string
+&name) const  "
+
+[INTERNAL]  Get output scheme index by name.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::codegen_name(const
+CodeGenerator &g) const  "
+
+[INTERNAL]  Get name in codegen.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sparsity_out(casadi_int
+ind) const  "
+
+[INTERNAL]  Input/output sparsity.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::set_work(void *mem, const
+double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
+
+[INTERNAL]  Set the (persistent) work vectors.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_function(const
+std::string &fname) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::slice(const std::string
+&name, const std::vector< casadi_int > &order_in, const std::vector<
+casadi_int > &order_out, const Dict &opts) const  "
+
+[INTERNAL]  returns a new function with a selection of inputs/outputs of the
+original
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::free_sx() const  "
+
+[INTERNAL]  Get free variables (SX)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::instruction_MX(casadi_int
+k) const  "
+
+[INTERNAL]  get MX expression associated with instruction
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::oracle() const  "
+
+[INTERNAL]  Get oracle.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mx_in(casadi_int ind) const
+"
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mx_in() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::n_instructions() const  "
+
+[INTERNAL]  Get the number of atomic operations.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_mx(const MXVector
+&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+
+[INTERNAL]  Evaluate with symbolic matrices.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size2_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::instruction_output(casadi_int k) const  "
+
+[INTERNAL]  Get the (integer) output argument of an atomic operation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_abstol() const  "
+
+[INTERNAL]  Get absolute tolerance.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::set_temp(void *mem, const
+double **arg, double **res, casadi_int *iw, double *w) const  "
+
+[INTERNAL]  Set the (temporary) work vectors.
+
+";
+
+%feature("docstring")  casadi::Map::get_name_out(casadi_int i)  "
+
+[INTERNAL]  Names of function input and outputs.
+
+";
+
+%feature("docstring")  casadi::Map::get_n_in()  "
+
+[INTERNAL]  Number of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::all_scalar() const  "
+
+[INTERNAL]  Are all inputs and outputs scalar.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::n_nodes() const  "
+
+[INTERNAL]  Number of nodes in the algorithm.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_reverse(const
+std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
+std::vector< MX > > &aseed, std::vector< std::vector< MX > > &asens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_reverse(const
+std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
+std::vector< SX > > &aseed, std::vector< std::vector< SX > > &asens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::clear_mem() "
+
+[INTERNAL]  Clear all memory (called from destructor)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::setup(void *mem, const
+double **arg, double **res, casadi_int *iw, double *w) const  "
+
+[INTERNAL]  Set the (persistent and temporary) work vectors.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::ad_weight() const  "
+
+[INTERNAL]  Weighting factor for chosing forward/reverse mode.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_out() const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::Map::info() const  "
+
+[INTERNAL]  Obtain information about node
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::check_arg(const
+std::vector< M > &arg, casadi_int &npar) const  "
+
+[INTERNAL]  Check if input arguments have correct length and dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_res() const  "
+
+[INTERNAL]  Get required length of res field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sprint(char *buf, size_t
+buf_sz, const char *fmt,...) const  "
+
+[INTERNAL]  C-style formatted printing to string.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
+
+[INTERNAL]  Serialize function header.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_out() const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring")  casadi::Map::get_forward(casadi_int nfwd, const
+std::string &name, const std::vector< std::string > &inames, const
+std::vector< std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Generate a function that calculates nfwd forward derivatives.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::alloc_mem() const  "
+
+[INTERNAL]  Create memory block.
+
+";
 
 
 // File: classcasadi_1_1OneSX.xml
@@ -51970,6 +52834,18 @@ Crunch the numbers; solve the problem.
 
 ";
 
+%feature("docstring") casadi::casadi_solve "
+
+Crunch the numbers; solve the problem.
+
+";
+
+%feature("docstring")  casadi::Opti::casadi_solve "
+
+Crunch the numbers; solve the problem.
+
+";
+
 %feature("docstring")  casadi::Opti::x() const  "
 
 Get all (scalarised) decision variables as a symbolic column vector.
@@ -52061,10 +52937,6 @@ Number of (scalarised) constraints.
 %feature("docstring") casadi::Opti::Opti() "
 
 Create Opti Context.
-
-";
-
-%feature("docstring")  casadi::Opti::value_parameters() const  "
 
 ";
 
@@ -52220,6 +53092,24 @@ update the original.
 
 ";
 
+%feature("docstring") casadi::casadi_copy "
+
+Get a copy of the.
+
+The copy is effectively a deep copy: Updating the state of the copy does not
+update the original.
+
+";
+
+%feature("docstring")  casadi::Opti::casadi_copy "
+
+Get a copy of the.
+
+The copy is effectively a deep copy: Updating the state of the copy does not
+update the original.
+
+";
+
 %feature("docstring")  casadi::SharedObject::class_name() const  "
 
 Get class name.
@@ -52332,12 +53222,44 @@ update the original.
 
 ";
 
-%feature("docstring")  casadi::Opti::ubg() const  "
+%feature("docstring")  casadi::Opti::solver(const std::string &solver, const
+Dict &plugin_options=Dict(), const Dict &solver_options=Dict()) "
+
+Set a solver.
+
+Parameters:
+-----------
+
+solver:  any of the nlpsol plugins can be used here In practice, not all
+nlpsol plugins may be supported yet
+
+options:  passed on to nlpsol plugin No stability can be guaranteed about
+this part of the API
+
+options:  to be passed to nlpsol solver No stability can be guaranteed about
+this part of the API
 
 ";
 
-%feature("docstring")  casadi::Opti::solver(const std::string &solver, const
-Dict &plugin_options=Dict(), const Dict &solver_options=Dict()) "
+%feature("docstring") casadi::casadi_solver "
+
+Set a solver.
+
+Parameters:
+-----------
+
+solver:  any of the nlpsol plugins can be used here In practice, not all
+nlpsol plugins may be supported yet
+
+options:  passed on to nlpsol plugin No stability can be guaranteed about
+this part of the API
+
+options:  to be passed to nlpsol solver No stability can be guaranteed about
+this part of the API
+
+";
+
+%feature("docstring")  casadi::Opti::casadi_solver "
 
 Set a solver.
 
@@ -52386,17 +53308,8 @@ constraints
 
 ";
 
-%feature("docstring")  casadi::Opti::update_user_dict(const std::vector< MX
-> &m, const Dict &meta) "
-
-";
-
 
 // File: classcasadi_1_1OptiAdvanced.xml
-%feature("docstring")  casadi::OptiAdvanced::assert_empty() const  "
-
-";
-
 %feature("docstring")  casadi::Opti::dual(const MX &m) const  "
 
 get the dual variable
@@ -52426,11 +53339,6 @@ attribute:  'full' (default) or 'symmetric'
 
 ";
 
-%feature("docstring")  casadi::OptiAdvanced::mark_problem_dirty(bool
-flag=true) "
-
-";
-
 %feature("docstring")  casadi::Opti::lam_g() const  "
 
 Get all (scalarised) dual variables as a symbolic column vector.
@@ -52447,10 +53355,6 @@ Useful for obtaining the Lagrange Hessian:
 
 ";
 
-%feature("docstring")  casadi::OptiAdvanced::assert_solved() const  "
-
-";
-
 %feature("docstring")  casadi::SharedObject::class_name() const  "
 
 Get class name.
@@ -52461,11 +53365,6 @@ Get class name.
 const  "
 
 Interpret an expression (for internal use only)
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::show_infeasibilities(double
-tol=0) const  "
 
 ";
 
@@ -52483,14 +53382,6 @@ Set meta-data of an expression.
 
 ";
 
-%feature("docstring")  casadi::OptiAdvanced::instance_number() const  "
-
-";
-
-%feature("docstring")  casadi::Opti::ubg() const  "
-
-";
-
 %feature("docstring")  casadi::Opti::user_dict(const MX &m) const  "
 
 Get user data.
@@ -52504,25 +53395,10 @@ point to any node, \"0\" is returned.
 
 ";
 
-%feature("docstring")  casadi::OptiAdvanced::x_lookup(casadi_index i) const
-"
-
-";
-
 %feature("docstring")  casadi::Opti::disp(std::ostream &stream, bool
 more=false) const  "
 
 Print representation.
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::describe(const MX &x,
-casadi_index indent=0) const  "
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::solve_actual(const DMDict
-&args) "
 
 ";
 
@@ -52553,19 +53429,6 @@ attribute:  'full' (default) or 'symmetric'
 
 ";
 
-%feature("docstring")  casadi::OptiAdvanced::g_describe(casadi_index i)
-const  "
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::problem_dirty() const  "
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::arg() const  "
-
-";
-
 %feature("docstring")  casadi::Opti::value_variables() const  "
 
 get assignment expressions for latest values
@@ -52573,6 +53436,18 @@ get assignment expressions for latest values
 ";
 
 %feature("docstring")  casadi::Opti::solve() "
+
+Crunch the numbers; solve the problem.
+
+";
+
+%feature("docstring") casadi::casadi_solve "
+
+Crunch the numbers; solve the problem.
+
+";
+
+%feature("docstring")  casadi::Opti::casadi_solve "
 
 Crunch the numbers; solve the problem.
 
@@ -52587,13 +53462,27 @@ update the original.
 
 ";
 
+%feature("docstring") casadi::casadi_copy "
+
+Get a copy of the.
+
+The copy is effectively a deep copy: Updating the state of the copy does not
+update the original.
+
+";
+
+%feature("docstring")  casadi::Opti::casadi_copy "
+
+Get a copy of the.
+
+The copy is effectively a deep copy: Updating the state of the copy does not
+update the original.
+
+";
+
 %feature("docstring") casadi::OptiAdvanced "
 
 C++ includes: optistack.hpp ";
-
-%feature("docstring")  casadi::OptiAdvanced::solved() const  "
-
-";
 
 %feature("docstring")  casadi::Opti::value(const MX &x, const std::vector<
 MX > &values=std::vector< MX >()) const  "
@@ -52657,11 +53546,6 @@ constraints
 
 ";
 
-%feature("docstring")  casadi::Opti::update_user_dict(const std::vector< MX
-> &m, const Dict &meta) "
-
-";
-
 %feature("docstring")  casadi::Opti::set_initial(const MX &x, const DM &v) "
 
 Set initial guess for decision variables
@@ -52720,19 +53604,6 @@ Get string representation.
 
 ";
 
-%feature("docstring")  casadi::Opti::value_parameters() const  "
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::solver_dirty() const  "
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::mark_solver_dirty(bool
-flag=true) "
-
-";
-
 %feature("docstring")  casadi::Opti::lbg() const  "
 
 Get all (scalarised) bounds on constraints as a column vector.
@@ -52742,10 +53613,6 @@ Get all (scalarised) bounds on constraints as a column vector.
 %feature("docstring")  casadi::Opti::ng() const  "
 
 Number of (scalarised) constraints.
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::objective() const  "
 
 ";
 
@@ -52846,10 +53713,6 @@ Number of (scalarised) decision variables.
 
 ";
 
-%feature("docstring") casadi::OptiAdvanced::OptiAdvanced(const Opti &x) "
-
-";
-
 %feature("docstring")  casadi::Opti::set_value(const MX &x, const DM &v) "
 
 Set value of parameter.
@@ -52864,14 +53727,6 @@ Each parameter must be given a value before 'solve' can be called
 Set value of parameter.
 
 Each parameter must be given a value before 'solve' can be called
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::res(const DMDict &res) "
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::res() const  "
 
 ";
 
@@ -52894,14 +53749,6 @@ update the original.
 
 ";
 
-%feature("docstring")  casadi::OptiAdvanced::solve_prepare() "
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::baked_copy() const  "
-
-";
-
 %feature("docstring")  casadi::Opti::np() const  "
 
 Number of (scalarised) parameters.
@@ -52917,7 +53764,43 @@ calls used to create the variables
 
 ";
 
+%feature("docstring") casadi::casadi_symvar "
+
+Get symbols present in expression.
+
+Returned vector is ordered according to the order of variable()/parameter()
+calls used to create the variables
+
+";
+
+%feature("docstring")  casadi::OptiAdvanced::casadi_symvar "
+
+Get symbols present in expression.
+
+Returned vector is ordered according to the order of variable()/parameter()
+calls used to create the variables
+
+";
+
 %feature("docstring")  casadi::OptiAdvanced::symvar(const MX &expr) const  "
+
+Get symbols present in expression.
+
+Returned vector is ordered according to the order of variable()/parameter()
+calls used to create the variables
+
+";
+
+%feature("docstring") casadi::casadi_symvar "
+
+Get symbols present in expression.
+
+Returned vector is ordered according to the order of variable()/parameter()
+calls used to create the variables
+
+";
+
+%feature("docstring")  casadi::OptiAdvanced::casadi_symvar "
 
 Get symbols present in expression.
 
@@ -52936,6 +53819,24 @@ calls used to create the variables
 
 ";
 
+%feature("docstring") casadi::casadi_symvar "
+
+Get symbols present in expression.
+
+Returned vector is ordered according to the order of variable()/parameter()
+calls used to create the variables
+
+";
+
+%feature("docstring")  casadi::OptiAdvanced::casadi_symvar "
+
+Get symbols present in expression.
+
+Returned vector is ordered according to the order of variable()/parameter()
+calls used to create the variables
+
+";
+
 %feature("docstring")  casadi::Opti::advanced() const  "
 
 Get a copy with advanced functionality.
@@ -52945,16 +53846,6 @@ stability
 
 The copy is effectively a deep copy: Updating the state of the copy does not
 update the original.
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::active_values(VariableType
-type) const  "
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::x_describe(casadi_index i)
-const  "
 
 ";
 
@@ -52992,26 +53883,9 @@ guaranteed about this part of the API.
 
 ";
 
-%feature("docstring")  casadi::OptiAdvanced::constraints() const  "
-
-";
-
 %feature("docstring")  casadi::OptiAdvanced::bake() "
 
 Fix the structure of the optimization problem.
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::assert_active_symbol(const MX
-&m) const  "
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::mark_solved(bool flag=true) "
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::assert_baked() const  "
 
 ";
 
@@ -53020,11 +53894,6 @@ const  "
 
 return true if expression is only dependant on Opti parameters, not
 variables
-
-";
-
-%feature("docstring")  casadi::OptiAdvanced::g_lookup(casadi_index i) const
-"
 
 ";
 
@@ -53053,8 +53922,39 @@ this part of the API
 
 ";
 
-%feature("docstring")  casadi::OptiAdvanced::active_symvar(VariableType
-type) const  "
+%feature("docstring") casadi::casadi_solver "
+
+Set a solver.
+
+Parameters:
+-----------
+
+solver:  any of the nlpsol plugins can be used here In practice, not all
+nlpsol plugins may be supported yet
+
+options:  passed on to nlpsol plugin No stability can be guaranteed about
+this part of the API
+
+options:  to be passed to nlpsol solver No stability can be guaranteed about
+this part of the API
+
+";
+
+%feature("docstring")  casadi::Opti::casadi_solver "
+
+Set a solver.
+
+Parameters:
+-----------
+
+solver:  any of the nlpsol plugins can be used here In practice, not all
+nlpsol plugins may be supported yet
+
+options:  passed on to nlpsol plugin No stability can be guaranteed about
+this part of the API
+
+options:  to be passed to nlpsol solver No stability can be guaranteed about
+this part of the API
 
 ";
 
@@ -53075,26 +53975,9 @@ Get all (scalarised) decision variables as a symbolic column vector.
 
 
 // File: classcasadi_1_1OptiCallback.xml
-%feature("docstring") casadi::OptiCallback::~OptiCallback "
-
-";
-
 %feature("docstring") casadi::OptiCallback "
 
 C++ includes: optistack.hpp ";
-
-%feature("docstring")  casadi::OptiCallback::call(casadi_int i) "
-
-";
-
-%feature("docstring") casadi::OptiCallback::OptiCallback() "
-
-";
-
-%feature("docstring") casadi::OptiCallback::OptiCallback(const OptiCallback
-&obj) "
-
-";
 
 
 // File: classcasadi_1_1OptiSol.xml
@@ -53104,25 +53987,12 @@ get assignment expressions for the optimal solution
 
 ";
 
-%feature("docstring")  casadi::OptiSol::get_str(bool more=false) const  "
-
-";
-
 %feature("docstring")  casadi::OptiSol::stats() const  "
 
 Get statistics.
 
 nlpsol stats are passed as-is. No stability can be guaranteed about this
 part of the API
-
-";
-
-%feature("docstring")  casadi::OptiSol::type_name() const  "
-
-";
-
-%feature("docstring")  casadi::OptiSol::disp(std::ostream &stream, bool
-more=false) const  "
 
 ";
 
@@ -53171,14 +54041,6 @@ Parameters:
 
 values:  Optional assignment expressions (e.g. x==3) to overrule the current
 value
-
-";
-
-%feature("docstring")  casadi::OptiSol::value_parameters() const  "
-
-";
-
-%feature("docstring")  casadi::OptiSol::opti() const  "
 
 ";
 
@@ -53250,6 +54112,13 @@ k) const  "
 %feature("docstring")  casadi::ProtoFunction::clear_mem() "
 
 [INTERNAL]  Clear all memory (called from destructor)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_sparsity_out(casadi_int
+i) "
+
+[INTERNAL]  Get sparsity of a given output.
 
 ";
 
@@ -53475,10 +54344,10 @@ persistent=false) "
 
 ";
 
-%feature("docstring")
-casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
 
-[INTERNAL]  Codegen incref for dependencies.
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -53601,6 +54470,13 @@ double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
 
 ";
 
+%feature("docstring")
+casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
+
+[INTERNAL]  Codegen incref for dependencies.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::size_out(casadi_int ind)
 const  "
 
@@ -53609,7 +54485,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -53665,6 +54541,13 @@ bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::is_a(const std::string
 &type, bool recursive) const  "
 
@@ -53692,10 +54575,10 @@ std::string &lang, std::ostream &stream, const Dict &options) const  "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::disp(std::ostream &stream,
-bool more) const  "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Display object.
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -53737,11 +54620,16 @@ casadi::FunctionInternal::codegen_declarations(CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::get_n_in() "
 
@@ -53852,7 +54740,7 @@ original
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -53879,7 +54767,7 @@ double **arg, double **res, casadi_int *iw, double *w) const  "
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -53942,7 +54830,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -54293,10 +55181,10 @@ C++ includes: oracle_function.hpp ";
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::get_sparsity_out(casadi_int
-i) "
+%feature("docstring")  casadi::FunctionInternal::disp(std::ostream &stream,
+bool more) const  "
 
-[INTERNAL]  Get sparsity of a given output.
+[INTERNAL]  Display object.
 
 ";
 
@@ -54417,7 +55305,7 @@ multiplying.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -54450,11 +55338,16 @@ SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::SharedObjectInternal::getCount() const  "
 
@@ -54581,7 +55474,7 @@ casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -54623,7 +55516,7 @@ structure recognition.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -54664,15 +55557,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -54877,7 +55771,7 @@ casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -54926,6 +55820,13 @@ casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
 const  "
 
 [INTERNAL]  C-style formatted printing during evaluation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -55018,7 +55919,7 @@ buf_sz, const char *fmt,...) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -55221,11 +56122,16 @@ std::string &name, std::ostream &stream) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::Conic::get_default_in(casadi_int ind) const
 "
@@ -55408,7 +56314,7 @@ casadi::FunctionInternal::instruction_output(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -55422,7 +56328,7 @@ casadi::FunctionInternal::instruction_input(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -55468,6 +56374,13 @@ get_forward(casadi_int nfwd) if no cached version is available.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::Conic::print_fstats(const ConicMemory *m)
 const  "
 
@@ -55505,9 +56418,9 @@ casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::sz_res() const  "
+%feature("docstring")  casadi::Conic::psd_support() const  "
 
-[INTERNAL]  Get required length of res field.
+[INTERNAL]  Can psd constraints be treated.
 
 ";
 
@@ -55705,8 +56618,8 @@ bool persistent=false) "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::is_a(const std::string
-&type, bool recursive) const  "
+%feature("docstring")  casadi::Conic::is_a(const std::string &type, bool
+recursive) const  "
 
 [INTERNAL]  Check if the function is of a particular type.
 
@@ -55750,6 +56663,12 @@ symmetric, bool allow_forward, bool allow_reverse) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::sz_res() const  "
+
+[INTERNAL]  Get required length of res field.
+
+";
+
 %feature("docstring")  casadi::Conic::get_name_in(casadi_int i)  "
 
 [INTERNAL]  Names of function input and outputs.
@@ -55770,7 +56689,7 @@ symmetric, bool allow_forward, bool allow_reverse) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -55798,15 +56717,16 @@ std::vector< M > &arg) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -55872,6 +56792,13 @@ CodeGenerator &g) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::has_forward(casadi_int
 nfwd) const  "
 
@@ -55917,11 +56844,16 @@ casadi::FunctionInternal::codegen_declarations(CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::get_min_in(casadi_int ind)
 const  "
@@ -56011,7 +56943,7 @@ std::string &lang, std::ostream &stream, const Dict &options) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -56036,6 +56968,1316 @@ multiplying.
 DM > &arg) const  "
 
 [INTERNAL]  Evaluate with DM matrices.
+
+";
+
+
+// File: classcasadi_1_1Qrqp.xml
+%feature("docstring")  casadi::FunctionInternal::get_jacobian(const
+std::string &name, const std::vector< std::string > &inames, const
+std::vector< std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::oracle() const  "
+
+[INTERNAL]  Get oracle.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::codegen_name(const
+CodeGenerator &g) const  "
+
+[INTERNAL]  Get name in codegen.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_derivative() const  "
+
+[INTERNAL]  Can derivatives be calculated in any way?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::forward(casadi_int nfwd)
+const  "
+
+[INTERNAL]  Return function that calculates forward derivatives
+forward(nfwd) returns a cached instance if available, and calls  Function
+get_forward(casadi_int nfwd) if no cached version is available.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
+
+[INTERNAL]  Serialize function header.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::definition() const  "
+
+[INTERNAL]  Get function signature: name:(inputs)->(outputs)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::print(const char *fmt,...)
+const  "
+
+[INTERNAL]  C-style formatted printing during evaluation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_out() const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::getJacSparsity(casadi_int
+iind, casadi_int oind, bool symmetric) const  "
+
+[INTERNAL]  Generate the sparsity of a Jacobian block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_dm(const std::vector<
+DM > &arg) const  "
+
+[INTERNAL]  Evaluate with DM matrices.
+
+";
+
+%feature("docstring")  casadi::Conic::is_a(const std::string &type, bool
+recursive) const  "
+
+[INTERNAL]  Check if the function is of a particular type.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mapsum_mx(const
+std::vector< MX > &arg, const std::string &parallelization) "
+
+[INTERNAL]  Parallel evaluation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::jac() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::export_code(const
+std::string &lang, std::ostream &stream, const Dict &options) const  "
+
+[INTERNAL]  Export function in a specific language.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::adjViaJac(casadi_int nadj)
+const  "
+
+[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
+multiplying.
+
+";
+
+%feature("docstring")  casadi::Conic::get_sparsity_in(casadi_int i)  "
+
+[INTERNAL]  Sparsities of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sp_forward(const bvec_t
+**arg, bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
+
+[INTERNAL]  Propagate sparsity forward.
+
+";
+
+%feature("docstring")  casadi::SharedObjectInternal::weak() "
+
+[INTERNAL]  Get a weak reference to the object.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::free_mx() const  "
+
+[INTERNAL]  Get free variables ( MX)
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
+
+[INTERNAL]  Codegen incref for dependencies.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::getJacSparsityHierarchical(casadi_int iind,
+casadi_int oind) const  "
+
+[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
+structure recognition.
+
+";
+
+%feature("docstring")  casadi::Conic::get_n_out()  "
+
+[INTERNAL]  Number of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::Qrqp::eval(const double **arg, double **res,
+casadi_int *iw, double *w, void *mem) const  "
+
+[INTERNAL]   Solve the QP.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::setup(void *mem, const
+double **arg, double **res, casadi_int *iw, double *w) const  "
+
+[INTERNAL]  Set the (persistent and temporary) work vectors.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_codegen() const  "
+
+[INTERNAL]  Is codegen supported?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sp_reverse(bvec_t **arg,
+bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
+
+[INTERNAL]  Propagate sparsity backwards.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_partition(casadi_int
+iind, casadi_int oind, Sparsity &D1, Sparsity &D2, bool compact, bool
+symmetric, bool allow_forward, bool allow_reverse) const  "
+
+[INTERNAL]  Get the unidirectional or bidirectional partition.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::clear_mem() "
+
+[INTERNAL]  Clear all memory (called from destructor)
+
+";
+
+%feature("docstring")  casadi::Qrqp::get_stats(void *mem) const  "
+
+[INTERNAL]  Get all statistics.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mx_in(casadi_int ind) const
+"
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mx_in() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::generate_lifted(Function
+&vdef_fcn, Function &vinit_fcn) const  "
+
+[INTERNAL]  Extract the functions needed for the Lifted Newton method.
+
+";
+
+%feature("docstring")  casadi::Qrqp::alloc_mem() const  "
+
+[INTERNAL]  Create memory block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_max_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Get largest input value.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::which_depends(const
+std::string &s_in, const std::vector< std::string > &s_out, casadi_int
+order, bool tr=false) const  "
+
+[INTERNAL]  Which variables enter with some order.
+
+Parameters:
+-----------
+
+s_in:   Input name
+
+s_out:   Output name(s)
+
+order:  Only 1 (linear) and 2 (nonlinear) allowed
+
+tr:  Flip the relationship. Return which expressions contain the variables
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_arg(size_t sz_arg,
+bool persistent=false) "
+
+[INTERNAL]  Ensure required length of arg field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::getAdaptorSolverName()
+const  "
+
+[INTERNAL]  Obtain solver name from Adaptor.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_free() const  "
+
+[INTERNAL]  Print free variables.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::memory(casadi_int ind) const
+"
+
+[INTERNAL]  Memory objects.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_res() const  "
+
+[INTERNAL]  Get required length of res field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 reverse seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::has_free() const  "
+
+[INTERNAL]  Does the function have free variables.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_iw() const  "
+
+[INTERNAL]  Get required length of iw field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 forward seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::has_spfwd() const  "
+
+[INTERNAL]  Is the class able to propagate seeds through the algorithm?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::symbolicAdjSeed(casadi_int
+nadj, const std::vector< MatType > &v) const  "
+
+[INTERNAL]  Symbolic expressions for the adjoint seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_min_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Get smallest input value.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size2_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sparsity_jac(casadi_int
+iind, casadi_int oind, bool compact, bool symmetric) const  "
+
+[INTERNAL]  Get, if necessary generate, the sparsity of a Jacobian block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_reltol() const  "
+
+[INTERNAL]  Get relative tolerance.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::codegen(CodeGenerator &g,
+const std::string &fname) const  "
+
+[INTERNAL]  Generate code the function.
+
+";
+
+%feature("docstring")  casadi::Conic::get_sparsity_out(casadi_int i)  "
+
+[INTERNAL]  Sparsities of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::Conic::integer_support() const  "
+
+[INTERNAL]  Can discrete variables be treated.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_work(size_t &sz_arg,
+size_t &sz_res, size_t &sz_iw, size_t &sz_w) const  "
+
+[INTERNAL]  Get number of temporary variables needed.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
+
+[INTERNAL]  Print dimensions of inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::reverse(casadi_int nadj)
+const  "
+
+[INTERNAL]  Return function that calculates adjoint derivatives
+reverse(nadj) returns a cached instance if available, and calls  Function
+get_reverse(casadi_int nadj) if no cached version is available.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::fwd_seed(casadi_int nfwd)
+const  "
+
+[INTERNAL]  Symbolic expressions for the forward seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::check_res(const
+std::vector< M > &res, casadi_int &npar) const  "
+
+[INTERNAL]  Check if output arguments have correct length and dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sparsity_out(casadi_int
+ind) const  "
+
+[INTERNAL]  Input/output sparsity.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_mx(const MXVector
+&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+
+[INTERNAL]  Evaluate with symbolic matrices.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::getJacSparsityGen(casadi_int iind, casadi_int
+oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
+
+[INTERNAL]  Get the sparsity pattern, forward mode.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_forward(casadi_int
+nfwd, const std::string &name, const std::vector< std::string > &inames,
+const std::vector< std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Return function that calculates forward derivatives
+forward(nfwd) returns a cached instance if available, and calls  Function
+get_forward(casadi_int nfwd) if no cached version is available.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_jac() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::serialize(std::ostream
+&stream) const  "
+
+[INTERNAL]  Serialize.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::jit_dependencies(const
+std::string &fname) "
+
+[INTERNAL]  Jit dependencies.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_jacobian() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::instruction_input(casadi_int k) const  "
+
+[INTERNAL]  Get the (integer) input arguments of an atomic operation.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::codegen_declarations(CodeGenerator &g) const  "
+
+[INTERNAL]  Generate code for the declarations of the C function.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::codegen_sparsities(CodeGenerator &g) const  "
+
+[INTERNAL]  Codegen sparsities.
+
+";
+
+%feature("docstring")  casadi::Conic::get_n_in()  "
+
+[INTERNAL]  Number of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_function(const
+std::string &fname) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_iw(size_t sz_iw, bool
+persistent=false) "
+
+[INTERNAL]  Ensure required length of iw field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_function() const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::get_function(const
+std::string &name) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::size1_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sparsity_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output sparsity.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::index_out(const std::string
+&name) const  "
+
+[INTERNAL]  Get output scheme index by name.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::print_option(const
+std::string &name, std::ostream &stream) const  "
+
+[INTERNAL]  Print all information there is to know about a certain option.
+
+";
+
+%feature("docstring")  casadi::Qrqp::plugin_name() const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::sprint(char *buf, size_t
+buf_sz, const char *fmt,...) const  "
+
+[INTERNAL]  C-style formatted printing to string.
+
+";
+
+%feature("docstring")  casadi::Conic::generateNativeCode(std::ostream &file)
+const  "
+
+[INTERNAL]  Generate native code in the interfaced language for debugging
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::n_nodes() const  "
+
+[INTERNAL]  Number of nodes in the algorithm.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_reverse(const
+std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
+std::vector< MX > > &aseed, std::vector< std::vector< MX > > &asens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_reverse(const
+std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
+std::vector< SX > > &aseed, std::vector< std::vector< SX > > &asens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_in() const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_gen(const double
+**arg, double **res, casadi_int *iw, double *w, void *mem) const  "
+
+[INTERNAL]  Evaluate numerically.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_gen(const SXElem
+**arg, SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
+
+[INTERNAL]  Evaluate a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_gen(const bvec_t
+**arg, bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
+
+[INTERNAL]  Evaluate a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size1_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_abstol() const  "
+
+[INTERNAL]  Get absolute tolerance.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::release(casadi_int mem) const
+"
+
+[INTERNAL]  Release a memory object.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::signature(const std::string
+&fname) const  "
+
+[INTERNAL]  Code generate the function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::check_arg(const
+std::vector< M > &arg, casadi_int &npar) const  "
+
+[INTERNAL]  Check if input arguments have correct length and dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_jacobian_sparsity()
+const  "
+
+[INTERNAL]  Get Jacobian sparsity.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::matching_arg(const
+std::vector< M > &arg, casadi_int &npar) const  "
+
+[INTERNAL]  Check if input arguments that needs to be replaced.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::codegen_decref(CodeGenerator &g) const  "
+
+[INTERNAL]  Codegen decref for dependencies.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::set_temp(void *mem, const
+double **arg, double **res, casadi_int *iw, double *w) const  "
+
+[INTERNAL]  Set the (temporary) work vectors.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_reverse(casadi_int
+nadj) const  "
+
+[INTERNAL]  Return function that calculates adjoint derivatives
+reverse(nadj) returns a cached instance if available, and calls  Function
+get_reverse(casadi_int nadj) if no cached version is available.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::jacobian() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::info() const  "
+
+[INTERNAL]  Obtain information about function
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::index_in(const std::string
+&name) const  "
+
+[INTERNAL]  Get input scheme index by name.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_reverse(casadi_int
+nadj, const std::string &name, const std::vector< std::string > &inames,
+const std::vector< std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Return function that calculates adjoint derivatives
+reverse(nadj) returns a cached instance if available, and calls  Function
+get_reverse(casadi_int nadj) if no cached version is available.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::wrap() const  "
+
+[INTERNAL]  Wrap in an Function instance consisting of only one MX call.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call(const std::vector< M >
+&arg, std::vector< M > &res, bool always_inline, bool never_inline) const  "
+
+[INTERNAL]   Call a function, templated.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_jac(const std::string
+&name, const std::vector< std::string > &inames, const std::vector<
+std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::codegen_body(CodeGenerator
+&g) const  "
+
+[INTERNAL]  Generate code for the function body.
+
+";
+
+%feature("docstring")  casadi::Qrqp::free_mem(void *mem) const  "
+
+[INTERNAL]  Free memory block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_forward(casadi_int
+nfwd) const  "
+
+[INTERNAL]  Return function that calculates forward derivatives
+forward(nfwd) returns a cached instance if available, and calls  Function
+get_forward(casadi_int nfwd) if no cached version is available.
+
+";
+
+%feature("docstring")  casadi::SharedObjectInternal::getCount() const  "
+
+[INTERNAL]  Get the reference count.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::self() const  "
+
+[INTERNAL]  Get a public class instance.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mx_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mx_out() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::Qrqp::init(const Dict &opts)  "
+
+[INTERNAL]  Initialize.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_res(size_t sz_res,
+bool persistent=false) "
+
+[INTERNAL]  Ensure required length of res field.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
+
+[INTERNAL]  Construct Prepares the function for evaluation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::print_options(std::ostream
+&stream) const  "
+
+[INTERNAL]  Print list of options.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::instruction_output(casadi_int k) const  "
+
+[INTERNAL]  Get the (integer) output argument of an atomic operation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_w() const  "
+
+[INTERNAL]  Get required length of w field.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::getJacSparsityHierarchicalSymm(casadi_int iind,
+casadi_int oind) const  "
+
+[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
+structure recognition for symmetric Jacobians
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::codegen_meta(CodeGenerator
+&g) const  "
+
+[INTERNAL]  Generate meta-information allowing a user to evaluate a
+generated function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_out() const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring") casadi::Qrqp "
+
+'qrqp' plugin for Conic
+
+Solve QPs using an active-set method
+
+>List of available options
+
++--------------+-----------+-----------------------------------------------+
+|      Id      |   Type    |                  Description                  |
++==============+===========+===============================================+
+| du_to_pr     | OT_DOUBLE | How much larger dual than primal error is     |
+|              |           | acceptable [1000]                             |
++--------------+-----------+-----------------------------------------------+
+| max_iter     | OT_INT    | Maximum number of iterations [1000].          |
++--------------+-----------+-----------------------------------------------+
+| print_header | OT_BOOL   | Print header [true].                          |
++--------------+-----------+-----------------------------------------------+
+| print_iter   | OT_BOOL   | Print iterations [true].                      |
++--------------+-----------+-----------------------------------------------+
+| tol          | OT_DOUBLE | Tolerance [1e-8].                             |
++--------------+-----------+-----------------------------------------------+
+
+Joel Andersson
+
+>List of available options
+
++--------------+---------------+---------------------------+---------------+
+|      Id      |     Type      |        Description        |    Used in    |
++==============+===============+===========================+===============+
+| discrete     | OT_BOOLVECTOR | Indicates which of the    | casadi::Conic |
+|              |               | variables are discrete,   |               |
+|              |               | i.e. integer-valued       |               |
++--------------+---------------+---------------------------+---------------+
+| du_to_pr     | OT_DOUBLE     | How much larger dual than | casadi::Qrqp  |
+|              |               | primal error is           |               |
+|              |               | acceptable [1000]         |               |
++--------------+---------------+---------------------------+---------------+
+| max_iter     | OT_INT        | Maximum number of         | casadi::Qrqp  |
+|              |               | iterations [1000].        |               |
++--------------+---------------+---------------------------+---------------+
+| print_header | OT_BOOL       | Print header [true].      | casadi::Qrqp  |
++--------------+---------------+---------------------------+---------------+
+| print_iter   | OT_BOOL       | Print iterations [true].  | casadi::Qrqp  |
++--------------+---------------+---------------------------+---------------+
+| tol          | OT_DOUBLE     | Tolerance [1e-8].         | casadi::Qrqp  |
++--------------+---------------+---------------------------+---------------+
+
+Diagrams
+--------
+
+
+
+C++ includes: qrqp.hpp ";
+
+%feature("docstring")  casadi::Qrqp::init_mem(void *mem) const  "
+
+[INTERNAL]  Initalize memory block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::slice(const std::string
+&name, const std::vector< casadi_int > &order_in, const std::vector<
+casadi_int > &order_out, const Dict &opts) const  "
+
+[INTERNAL]  returns a new function with a selection of inputs/outputs of the
+original
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_arg() const  "
+
+[INTERNAL]  Get required length of arg field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::ad_weight() const  "
+
+[INTERNAL]  Weighting factor for chosing forward/reverse mode.
+
+";
+
+%feature("docstring") casadi::Qrqp::~Qrqp "
+
+[INTERNAL]  Destructor.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::instruction_id(casadi_int
+k) const  "
+
+[INTERNAL]  Get an atomic operation operator index.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::matching_res(const
+std::vector< M > &arg, casadi_int &npar) const  "
+
+[INTERNAL]  Check if output arguments that needs to be replaced.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
+%feature("docstring")  casadi::Conic::print_fstats(const ConicMemory *m)
+const  "
+
+[INTERNAL]  Print statistics.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::symbolic_output(const
+std::vector< MX > &arg) const  "
+
+[INTERNAL]  Get a vector of symbolic variables corresponding to the outputs.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::checkout() const  "
+
+[INTERNAL]  Checkout a memory object.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_in() const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_sx(const SXElem **arg,
+SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
+
+[INTERNAL]  Evaluate with symbolic scalars.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_in(casadi_int ind) const
+"
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_in() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::Conic::check_inputs(const double *lbx, const
+double *ubx, const double *lba, const double *uba) const  "
+
+[INTERNAL]  Check if the numerical values of the supplied bounds make sense.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
+
+[INTERNAL]  Get the floating point output argument of an atomic operation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_res(const
+std::vector< M > &res, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_w(size_t sz_w, bool
+persistent=false) "
+
+[INTERNAL]  Ensure required length of w field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::factory(const std::string
+&name, const std::vector< std::string > &s_in, const std::vector<
+std::string > &s_out, const Function::AuxOut &aux, const Dict &opts) const
+"
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::n_instructions() const  "
+
+[INTERNAL]  Get the number of atomic operations.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_sprev() const  "
+
+[INTERNAL]  Is the class able to propagate seeds through the algorithm?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc(const Function &f,
+bool persistent=false) "
+
+[INTERNAL]  Ensure work vectors long enough to evaluate function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::finalize(const Dict &opts)
+"
+
+[INTERNAL]  Finalize the object creation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::disp_more(std::ostream
+&stream) const  "
+
+[INTERNAL]  Print more.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::fwdViaJac(casadi_int nfwd)
+const  "
+
+[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
+multiplying.
+
+";
+
+%feature("docstring")  casadi::Conic::get_name_out(casadi_int i)  "
+
+[INTERNAL]  Names of function input and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::all_scalar() const  "
+
+[INTERNAL]  Are all inputs and outputs scalar.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_forward(const
+std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
+std::vector< MX > > &fseed, std::vector< std::vector< MX > > &fsens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
+classes.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_forward(const
+std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
+std::vector< SX > > &fseed, std::vector< std::vector< SX > > &fsens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
+classes.
+
+";
+
+%feature("docstring")  casadi::Conic::get_name_in(casadi_int i)  "
+
+[INTERNAL]  Names of function input and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_out() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::uses_output() const  "
+
+[INTERNAL]  Do the derivative functions need nondifferentiated outputs?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::set_work(void *mem, const
+double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
+
+[INTERNAL]  Set the (persistent) work vectors.
+
+";
+
+%feature("docstring")  casadi::Conic::get_default_in(casadi_int ind) const
+"
+
+[INTERNAL]  Get default input value.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::free_sx() const  "
+
+[INTERNAL]  Get free variables (SX)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::generate_dependencies(const
+std::string &fname, const Dict &opts) const  "
+
+[INTERNAL]  Export / Generate C code for the dependency function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_arg(const
+std::vector< M > &arg, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 inputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::instruction_MX(casadi_int
+k) const  "
+
+[INTERNAL]  get MX expression associated with instruction
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::disp(std::ostream &stream,
+bool more) const  "
+
+[INTERNAL]  Display object.
+
+";
+
+%feature("docstring")  casadi::Qrqp::class_name() const  "
+
+[INTERNAL]  Readable name of the internal class.
+
+";
+
+%feature("docstring") casadi::Qrqp::Qrqp(const std::string &name, const
+std::map< std::string, Sparsity > &st) "
+
+[INTERNAL]  Create a new Solver.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size2_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::Conic::psd_support() const  "
+
+[INTERNAL]  Can psd constraints be treated.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
+
+[INTERNAL]   Call a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]   Call a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sp_weight() const  "
+
+[INTERNAL]  Weighting factor for chosing forward/reverse mode, sparsity
+propagation.
+
+";
+
+%feature("docstring")  casadi::Qrqp::get_options() const  "
+
+[INTERNAL]  Options.
 
 ";
 
@@ -56089,7 +58331,7 @@ casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -56109,23 +58351,28 @@ ind) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::size_in(casadi_int ind)
 const  "
@@ -56140,7 +58387,7 @@ const  "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -56305,7 +58552,7 @@ SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -56345,11 +58592,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::sparsity_jac(casadi_int
 iind, casadi_int oind, bool compact, bool symmetric) const  "
@@ -56473,9 +58725,17 @@ elements.
 
 [INTERNAL] ";
 
-%feature("docstring")  casadi::SharedObjectInternal::weak() "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Get a weak reference to the object.
+[INTERNAL]  Get function in cache.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -56640,7 +58900,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -56696,6 +58956,13 @@ Internal class.
 |                  |                 | 0.0, 2: ui >     |                  |
 |                  |                 | 0.0, -2: ui <    |                  |
 |                  |                 | 0.0.             |                  |
++------------------+-----------------+------------------+------------------+
+| error_on_fail    | OT_BOOL         | When the         | casadi::Rootfind |
+|                  |                 | numerical        | er               |
+|                  |                 | process returns  |                  |
+|                  |                 | unsuccessfully,  |                  |
+|                  |                 | raise an error   |                  |
+|                  |                 | (default false). |                  |
 +------------------+-----------------+------------------+------------------+
 | implicit_input   | OT_INT          | Index of the     | casadi::Rootfind |
 |                  |                 | input that       | er               |
@@ -56777,15 +59044,16 @@ generated function.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -56897,6 +59165,13 @@ casadi::FunctionInternal::codegen_sparsities(CodeGenerator &g) const  "
 std::string &lang, std::ostream &stream, const Dict &options) const  "
 
 [INTERNAL]  Export function in a specific language.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -57063,7 +59338,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -57119,7 +59394,7 @@ casadi::FunctionInternal::instruction_output(casadi_int k) const  "
 
 ";
 
-%feature("docstring")  casadi::OracleFunction::get_stats(void *mem) const  "
+%feature("docstring")  casadi::Rootfinder::get_stats(void *mem) const  "
 
 [INTERNAL]  Get all statistics.
 
@@ -57356,6 +59631,12 @@ std::vector< std::string > &onames, const Dict &opts) const  "
 
 ";
 
+%feature("docstring")  casadi::SharedObjectInternal::weak() "
+
+[INTERNAL]  Get a weak reference to the object.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::free_mx() const  "
 
 [INTERNAL]  Get free variables ( MX)
@@ -57522,6 +59803,13 @@ bool persistent=false) "
 
 [INTERNAL] ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::disp(std::ostream &stream,
 bool more) const  "
 
@@ -57551,7 +59839,7 @@ nadj, const std::vector< MatType > &v) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -57588,16 +59876,24 @@ const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -57623,7 +59919,7 @@ bool never_inline) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -57761,6 +60057,13 @@ bool persistent=false) "
 const  "
 
 [INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -58333,11 +60636,16 @@ double **arg, double **res, casadi_int *iw, double *w) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::print(const char *fmt,...)
 const  "
@@ -58382,7 +60690,7 @@ original
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -58468,11 +60776,16 @@ buf_sz, const char *fmt,...) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::fwdViaJac(casadi_int nfwd)
 const  "
@@ -58511,7 +60824,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -58539,7 +60852,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -58649,7 +60962,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -58732,7 +61045,7 @@ always_inline, bool never_inline) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -58748,11 +61061,16 @@ casadi::FunctionInternal::codegen_declarations(CodeGenerator &g) const  "
 
 // File: classcasadi_1_1Scpgen.xml
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::instruction_id(casadi_int
 k) const  "
@@ -58853,11 +61171,16 @@ structure recognition for symmetric Jacobians
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::alloc_w(size_t sz_w, bool
 persistent=false) "
@@ -58992,6 +61315,13 @@ const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::get_max_in(casadi_int ind)
 const  "
 
@@ -59050,7 +61380,7 @@ casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -59263,15 +61593,16 @@ iind, casadi_int oind, bool symmetric) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -59415,7 +61746,7 @@ structure recognition.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -59460,7 +61791,7 @@ const  "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -59724,6 +62055,13 @@ std::string &name) const  "
 
 [INTERNAL] ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::info() const  "
 
 [INTERNAL]  Obtain information about function
@@ -59856,7 +62194,7 @@ casadi_int &ls_iter, bool &ls_success) const  "
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -59902,7 +62240,7 @@ k) const  "
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -59913,7 +62251,7 @@ k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -60125,6 +62463,13 @@ Joel Andersson, Attila Kozma and Joris Gillis
 |                   |                 | i.e. integer-     |                |
 |                   |                 | valued            |                |
 +-------------------+-----------------+-------------------+----------------+
+| error_on_fail     | OT_BOOL         | When the          | casadi::Nlpsol |
+|                   |                 | numerical process |                |
+|                   |                 | returns           |                |
+|                   |                 | unsuccessfully,   |                |
+|                   |                 | raise an error    |                |
+|                   |                 | (default false).  |                |
++-------------------+-----------------+-------------------+----------------+
 | eval_errors_fatal | OT_BOOL         | When errors occur | casadi::Nlpsol |
 |                   |                 | during evaluation |                |
 |                   |                 | of f,g,...,stop   |                |
@@ -60261,7 +62606,7 @@ C++ includes: scpgen.hpp ";
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -60296,6 +62641,13 @@ oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
 std::string &fname) const  "
 
 [INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
 
 %feature("docstring")  casadi::Scpgen::printIteration(ScpgenMemory *m,
 std::ostream &stream) const  "
@@ -60701,8 +63053,32 @@ Get a vector of indices.
 
 ";
 
+%feature("docstring") casadi::casadi_all "
+
+Get a vector of indices.
+
+";
+
+%feature("docstring")  casadi::Slice::casadi_all "
+
+Get a vector of indices.
+
+";
+
 %feature("docstring")  casadi::Slice::all(const Slice &outer, casadi_int
 len) const  "
+
+Get a vector of indices (nested slice)
+
+";
+
+%feature("docstring") casadi::casadi_all "
+
+Get a vector of indices (nested slice)
+
+";
+
+%feature("docstring")  casadi::Slice::casadi_all "
 
 Get a vector of indices (nested slice)
 
@@ -60724,21 +63100,6 @@ A single element (explicit to avoid ambiguity with IM overload.
 stop, casadi_int step=1) "
 
 A slice.
-
-";
-
-%feature("docstring") casadi::Slice::Slice(int start, int stop, int step=1)
-"
-
-";
-
-%feature("docstring") casadi::Slice::Slice(int start, casadi_int stop, int
-step=1) "
-
-";
-
-%feature("docstring") casadi::Slice::Slice(casadi_int start, int stop, int
-step=1) "
 
 ";
 
@@ -60799,7 +63160,7 @@ DM > &arg) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -60847,11 +63208,16 @@ symmetric, bool allow_forward, bool allow_reverse) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::has_jac() const  "
 
@@ -60868,15 +63234,16 @@ const std::string &fname) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -61087,9 +63454,10 @@ double **arg, double **res, casadi_int *iw, double *w) const  "
 
 ";
 
-%feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Construct Prepares the function for evaluation.
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -61289,7 +63657,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -61390,11 +63758,16 @@ iind, casadi_int oind, bool symmetric) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::serialize(std::ostream
 &stream) const  "
@@ -61449,6 +63822,12 @@ const  "
 
 ";
 
+%feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
+
+[INTERNAL]  Construct Prepares the function for evaluation.
+
+";
+
 %feature("docstring")  casadi::SlicotDple::class_name() const  "
 
 [INTERNAL]  Readable name of the internal class.
@@ -61480,7 +63859,7 @@ always_inline, bool never_inline) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -61494,7 +63873,7 @@ casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -61875,7 +64254,7 @@ oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -61901,9 +64280,23 @@ elements.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::all_scalar() const  "
 
 [INTERNAL]  Are all inputs and outputs scalar.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -61935,7 +64328,7 @@ structure recognition for symmetric Jacobians
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -62219,7 +64612,7 @@ Problem structure.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -62247,7 +64640,7 @@ std::vector< std::string > &onames, const Dict &opts) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -62274,7 +64667,7 @@ k) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -62294,15 +64687,16 @@ buf_sz, const char *fmt,...) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -62412,6 +64806,13 @@ casadi::FunctionInternal::instruction_input(casadi_int k) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
 %feature("docstring") casadi::SlicotExpm "
 
 [INTERNAL]  'slicot' plugin for Expm
@@ -62479,6 +64880,13 @@ casadi::FunctionInternal::codegen_decref(CodeGenerator &g) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::uses_output() const  "
 
 [INTERNAL]  Do the derivative functions need nondifferentiated outputs?
@@ -62505,7 +64913,7 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -62645,7 +65053,7 @@ bool persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -62800,7 +65208,7 @@ ind) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -62880,6 +65288,13 @@ const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::alloc_iw(size_t sz_iw, bool
 persistent=false) "
 
@@ -62888,11 +65303,16 @@ persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::generate_lifted(Function
 &vdef_fcn, Function &vinit_fcn) const  "
@@ -62902,11 +65322,16 @@ std::vector< std::vector< M > > &fseed) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::mapsum_mx(const
 std::vector< MX > &arg, const std::string &parallelization) "
@@ -63523,15 +65948,16 @@ Diagrams
 C++ includes: finite_differences.hpp ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -63548,11 +65974,16 @@ get_reverse(casadi_int nadj) if no cached version is available.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::size1_out(casadi_int ind)
 const  "
@@ -63633,6 +66064,13 @@ const  "
 %feature("docstring")  casadi::FiniteDiff::get_n_out()  "
 
 [INTERNAL]  Number of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
 
 ";
 
@@ -63791,7 +66229,7 @@ buf_sz, const char *fmt,...) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -63921,7 +66359,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -64085,14 +66523,19 @@ DM > &arg) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
+
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -64250,7 +66693,7 @@ iind, casadi_int oind, bool symmetric) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -64479,7 +66922,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -64535,6 +66978,13 @@ multiplying.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::has_spfwd() const  "
 
 [INTERNAL]  Is the class able to propagate seeds through the algorithm?
@@ -64542,7 +66992,7 @@ multiplying.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -64588,6 +67038,13 @@ const  "
 std::string &lang, std::ostream &stream, const Dict &options) const  "
 
 [INTERNAL]  Export function in a specific language.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -64779,6 +67236,18 @@ nrow, casadi_int ncol) "
 "
 
 [INTERNAL]  Const access the sparsity - reference to data member.
+
+";
+
+%feature("docstring") casadi::casadi_sparsity "
+
+Const access the sparsity - reference to data member.
+
+";
+
+%feature("docstring")  casadi::SparseStorage< DataType >::casadi_sparsity "
+
+Const access the sparsity - reference to data member.
 
 ";
 
@@ -64975,13 +67444,29 @@ work under the GNU LGPL.
 
 ";
 
-%feature("docstring")  casadi::Sparsity::is_vector() const  "
+%feature("docstring") casadi::casadi_qr_sparse "
 
-Check if the pattern is a row or column vector.
+Symbolic QR factorization Returns the sparsity pattern of V (compact
+representation of Q) and R as well as vectors needed for the numerical
+factorization and solution. The implementation is a modified version of
+CSparse Copyright(c) Timothy A. Davis, 2006-2009 Licensed as a derivative
+work under the GNU LGPL.
 
 ";
 
-%feature("docstring")  casadi::Sparsity::hash() const  "
+%feature("docstring")  casadi::Sparsity::casadi_qr_sparse "
+
+Symbolic QR factorization Returns the sparsity pattern of V (compact
+representation of Q) and R as well as vectors needed for the numerical
+factorization and solution. The implementation is a modified version of
+CSparse Copyright(c) Timothy A. Davis, 2006-2009 Licensed as a derivative
+work under the GNU LGPL.
+
+";
+
+%feature("docstring")  casadi::Sparsity::is_vector() const  "
+
+Check if the pattern is a row or column vector.
 
 ";
 
@@ -65000,6 +67485,30 @@ Print a description of the object.
 ";
 
 %feature("docstring")  casadi::Sparsity::find(bool ind1=false) const  "
+
+Get the location of all non-zero elements as they would appear in a Dense
+matrix A : DenseMatrix 4 x 3 B : SparseMatrix 4 x 3 , 5 structural non-
+zeros.
+
+k = A.find() A[k] will contain the elements of A that are non-zero in B
+
+Inverse of nonzeros.
+
+";
+
+%feature("docstring") casadi::casadi_find "
+
+Get the location of all non-zero elements as they would appear in a Dense
+matrix A : DenseMatrix 4 x 3 B : SparseMatrix 4 x 3 , 5 structural non-
+zeros.
+
+k = A.find() A[k] will contain the elements of A that are non-zero in B
+
+Inverse of nonzeros.
+
+";
+
+%feature("docstring")  casadi::Sparsity::casadi_find "
 
 Get the location of all non-zero elements as they would appear in a Dense
 matrix A : DenseMatrix 4 x 3 B : SparseMatrix 4 x 3 , 5 structural non-
@@ -65066,7 +67575,7 @@ Create a sparse matrix with all structural zeros.
 ";
 
 %feature("docstring")  casadi::Sparsity::to_file(const std::string
-&filename, const std::string &format="") const  "
+&filename, const std::string &format_hint="") const  "
 
 Export sparsity pattern to file
 
@@ -65077,6 +67586,13 @@ Supported formats: .mtx Matrix Market
 %feature("docstring")  casadi::Sparsity::colind(casadi_int cc) const  "
 
 Get a reference to the colindex of column cc (see class description)
+
+";
+
+%feature("docstring")  casadi::Sparsity::is_stacked(const Sparsity &y,
+casadi_int n) const  "
+
+Check if pattern is horizontal repeat of another.
 
 ";
 
@@ -65102,6 +67618,18 @@ Get the number of columns, Octave-style syntax.
 ";
 
 %feature("docstring")  casadi::Sparsity::unite(const Sparsity &y) const  "
+
+Union of two sparsity patterns.
+
+";
+
+%feature("docstring") casadi::casadi_unite "
+
+Union of two sparsity patterns.
+
+";
+
+%feature("docstring")  casadi::Sparsity::casadi_unite "
 
 Union of two sparsity patterns.
 
@@ -65135,6 +67663,24 @@ Append another sparsity patten horizontally.
 
 %feature("docstring")  casadi::Sparsity::ldl(std::vector< casadi_int >
 &output_p, bool amd=true) const  "
+
+Symbolic LDL factorization Returns the sparsity pattern of L^T.
+
+The implementation is a modified version of LDL Copyright(c) Timothy A.
+Davis, 2005-2013 Licensed as a derivative work under the GNU LGPL
+
+";
+
+%feature("docstring") casadi::casadi_ldl "
+
+Symbolic LDL factorization Returns the sparsity pattern of L^T.
+
+The implementation is a modified version of LDL Copyright(c) Timothy A.
+Davis, 2005-2013 Licensed as a derivative work under the GNU LGPL
+
+";
+
+%feature("docstring")  casadi::Sparsity::casadi_ldl "
 
 Symbolic LDL factorization Returns the sparsity pattern of L^T.
 
@@ -65238,6 +67784,18 @@ Create diagonal sparsity pattern.
 
 ";
 
+%feature("docstring") casadi::casadi_diag "
+
+Create diagonal sparsity pattern.
+
+";
+
+%feature("docstring")  casadi::Sparsity::casadi_diag "
+
+Create diagonal sparsity pattern.
+
+";
+
 %feature("docstring")  casadi::Sparsity::diag(casadi_int nrow, casadi_int
 ncol) "
 
@@ -65245,8 +67803,32 @@ Create diagonal sparsity pattern.
 
 ";
 
+%feature("docstring") casadi::casadi_diag "
+
+Create diagonal sparsity pattern.
+
+";
+
+%feature("docstring")  casadi::Sparsity::casadi_diag "
+
+Create diagonal sparsity pattern.
+
+";
+
 %feature("docstring")  casadi::Sparsity::diag(const std::pair< casadi_int,
 casadi_int > &rc) "
+
+Create diagonal sparsity pattern.
+
+";
+
+%feature("docstring") casadi::casadi_diag "
+
+Create diagonal sparsity pattern.
+
+";
+
+%feature("docstring")  casadi::Sparsity::casadi_diag "
 
 Create diagonal sparsity pattern.
 
@@ -65403,6 +67985,30 @@ matrix
 
 ";
 
+%feature("docstring") casadi::casadi_transpose "
+
+Transpose the matrix and get the reordering of the non-zero entries.
+
+Parameters:
+-----------
+
+mapping:  the non-zeros of the original matrix for each non-zero of the new
+matrix
+
+";
+
+%feature("docstring")  casadi::Sparsity::casadi_transpose "
+
+Transpose the matrix and get the reordering of the non-zero entries.
+
+Parameters:
+-----------
+
+mapping:  the non-zeros of the original matrix for each non-zero of the new
+matrix
+
+";
+
 %feature("docstring")  casadi::Sparsity::pmult(const std::vector< casadi_int
 > &p, bool permute_rows=true, bool permute_columns=true, bool
 invert_permutation=false) const  "
@@ -65435,17 +68041,6 @@ Timothy A. Davis, 2006-2009 Licensed as a derivative work under the GNU LGPL
 %feature("docstring")  casadi::SharedObject::class_name() const  "
 
 Get class name.
-
-";
-
-%feature("docstring")  casadi::Sparsity::is_equal(const Sparsity &y) const
-"
-
-";
-
-%feature("docstring")  casadi::Sparsity::is_equal(casadi_int nrow,
-casadi_int ncol, const std::vector< casadi_int > &colind, const std::vector<
-casadi_int > &row) const  "
 
 ";
 
@@ -65797,15 +68392,16 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -65893,6 +68489,13 @@ oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::codegen_body(CodeGenerator
+&g) const  "
+
+[INTERNAL]  Generate code for the function body.
+
+";
+
 %feature("docstring")
 casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
 
@@ -65959,8 +68562,15 @@ elements.
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -66209,6 +68819,13 @@ A textbook SQPMethod
 |                   |               | are discrete,     |                  |
 |                   |               | i.e. integer-     |                  |
 |                   |               | valued            |                  |
++-------------------+---------------+-------------------+------------------+
+| error_on_fail     | OT_BOOL       | When the          | casadi::Nlpsol   |
+|                   |               | numerical process |                  |
+|                   |               | returns           |                  |
+|                   |               | unsuccessfully,   |                  |
+|                   |               | raise an error    |                  |
+|                   |               | (default false).  |                  |
 +-------------------+---------------+-------------------+------------------+
 | eval_errors_fatal | OT_BOOL       | When errors occur | casadi::Nlpsol   |
 |                   |               | during evaluation |                  |
@@ -66534,7 +69151,7 @@ persistent=false) "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -66586,7 +69203,7 @@ multiplying.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
@@ -66600,11 +69217,16 @@ std::vector< M > &arg) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::serialize(std::ostream
 &stream) const  "
@@ -66659,7 +69281,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -66737,10 +69359,10 @@ casadi::FunctionInternal::codegen_sparsities(CodeGenerator &g) const  "
 
 ";
 
-%feature("docstring")  casadi::FunctionInternal::codegen_body(CodeGenerator
-&g) const  "
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
 
-[INTERNAL]  Generate code for the function body.
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -66824,11 +69446,16 @@ iind, casadi_int oind, bool symmetric) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::jacobian() const  "
 
@@ -66948,7 +69575,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -67078,7 +69705,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::OracleFunction::calc_function(OracleMemory
-*m, const std::string &fcn, const double *const *arg=0) const  "
+*m, const std::string &fcn, const double *const *arg=nullptr) const  "
 
 [INTERNAL] ";
 
@@ -67114,6 +69741,13 @@ std::vector< SX > > &aseed, std::vector< std::vector< SX > > &asens, bool
 always_inline, bool never_inline) const  "
 
 [INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -67223,7 +69857,7 @@ elements.
 [INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -67264,19 +69898,11 @@ std::string > &s_out, const Function::AuxOut &aux, const Dict &opts) const
 
 C++ includes: casadi_logger.hpp ";
 
-%feature("docstring") casadi::Logger::Stream< Err >::Stream() "
-
-";
-
 
 // File: classcasadi_1_1Logger_1_1Streambuf.xml
 %feature("docstring") casadi::Logger::Streambuf "
 
 C++ includes: casadi_logger.hpp ";
-
-%feature("docstring") casadi::Logger::Streambuf< Err >::Streambuf() "
-
-";
 
 
 // File: classcasadi_1_1SubAssign.xml
@@ -67377,7 +70003,7 @@ nadj, const std::vector< MatType > &v) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments have correct length and dimensions.
 
@@ -67398,11 +70024,16 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_aseed(const
-std::vector< std::vector< M > > &aseed) const  "
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 reverse seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::fwdViaJac(casadi_int nfwd)
 const  "
@@ -67506,6 +70137,13 @@ elements.
 const  "
 
 [INTERNAL]  Get largest input value.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
 
 ";
 
@@ -67631,14 +70269,14 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::check_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments have correct length and dimensions.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if input arguments that needs to be replaced.
 
@@ -67809,7 +70447,7 @@ const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::matching_res(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int &npar) const  "
 
 [INTERNAL]  Check if output arguments that needs to be replaced.
 
@@ -67856,7 +70494,7 @@ tr:  Flip the relationship. Return which expressions contain the variables
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_arg(const
-std::vector< M > &arg) const  "
+std::vector< M > &arg, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 inputs.
 
@@ -68073,6 +70711,13 @@ bool more) const  "
 
 ";
 
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
 %feature("docstring")  casadi::FunctionInternal::has_sprev() const  "
 
 [INTERNAL]  Is the class able to propagate seeds through the algorithm?
@@ -68137,11 +70782,16 @@ derivatives
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_fseed(const
-std::vector< std::vector< M > > &fseed) const  "
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 forward seeds.
 
 ";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::FunctionInternal::mx_out(casadi_int ind)
 const  "
@@ -68291,15 +70941,16 @@ elements.
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
-&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
 
 [INTERNAL]   Call a function, overloaded.
 
 ";
 
 %feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
-Matrix< D > > &arg, std::vector< Matrix< D > > &res, bool always_inline,
-bool never_inline) const  "
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
 
 [INTERNAL]   Call a function, overloaded.
 
@@ -68334,7 +70985,7 @@ double **arg, double **res, casadi_int *iw, double *w) const  "
 ";
 
 %feature("docstring")  casadi::FunctionInternal::replace_res(const
-std::vector< M > &res) const  "
+std::vector< M > &res, casadi_int npar) const  "
 
 [INTERNAL]  Replace 0-by-0 outputs.
 
@@ -68400,6 +71051,13 @@ elements.
 %feature("docstring")  casadi::FunctionInternal::sz_w() const  "
 
 [INTERNAL]  Get required length of w field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
 
 ";
 
@@ -68955,6 +71613,1193 @@ const  "
 // File: classcasadi_1_1SymbolicSX.xml
 
 
+// File: classcasadi_1_1ThreadMap.xml
+%feature("docstring")  casadi::FunctionInternal::symbolicAdjSeed(casadi_int
+nadj, const std::vector< MatType > &v) const  "
+
+[INTERNAL]  Symbolic expressions for the adjoint seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::serialize(std::ostream
+&stream) const  "
+
+[INTERNAL]  Serialize.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::disp(std::ostream &stream,
+bool more) const  "
+
+[INTERNAL]  Display object.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::getJacSparsityGen(casadi_int iind, casadi_int
+oind, bool symmetric, casadi_int gr_i=1, casadi_int gr_o=1) const  "
+
+[INTERNAL]  Get the sparsity pattern, forward mode.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sparsity_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output sparsity.
+
+";
+
+%feature("docstring")  casadi::Map::get_sparsity_in(casadi_int i)  "
+
+[INTERNAL]  Sparsities of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sparsity_jac(casadi_int
+iind, casadi_int oind, bool compact, bool symmetric) const  "
+
+[INTERNAL]  Get, if necessary generate, the sparsity of a Jacobian block.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::memory(casadi_int ind) const
+"
+
+[INTERNAL]  Memory objects.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::construct(const Dict &opts) "
+
+[INTERNAL]  Construct Prepares the function for evaluation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::finalize(const Dict &opts)
+"
+
+[INTERNAL]  Finalize the object creation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::jac() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_out() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::tocache(const Function &f)
+const  "
+
+[INTERNAL]  Save function to cache.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_arg() const  "
+
+[INTERNAL]  Get required length of arg field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mapsum_mx(const
+std::vector< MX > &arg, const std::string &parallelization) "
+
+[INTERNAL]  Parallel evaluation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::check_arg(const
+std::vector< M > &arg, casadi_int &npar) const  "
+
+[INTERNAL]  Check if input arguments have correct length and dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size2_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_arg(const
+std::vector< M > &arg, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 inputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::codegen_name(const
+CodeGenerator &g) const  "
+
+[INTERNAL]  Get name in codegen.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_mx(const MXVector
+&arg, MXVector &res, bool always_inline, bool never_inline) const  "
+
+[INTERNAL]  Evaluate with symbolic matrices.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::free_sx() const  "
+
+[INTERNAL]  Get free variables (SX)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_jacobian() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::instruction_input(casadi_int k) const  "
+
+[INTERNAL]  Get the (integer) input arguments of an atomic operation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::signature(const std::string
+&fname) const  "
+
+[INTERNAL]  Code generate the function.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::codegen_incref(CodeGenerator &g) const  "
+
+[INTERNAL]  Codegen incref for dependencies.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::checkout() const  "
+
+[INTERNAL]  Checkout a memory object.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::getJacSparsityHierarchicalSymm(casadi_int iind,
+casadi_int oind) const  "
+
+[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
+structure recognition for symmetric Jacobians
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_dm(const std::vector<
+DM > &arg) const  "
+
+[INTERNAL]  Evaluate with DM matrices.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::print_dimensions(std::ostream &stream) const  "
+
+[INTERNAL]  Print dimensions of inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_gen(const double
+**arg, double **res, casadi_int *iw, double *w, void *mem) const  "
+
+[INTERNAL]  Evaluate numerically.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_gen(const SXElem
+**arg, SXElem **res, casadi_int *iw, SXElem *w, void *mem) const  "
+
+[INTERNAL]  Evaluate a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::eval_gen(const bvec_t
+**arg, bvec_t **res, casadi_int *iw, bvec_t *w, void *mem) const  "
+
+[INTERNAL]  Evaluate a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::Map::eval_gen(const T **arg, T **res,
+casadi_int *iw, T *w, casadi_int mem=0) const  "
+
+[INTERNAL]  Evaluate or propagate sparsities.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_partition(casadi_int
+iind, casadi_int oind, Sparsity &D1, Sparsity &D2, bool compact, bool
+symmetric, bool allow_forward, bool allow_reverse) const  "
+
+[INTERNAL]  Get the unidirectional or bidirectional partition.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::serialize_header(std::ostream &stream) const  "
+
+[INTERNAL]  Serialize function header.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc(const Function &f,
+bool persistent=false) "
+
+[INTERNAL]  Ensure work vectors long enough to evaluate function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::set_temp(void *mem, const
+double **arg, double **res, casadi_int *iw, double *w) const  "
+
+[INTERNAL]  Set the (temporary) work vectors.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_options() const  "
+
+[INTERNAL]  Options.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_max_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Get largest input value.
+
+";
+
+%feature("docstring")  casadi::Map::info() const  "
+
+[INTERNAL]  Obtain information about node
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_gen(const MXVector
+&arg, MXVector &res, casadi_int npar, bool always_inline, bool never_inline)
+const  "
+
+[INTERNAL]   Call a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_gen(const std::vector<
+MatrixCommon > &arg, std::vector< MatrixCommon > &res, casadi_int npar, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]   Call a function, overloaded.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::check_res(const
+std::vector< M > &res, casadi_int &npar) const  "
+
+[INTERNAL]  Check if output arguments have correct length and dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::slice(const std::string
+&name, const std::vector< casadi_int > &order_in, const std::vector<
+casadi_int > &order_out, const Dict &opts) const  "
+
+[INTERNAL]  returns a new function with a selection of inputs/outputs of the
+original
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::matching_res(const
+std::vector< M > &arg, casadi_int &npar) const  "
+
+[INTERNAL]  Check if output arguments that needs to be replaced.
+
+";
+
+%feature("docstring")  casadi::Map::has_forward(casadi_int nfwd) const  "
+
+[INTERNAL]  Generate a function that calculates nfwd forward derivatives.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::which_depends(const
+std::string &s_in, const std::vector< std::string > &s_out, casadi_int
+order, bool tr=false) const  "
+
+[INTERNAL]  Which variables enter with some order.
+
+Parameters:
+-----------
+
+s_in:   Input name
+
+s_out:   Output name(s)
+
+order:  Only 1 (linear) and 2 (nonlinear) allowed
+
+tr:  Flip the relationship. Return which expressions contain the variables
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::fwdViaJac(casadi_int nfwd)
+const  "
+
+[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
+multiplying.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_res() const  "
+
+[INTERNAL]  Get required length of res field.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::instruction_output(casadi_int k) const  "
+
+[INTERNAL]  Get the (integer) output argument of an atomic operation.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::alloc_mem() const  "
+
+[INTERNAL]  Create memory block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::reverse(casadi_int nadj)
+const  "
+
+[INTERNAL]  Return function that calculates adjoint derivatives
+reverse(nadj) returns a cached instance if available, and calls  Function
+get_reverse(casadi_int nadj) if no cached version is available.
+
+";
+
+%feature("docstring")  casadi::Map::get_default_in(casadi_int ind) const  "
+
+[INTERNAL]  Get default input value.
+
+";
+
+%feature("docstring")  casadi::Map::has_reverse(casadi_int nadj) const  "
+
+[INTERNAL]  Generate a function that calculates nadj adjoint derivatives.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_derivative() const  "
+
+[INTERNAL]  Can derivatives be calculated in any way?
+
+";
+
+%feature("docstring")  casadi::SharedObjectInternal::getCount() const  "
+
+[INTERNAL]  Get the reference count.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_out() const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_free() const  "
+
+[INTERNAL]  Print free variables.
+
+";
+
+%feature("docstring")  casadi::Map::eval_sx(const SXElem **arg, SXElem
+**res, casadi_int *iw, SXElem *w, void *mem) const  "
+
+[INTERNAL]  evaluate symbolically while also propagating directional
+derivatives
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::oracle() const  "
+
+[INTERNAL]  Get oracle.
+
+";
+
+%feature("docstring")  casadi::Map::has_spfwd() const  "
+
+[INTERNAL]  Is the class able to propagate seeds through the algorithm?
+
+";
+
+%feature("docstring")  casadi::Map::codegen_declarations(CodeGenerator &g)
+const  "
+
+[INTERNAL]  Generate code for the declarations of the C function.
+
+";
+
+%feature("docstring")  casadi::Map::get_name_in(casadi_int i)  "
+
+[INTERNAL]  Names of function input and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call(const std::vector< M >
+&arg, std::vector< M > &res, bool always_inline, bool never_inline) const  "
+
+[INTERNAL]   Call a function, templated.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::map(casadi_int n, const
+std::string &parallelization) const  "
+
+[INTERNAL]  Generate/retrieve cached serial map.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_free() const  "
+
+[INTERNAL]  Does the function have free variables.
+
+";
+
+%feature("docstring")  casadi::Map::get_reverse(casadi_int nadj, const
+std::string &name, const std::vector< std::string > &inames, const
+std::vector< std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Generate a function that calculates nadj adjoint derivatives.
+
+";
+
+%feature("docstring")  casadi::Map::sp_forward(const bvec_t **arg, bvec_t
+**res, casadi_int *iw, bvec_t *w, void *mem) const  "
+
+[INTERNAL]  Propagate sparsity forward.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::jacobian() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_in(casadi_int ind) const
+"
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sx_in() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_min_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Get smallest input value.
+
+";
+
+%feature("docstring")  casadi::Map::get_sparsity_out(casadi_int i)  "
+
+[INTERNAL]  Sparsities of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::codegen_meta(CodeGenerator
+&g) const  "
+
+[INTERNAL]  Generate meta-information allowing a user to evaluate a
+generated function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::all_scalar() const  "
+
+[INTERNAL]  Are all inputs and outputs scalar.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_res(const
+std::vector< M > &res, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::generate_lifted(Function
+&vdef_fcn, Function &vinit_fcn) const  "
+
+[INTERNAL]  Extract the functions needed for the Lifted Newton method.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::instruction_MX(casadi_int
+k) const  "
+
+[INTERNAL]  get MX expression associated with instruction
+
+";
+
+%feature("docstring")  casadi::Map::has_sprev() const  "
+
+[INTERNAL]  Is the class able to propagate seeds through the algorithm?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_jacobian_sparsity()
+const  "
+
+[INTERNAL]  Get Jacobian sparsity.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size2_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_in() const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::nnz_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output nonzeros.
+
+";
+
+%feature("docstring")  casadi::Map::sp_reverse(bvec_t **arg, bvec_t **res,
+casadi_int *iw, bvec_t *w, void *mem) const  "
+
+[INTERNAL]  Propagate sparsity backwards.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::export_code(const
+std::string &lang, std::ostream &stream, const Dict &options) const  "
+
+[INTERNAL]  Export function in a specific language.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::instruction_id(casadi_int
+k) const  "
+
+[INTERNAL]  Get an atomic operation operator index.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::wrap() const  "
+
+[INTERNAL]  Wrap in an Function instance consisting of only one MX call.
+
+";
+
+%feature("docstring")  casadi::Map::get_name_out(casadi_int i)  "
+
+[INTERNAL]  Names of function input and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_forward(const
+std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
+std::vector< MX > > &fseed, std::vector< std::vector< MX > > &fsens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
+classes.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_forward(const
+std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
+std::vector< SX > > &fseed, std::vector< std::vector< SX > > &fsens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Forward mode AD, virtual functions overloaded in derived
+classes.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::generate_dependencies(const
+std::string &fname, const Dict &opts) const  "
+
+[INTERNAL]  Export / Generate C code for the dependency function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::index_out(const std::string
+&name) const  "
+
+[INTERNAL]  Get output scheme index by name.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::is_a(const std::string
+&type, bool recursive) const  "
+
+[INTERNAL]  Check if the function is of a particular type.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_function() const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::get_function(const
+std::string &name) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::mx_in(casadi_int ind) const
+"
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mx_in() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_iw() const  "
+
+[INTERNAL]  Get required length of iw field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_jacobian(const
+std::string &name, const std::vector< std::string > &inames, const
+std::vector< std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::incache(const std::string
+&fname, Function &f) const  "
+
+[INTERNAL]  Get function in cache.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_iw(size_t sz_iw, bool
+persistent=false) "
+
+[INTERNAL]  Ensure required length of iw field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_stats(void *mem) const
+"
+
+[INTERNAL]  Get all statistics.
+
+";
+
+%feature("docstring")  casadi::Map::get_forward(casadi_int nfwd, const
+std::string &name, const std::vector< std::string > &inames, const
+std::vector< std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Generate a function that calculates nfwd forward derivatives.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::getJacSparsityHierarchical(casadi_int iind,
+casadi_int oind) const  "
+
+[INTERNAL]  A flavor of getJacSparsity that does hierarchical block
+structure recognition.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::codegen(CodeGenerator &g,
+const std::string &fname) const  "
+
+[INTERNAL]  Generate code the function.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sparsity_out(casadi_int
+ind) const  "
+
+[INTERNAL]  Input/output sparsity.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_abstol() const  "
+
+[INTERNAL]  Get absolute tolerance.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_w(size_t sz_w, bool
+persistent=false) "
+
+[INTERNAL]  Ensure required length of w field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_reverse(const
+std::vector< MX > &arg, const std::vector< MX > &res, const std::vector<
+std::vector< MX > > &aseed, std::vector< std::vector< MX > > &asens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::call_reverse(const
+std::vector< SX > &arg, const std::vector< SX > &res, const std::vector<
+std::vector< SX > > &aseed, std::vector< std::vector< SX > > &asens, bool
+always_inline, bool never_inline) const  "
+
+[INTERNAL]  Reverse mode, virtual functions overloaded in derived classes.
+
+";
+
+%feature("docstring")  casadi::SharedObjectInternal::weak() "
+
+[INTERNAL]  Get a weak reference to the object.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::ad_weight() const  "
+
+[INTERNAL]  Weighting factor for chosing forward/reverse mode.
+
+";
+
+%feature("docstring")  casadi::Map::get_n_in()  "
+
+[INTERNAL]  Number of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::disp_more(std::ostream
+&stream) const  "
+
+[INTERNAL]  Print more.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size1_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::fwd_seed(casadi_int nfwd)
+const  "
+
+[INTERNAL]  Symbolic expressions for the forward seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::definition() const  "
+
+[INTERNAL]  Get function signature: name:(inputs)->(outputs)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sp_weight() const  "
+
+[INTERNAL]  Weighting factor for chosing forward/reverse mode, sparsity
+propagation.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::init_mem(void *mem) const  "
+
+[INTERNAL]  Initalize memory block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::set_work(void *mem, const
+double **&arg, double **&res, casadi_int *&iw, double *&w) const  "
+
+[INTERNAL]  Set the (persistent) work vectors.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_out() const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::n_instructions() const  "
+
+[INTERNAL]  Get the number of atomic operations.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::codegen_decref(CodeGenerator &g) const  "
+
+[INTERNAL]  Codegen decref for dependencies.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size1_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::get_jac(const std::string
+&name, const std::vector< std::string > &inames, const std::vector<
+std::string > &onames, const Dict &opts) const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")
+casadi::FunctionInternal::instruction_constant(casadi_int k) const  "
+
+[INTERNAL]  Get the floating point output argument of an atomic operation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::index_in(const std::string
+&name) const  "
+
+[INTERNAL]  Get input scheme index by name.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::size_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Input/output dimensions.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M >> &fseed, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 forward seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_fseed(const
+std::vector< std::vector< M > > &fseed, casadi_int npar) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::get_reltol() const  "
+
+[INTERNAL]  Get relative tolerance.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::matching_arg(const
+std::vector< M > &arg, casadi_int &npar) const  "
+
+[INTERNAL]  Check if input arguments that needs to be replaced.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::getAdaptorSolverName()
+const  "
+
+[INTERNAL]  Obtain solver name from Adaptor.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_jac() const  "
+
+[INTERNAL]  Return Jacobian of all input elements with respect to all output
+elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::forward(casadi_int nfwd)
+const  "
+
+[INTERNAL]  Return function that calculates forward derivatives
+forward(nfwd) returns a cached instance if available, and calls  Function
+get_forward(casadi_int nfwd) if no cached version is available.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M >> &aseed, casadi_int npar) const  "
+
+[INTERNAL]  Replace 0-by-0 reverse seeds.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::replace_aseed(const
+std::vector< std::vector< M > > &aseed, casadi_int npar) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::mx_out(casadi_int ind)
+const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::mx_out() const  "
+
+[INTERNAL]  Get function input(s) and output(s)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::print_options(std::ostream
+&stream) const  "
+
+[INTERNAL]  Print list of options.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::free_mem(void *mem) const  "
+
+[INTERNAL]  Free memory block.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::free_mx() const  "
+
+[INTERNAL]  Get free variables ( MX)
+
+";
+
+%feature("docstring")  casadi::Map::get_n_out()  "
+
+[INTERNAL]  Number of function inputs and outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sprint(char *buf, size_t
+buf_sz, const char *fmt,...) const  "
+
+[INTERNAL]  C-style formatted printing to string.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::self() const  "
+
+[INTERNAL]  Get a public class instance.
+
+";
+
+%feature("docstring")  casadi::Map::has_codegen() const  "
+
+[INTERNAL]  Is codegen supported?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_in() const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::numel_in(casadi_int ind)
+const  "
+
+[INTERNAL]  Number of input/output elements.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::n_nodes() const  "
+
+[INTERNAL]  Number of nodes in the algorithm.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::clear_mem() "
+
+[INTERNAL]  Clear all memory (called from destructor)
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::sz_w() const  "
+
+[INTERNAL]  Get required length of w field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::has_function(const
+std::string &fname) const  "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::adjViaJac(casadi_int nadj)
+const  "
+
+[INTERNAL]  Calculate derivatives by multiplying the full Jacobian and
+multiplying.
+
+";
+
+%feature("docstring")  casadi::ProtoFunction::release(casadi_int mem) const
+"
+
+[INTERNAL]  Release a memory object.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::setup(void *mem, const
+double **arg, double **res, casadi_int *iw, double *w) const  "
+
+[INTERNAL]  Set the (persistent and temporary) work vectors.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::print(const char *fmt,...)
+const  "
+
+[INTERNAL]  C-style formatted printing during evaluation.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_arg(size_t sz_arg,
+bool persistent=false) "
+
+[INTERNAL]  Ensure required length of arg field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::uses_output() const  "
+
+[INTERNAL]  Do the derivative functions need nondifferentiated outputs?
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::factory(const std::string
+&name, const std::vector< std::string > &s_in, const std::vector<
+std::string > &s_out, const Function::AuxOut &aux, const Dict &opts) const
+"
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::FunctionInternal::sz_work(size_t &sz_arg,
+size_t &sz_res, size_t &sz_iw, size_t &sz_w) const  "
+
+[INTERNAL]  Get number of temporary variables needed.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::alloc_res(size_t sz_res,
+bool persistent=false) "
+
+[INTERNAL]  Ensure required length of res field.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::print_option(const
+std::string &name, std::ostream &stream) const  "
+
+[INTERNAL]  Print all information there is to know about a certain option.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::symbolic_output(const
+std::vector< MX > &arg) const  "
+
+[INTERNAL]  Get a vector of symbolic variables corresponding to the outputs.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::getJacSparsity(casadi_int
+iind, casadi_int oind, bool symmetric) const  "
+
+[INTERNAL]  Generate the sparsity of a Jacobian block.
+
+";
+
+%feature("docstring") casadi::ThreadMap "
+
+[INTERNAL]  A map Evaluate in parallel using std::thread Note: Do not use
+this class with much more than the intended number of threads for the
+parallel evaluation as it will cause excessive memory use.
+
+Joris Gillis
+
+C++ includes: map.hpp ";
+
+%feature("docstring")
+casadi::FunctionInternal::codegen_sparsities(CodeGenerator &g) const  "
+
+[INTERNAL]  Codegen sparsities.
+
+";
+
+%feature("docstring")  casadi::FunctionInternal::jit_dependencies(const
+std::string &fname) "
+
+[INTERNAL]  Jit dependencies.
+
+";
+
+
 // File: classcasadi_1_1Transpose.xml
 
 
@@ -68980,6 +72825,18 @@ Joel Andersson
 C++ includes: shared_object.hpp ";
 
 %feature("docstring")  casadi::WeakRef::shared() "
+
+Get a shared (owning) reference.
+
+";
+
+%feature("docstring") casadi::casadi_shared "
+
+Get a shared (owning) reference.
+
+";
+
+%feature("docstring")  casadi::WeakRef::casadi_shared "
 
 Get a shared (owning) reference.
 
@@ -69063,14 +72920,6 @@ Get string representation.
 
 ";
 
-%feature("docstring") casadi::XmlFile::XmlFile() "
-
-";
-
-%feature("docstring") casadi::XmlFile::XmlFile(const std::string &name) "
-
-";
-
 %feature("docstring") casadi::XmlFile::__hash__ "
 
 Returns a number that is unique for a given Node. If the Object does not
@@ -69094,10 +72943,6 @@ Is a null pointer?
 more=false) const  "
 
 Print a description of the object.
-
-";
-
-%feature("docstring") casadi::XmlFile::~XmlFile "
 
 ";
 
@@ -69148,11 +72993,6 @@ Get type info for a particular option.
 
 ";
 
-%feature("docstring")  casadi::temporary_file(const std::string &prefix,
-const std::string &suffix) "
-
-";
-
 %feature("docstring")  casadi::load_expm(const std::string &name) "
 
 Explicitly load a plugin dynamically.
@@ -69188,10 +73028,6 @@ m, casadi_int l, const double *A, const double *B, double *C, casadi_int
 strideA, casadi_int strideB, casadi_int strideC) "
 
 [INTERNAL] ";
-
-%feature("docstring")  casadi::is_zero(const T &x) "
-
-";
 
 %feature("docstring")  casadi::dple_out() "
 
@@ -69496,6 +73332,11 @@ Get the number of integrator outputs.
 
 ";
 
+%feature("docstring")  casadi::casadi_mmax(const T1 *x, casadi_int n,
+casadi_int is_dense) "
+
+[INTERNAL] ";
+
 %feature("docstring")  casadi::slicot_periodic_schur(casadi_int n,
 casadi_int K, const double *a, double *t, double *z, double *dwork, double
 *eig_real, double *eig_imag, double num_zero=0) "
@@ -69598,17 +73439,14 @@ Check if the vector is strictly increasing.
 
 ";
 
-%feature("docstring")  casadi::Contraction(const T &a, const T &b, T &r) "
-
-";
-
-%feature("docstring")  casadi::Contraction(const bvec_t &a, const bvec_t &b,
-bvec_t &r) "
-
-";
-
 %feature("docstring")  casadi::casadi_fill_casadi_int(casadi_int *x,
 casadi_int n, casadi_int alpha) "
+
+[INTERNAL] ";
+
+%feature("docstring")  casadi::casadi_qr_singular(T1 *rmin, casadi_int
+*irmin, const T1 *nz_r, const casadi_int *sp_r, const casadi_int *pc, T1
+eps) "
 
 [INTERNAL] ";
 
@@ -69666,17 +73504,6 @@ inc_x, T1 *y, casadi_int inc_y) "
 %feature("docstring")  casadi::nlpsol_options(const std::string &name) "
 
 Get all options for a plugin.
-
-";
-
-%feature("docstring")  casadi::einstein_eval(casadi_int n_iter, const
-std::vector< casadi_int > &iter_dims, const std::vector< casadi_int >
-&strides_a, const std::vector< casadi_int > &strides_b, const std::vector<
-casadi_int > &strides_c, const T *a_in, const T *b_in, T *c_in) "
-
-";
-
-%feature("docstring")  casadi::uerr() "
 
 ";
 
@@ -69760,11 +73587,6 @@ Hash a sparsity pattern.
 
 ";
 
-%feature("docstring")  casadi::hash_sparsity(casadi_int nrow, casadi_int
-ncol, const casadi_int *colind, const casadi_int *row) "
-
-";
-
 %feature("docstring")  casadi::is_slice2(const std::vector< casadi_int > &v)
 "
 
@@ -69813,6 +73635,13 @@ General information
 |                  |                 | 0.0, 2: ui >     |                  |
 |                  |                 | 0.0, -2: ui <    |                  |
 |                  |                 | 0.0.             |                  |
++------------------+-----------------+------------------+------------------+
+| error_on_fail    | OT_BOOL         | When the         | casadi::Rootfind |
+|                  |                 | numerical        | er               |
+|                  |                 | process returns  |                  |
+|                  |                 | unsuccessfully,  |                  |
+|                  |                 | raise an error   |                  |
+|                  |                 | (default false). |                  |
 +------------------+-----------------+------------------+------------------+
 | implicit_input   | OT_INT          | Index of the     | casadi::Rootfind |
 |                  |                 | input that       | er               |
@@ -70027,16 +73856,6 @@ Joel Andersson
 
 ";
 
-%feature("docstring")  casadi::rootfinder(const std::string &name, const
-std::string &solver, const MXDict &rfp, const Dict &opts=Dict()) "
-
-";
-
-%feature("docstring")  casadi::rootfinder(const std::string &name, const
-std::string &solver, const Function &f, const Dict &opts=Dict()) "
-
-";
-
 %feature("docstring")  casadi::casadi_ldl(const casadi_int *sp_a, const T1
 *a, const casadi_int *sp_lt, T1 *lt, T1 *d, const casadi_int *p, T1 *w) "
 
@@ -70126,17 +73945,6 @@ Duplicates are treated by looking up last occurrence
 
 ";
 
-%feature("docstring")  casadi::lookupvector(const std::vector< casadi_int >
-&v) "
-
-";
-
-%feature("docstring")  casadi::slicot_mb03vy(int n, int p, int ilo, int ihi,
-double *a, int lda1, int lda2, const double *tau, int ldtau, double
-*dwork=0, int ldwork=0) "
-
-";
-
 %feature("docstring")  casadi::doc_dple(const std::string &name) "
 
 Get the documentation string for a plugin.
@@ -70166,14 +73974,6 @@ Generate a hash value incrementally (function taken from boost)
 %feature("docstring")  casadi::rootfinder_n_in() "
 
 Number of rootfinder inputs.
-
-";
-
-%feature("docstring")  casadi::trim_path(const std::string &full_path) "
-
-";
-
-%feature("docstring")  casadi::uout() "
 
 ";
 
@@ -70640,11 +74440,6 @@ Joel Andersson
 
 ";
 
-%feature("docstring")  casadi::integrator(const std::string &name, const
-std::string &solver, const MXDict &dae, const Dict &opts=Dict()) "
-
-";
-
 %feature("docstring")  casadi::integrator_out() "
 
 Get integrator output scheme of integrators.
@@ -70671,7 +74466,7 @@ Get documentation for a particular option.
 ";
 
 %feature("docstring")  casadi::replace_mat(const M &arg, const Sparsity
-&inp) "
+&inp, casadi_int npar) "
 
 [INTERNAL] ";
 
@@ -70727,16 +74522,35 @@ Create a QP solver Solves the following strictly convex problem:
   LBA <= A x <= UBA
   LBX <= x   <= UBX
   
+  resize(Q x, np, np) + P >= 0 (psd)
+  
   with :
   H sparse (n x n) positive definite
   g dense  (n x 1)
+  A sparse (nc x n)
+  Q sparse symmetric (np^2 x n)
+  P sparse symmetric (np x nq)
   
   n: number of decision variables (x)
   nc: number of constraints (A)
+  nq: shape of psd constraint matrix
 
 
 
 If H is not positive-definite, the solver should throw an error.
+
+Second-order cone constraints can be added as psd constraints through a
+helper function 'soc':
+
+x in R^n y in R
+
+|| x ||_2 <= y
+
+<=>
+
+soc(x, y) psd
+
+This can be proven with soc(x, y)=[y*I x; x' y] using the Shur complement.
 
 General information
 ===================
@@ -70975,7 +74789,7 @@ General information
 |                  |                 | debugging        |                  |
 +------------------+-----------------+------------------+------------------+
 
->Input scheme: casadi::ConicInput (CONIC_NUM_IN = 10)
+>Input scheme: casadi::ConicInput (CONIC_NUM_IN = 12)
 
 +--------------+--------+--------------------------------------------------+
 |  Full name   | Short  |                   Description                    |
@@ -71002,6 +74816,10 @@ General information
 | CONIC_LAM_X0 | lam_x0 | dense                                            |
 +--------------+--------+--------------------------------------------------+
 | CONIC_LAM_A0 | lam_a0 | dense                                            |
++--------------+--------+--------------------------------------------------+
+| CONIC_Q      | q      | The matrix Q: sparse symmetric, (np^2 x n)       |
++--------------+--------+--------------------------------------------------+
+| CONIC_P      | p      | The matrix P: sparse symmetric, (np x np)        |
 +--------------+--------+--------------------------------------------------+
 
 >Output scheme: casadi::ConicOutput (CONIC_NUM_OUT = 4)
@@ -71037,9 +74855,9 @@ List of plugins
 
 - sqic
 
-- activeset
-
 - nlpsol
+
+- qrqp
 
 Note: some of the plugins in this list might not be available on your
 system. Also, there might be extra plugins available to you that are not
@@ -71390,29 +75208,6 @@ Interface to the SQIC solver for quadratic programming
 
 --------------------------------------------------------------------------------
 
-activeset
----------
-
-
-
-Solve QPs using an active-set method
-
->List of available options
-
-+----------+-----------+--------------------------------------+
-|    Id    |   Type    |             Description              |
-+==========+===========+======================================+
-| max_iter | OT_INT    | Maximum number of iterations [1000]. |
-+----------+-----------+--------------------------------------+
-| tol      | OT_DOUBLE | Tolerance [1e-8].                    |
-+----------+-----------+--------------------------------------+
-
---------------------------------------------------------------------------------
-
-
-
---------------------------------------------------------------------------------
-
 nlpsol
 ------
 
@@ -71430,6 +75225,36 @@ to use.
 +----------------+-----------+---------------------------------+
 | nlpsol_options | OT_DICT   | Options to be passed to solver. |
 +----------------+-----------+---------------------------------+
+
+--------------------------------------------------------------------------------
+
+
+
+--------------------------------------------------------------------------------
+
+qrqp
+----
+
+
+
+Solve QPs using an active-set method
+
+>List of available options
+
++--------------+-----------+-----------------------------------------------+
+|      Id      |   Type    |                  Description                  |
++==============+===========+===============================================+
+| du_to_pr     | OT_DOUBLE | How much larger dual than primal error is     |
+|              |           | acceptable [1000]                             |
++--------------+-----------+-----------------------------------------------+
+| max_iter     | OT_INT    | Maximum number of iterations [1000].          |
++--------------+-----------+-----------------------------------------------+
+| print_header | OT_BOOL   | Print header [true].                          |
++--------------+-----------+-----------------------------------------------+
+| print_iter   | OT_BOOL   | Print iterations [true].                      |
++--------------+-----------+-----------------------------------------------+
+| tol          | OT_DOUBLE | Tolerance [1e-8].                             |
++--------------+-----------+-----------------------------------------------+
 
 --------------------------------------------------------------------------------
 
@@ -71521,13 +75346,6 @@ Get all options for a plugin.
 const std::vector< T > &mat) "
 
 [INTERNAL] ";
-
-%feature("docstring")  casadi::slicot_mb03wd(char job, char compz, int n,
-int p, int ilo, int ihi, int iloz, int ihiz, double *h, int ldh1, int ldh2,
-double *z, int ldz1, int ldz2, double *wr, double *wi, double *dwork=0, int
-ldwork=0) "
-
-";
 
 %feature("docstring")  casadi::casadi_max_viol(casadi_int n, const T1 *x,
 const T1 *lb, const T1 *ub) "
@@ -71655,7 +75473,8 @@ x) "
 
 ";
 
-%feature("docstring")  casadi::casadi_house(T1 *x, T1 *beta, casadi_int n) "
+%feature("docstring")  casadi::casadi_house(T1 *v, T1 *beta, casadi_int nv)
+"
 
 [INTERNAL] ";
 
@@ -71716,11 +75535,6 @@ casadi_int m) "
 
 ";
 
-%feature("docstring")  casadi::slicot_mb03vd(int n, int p, int ilo, int ihi,
-double *a, int lda1, int lda2, double *tau, int ldtau, double *dwork=0) "
-
-";
-
 %feature("docstring")  casadi::nlpsol_default_in(casadi_int ind) "
 
 Default input for an NLP solver.
@@ -71730,16 +75544,6 @@ Default input for an NLP solver.
 %feature("docstring")  casadi::nlpsol_default_in() "
 
 Default input for an NLP solver.
-
-";
-
-%feature("docstring")  casadi::einstein_process(const T &A, const T &B,
-const T &C, const std::vector< casadi_int > &dim_a, const std::vector<
-casadi_int > &dim_b, const std::vector< casadi_int > &dim_c, const
-std::vector< casadi_int > &a, const std::vector< casadi_int > &b, const
-std::vector< casadi_int > &c, std::vector< casadi_int > &iter_dims,
-std::vector< casadi_int > &strides_a, std::vector< casadi_int > &strides_b,
-std::vector< casadi_int > &strides_c) "
 
 ";
 
@@ -71762,12 +75566,6 @@ value
 
 ";
 
-%feature("docstring")  casadi::slicot_mb05nd(int n, double delta, const
-double *a, int lda, double *ex, int ldex, double *exint, int ldexin, double
-tol, int *iwork, double *dwork, int ldwork) "
-
-";
-
 %feature("docstring")  casadi::casadi_ldl_trs(const casadi_int *sp_r, const
 T1 *nz_r, T1 *x, casadi_int tr) "
 
@@ -71776,11 +75574,6 @@ T1 *nz_r, T1 *x, casadi_int tr) "
 %feature("docstring")  casadi::has_rootfinder(const std::string &name) "
 
 Check if a particular plugin is available.
-
-";
-
-%feature("docstring")  casadi::index_interp1d(const std::vector< double >
-&x, double xq, bool equidistant=false) "
 
 ";
 
@@ -71795,6 +75588,11 @@ Get the number of QP solver outputs.
 Get the documentation string for a plugin.
 
 ";
+
+%feature("docstring")  casadi::casadi_qr_colcomb(T1 *v, const T1 *nz_r,
+const casadi_int *sp_r, const casadi_int *pc, T1 eps, casadi_int ind) "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::casadi_project(const T1 *x, const casadi_int
 *sp_x, T1 *y, const casadi_int *sp_y, T1 *w) "
@@ -72562,21 +76360,6 @@ Joris Gillis
 
 ";
 
-%feature("docstring")  casadi::dplesol(const MX &A, const MX &V, const
-std::string &solver, const Dict &opts=Dict()) "
-
-";
-
-%feature("docstring")  casadi::dplesol(const MXVector &A, const MXVector &V,
-const std::string &solver, const Dict &opts=Dict()) "
-
-";
-
-%feature("docstring")  casadi::dplesol(const DMVector &A, const DMVector &V,
-const std::string &solver, const Dict &opts=Dict()) "
-
-";
-
 %feature("docstring")  casadi::is_slice(const IM &x, bool ind1=false) "
 
 Is the IM a Slice.
@@ -72589,6 +76372,11 @@ bool ind1=false) "
 Check if an index vector can be represented more efficiently as a slice.
 
 ";
+
+%feature("docstring")  casadi::casadi_mmin(const T1 *x, casadi_int n,
+casadi_int is_dense) "
+
+[INTERNAL] ";
 
 %feature("docstring")  casadi::is_decreasing(const std::vector< T > &v) "
 
@@ -72612,10 +76400,6 @@ Get the documentation string for a plugin.
 T1 *y) "
 
 [INTERNAL]  Inner product.
-
-";
-
-%feature("docstring")  casadi::message_prefix(std::ostream &stream) "
 
 ";
 
@@ -72891,16 +76675,6 @@ Get the number of QP solver inputs.
 
 ";
 
-%feature("docstring")  casadi::qpsol(const std::string &name, const
-std::string &solver, const SXDict &qp, const Dict &opts=Dict()) "
-
-";
-
-%feature("docstring")  casadi::qpsol(const std::string &name, const
-std::string &solver, const MXDict &qp, const Dict &opts=Dict()) "
-
-";
-
 %feature("docstring")  casadi::doc_rootfinder(const std::string &name) "
 
 Get the documentation string for a plugin.
@@ -73011,6 +76785,13 @@ General information
 |                  |                 | are discrete,    |                  |
 |                  |                 | i.e. integer-    |                  |
 |                  |                 | valued           |                  |
++------------------+-----------------+------------------+------------------+
+| error_on_fail    | OT_BOOL         | When the         | casadi::Nlpsol   |
+|                  |                 | numerical        |                  |
+|                  |                 | process returns  |                  |
+|                  |                 | unsuccessfully,  |                  |
+|                  |                 | raise an error   |                  |
+|                  |                 | (default false). |                  |
 +------------------+-----------------+------------------+------------------+
 | eval_errors_fata | OT_BOOL         | When errors      | casadi::Nlpsol   |
 | l                |                 | occur during     |                  |
@@ -73381,72 +77162,101 @@ wrong for equality constraints. Change the 'fixed_variable_treatment' to
 
 >List of available options
 
-+----------------------------+-------------+-------------------------------+
-|             Id             |    Type     |          Description          |
-+============================+=============+===============================+
-| bonmin                     | OT_DICT     | Options to be passed to       |
-|                            |             | BONMIN                        |
-+----------------------------+-------------+-------------------------------+
-| con_integer_md             | OT_DICT     | Integer metadata (a           |
-|                            |             | dictionary with lists of      |
-|                            |             | integers) about constraints   |
-|                            |             | to be passed to BONMIN        |
-+----------------------------+-------------+-------------------------------+
-| con_numeric_md             | OT_DICT     | Numeric metadata (a           |
-|                            |             | dictionary with lists of      |
-|                            |             | reals) about constraints to   |
-|                            |             | be passed to BONMIN           |
-+----------------------------+-------------+-------------------------------+
-| con_string_md              | OT_DICT     | String metadata (a dictionary |
-|                            |             | with lists of strings) about  |
-|                            |             | constraints to be passed to   |
-|                            |             | BONMIN                        |
-+----------------------------+-------------+-------------------------------+
-| grad_f                     | OT_FUNCTION | Function for calculating the  |
-|                            |             | gradient of the objective     |
-|                            |             | (column, autogenerated by     |
-|                            |             | default)                      |
-+----------------------------+-------------+-------------------------------+
-| grad_f_options             | OT_DICT     | Options for the autogenerated |
-|                            |             | gradient of the objective.    |
-+----------------------------+-------------+-------------------------------+
-| hess_lag                   | OT_FUNCTION | Function for calculating the  |
-|                            |             | Hessian of the Lagrangian     |
-|                            |             | (autogenerated by default)    |
-+----------------------------+-------------+-------------------------------+
-| hess_lag_options           | OT_DICT     | Options for the autogenerated |
-|                            |             | Hessian of the Lagrangian.    |
-+----------------------------+-------------+-------------------------------+
-| jac_g                      | OT_FUNCTION | Function for calculating the  |
-|                            |             | Jacobian of the constraints   |
-|                            |             | (autogenerated by default)    |
-+----------------------------+-------------+-------------------------------+
-| jac_g_options              | OT_DICT     | Options for the autogenerated |
-|                            |             | Jacobian of the constraints.  |
-+----------------------------+-------------+-------------------------------+
-| pass_nonlinear_constraints | OT_BOOL     | Pass list of constraints      |
-|                            |             | entering nonlinearly to       |
-|                            |             | BONMIN                        |
-+----------------------------+-------------+-------------------------------+
-| pass_nonlinear_variables   | OT_BOOL     | Pass list of variables        |
-|                            |             | entering nonlinearly to       |
-|                            |             | BONMIN                        |
-+----------------------------+-------------+-------------------------------+
-| var_integer_md             | OT_DICT     | Integer metadata (a           |
-|                            |             | dictionary with lists of      |
-|                            |             | integers) about variables to  |
-|                            |             | be passed to BONMIN           |
-+----------------------------+-------------+-------------------------------+
-| var_numeric_md             | OT_DICT     | Numeric metadata (a           |
-|                            |             | dictionary with lists of      |
-|                            |             | reals) about variables to be  |
-|                            |             | passed to BONMIN              |
-+----------------------------+-------------+-------------------------------+
-| var_string_md              | OT_DICT     | String metadata (a dictionary |
-|                            |             | with lists of strings) about  |
-|                            |             | variables to be passed to     |
-|                            |             | BONMIN                        |
-+----------------------------+-------------+-------------------------------+
++-------------------------+-----------------------+------------------------+
+|           Id            |         Type          |      Description       |
++=========================+=======================+========================+
+| bonmin                  | OT_DICT               | Options to be passed   |
+|                         |                       | to BONMIN              |
++-------------------------+-----------------------+------------------------+
+| con_integer_md          | OT_DICT               | Integer metadata (a    |
+|                         |                       | dictionary with lists  |
+|                         |                       | of integers) about     |
+|                         |                       | constraints to be      |
+|                         |                       | passed to BONMIN       |
++-------------------------+-----------------------+------------------------+
+| con_numeric_md          | OT_DICT               | Numeric metadata (a    |
+|                         |                       | dictionary with lists  |
+|                         |                       | of reals) about        |
+|                         |                       | constraints to be      |
+|                         |                       | passed to BONMIN       |
++-------------------------+-----------------------+------------------------+
+| con_string_md           | OT_DICT               | String metadata (a     |
+|                         |                       | dictionary with lists  |
+|                         |                       | of strings) about      |
+|                         |                       | constraints to be      |
+|                         |                       | passed to BONMIN       |
++-------------------------+-----------------------+------------------------+
+| grad_f                  | OT_FUNCTION           | Function for           |
+|                         |                       | calculating the        |
+|                         |                       | gradient of the        |
+|                         |                       | objective (column,     |
+|                         |                       | autogenerated by       |
+|                         |                       | default)               |
++-------------------------+-----------------------+------------------------+
+| grad_f_options          | OT_DICT               | Options for the        |
+|                         |                       | autogenerated gradient |
+|                         |                       | of the objective.      |
++-------------------------+-----------------------+------------------------+
+| hess_lag                | OT_FUNCTION           | Function for           |
+|                         |                       | calculating the        |
+|                         |                       | Hessian of the         |
+|                         |                       | Lagrangian             |
+|                         |                       | (autogenerated by      |
+|                         |                       | default)               |
++-------------------------+-----------------------+------------------------+
+| hess_lag_options        | OT_DICT               | Options for the        |
+|                         |                       | autogenerated Hessian  |
+|                         |                       | of the Lagrangian.     |
++-------------------------+-----------------------+------------------------+
+| jac_g                   | OT_FUNCTION           | Function for           |
+|                         |                       | calculating the        |
+|                         |                       | Jacobian of the        |
+|                         |                       | constraints            |
+|                         |                       | (autogenerated by      |
+|                         |                       | default)               |
++-------------------------+-----------------------+------------------------+
+| jac_g_options           | OT_DICT               | Options for the        |
+|                         |                       | autogenerated Jacobian |
+|                         |                       | of the constraints.    |
++-------------------------+-----------------------+------------------------+
+| pass_nonlinear_constrai | OT_BOOL               | Pass list of           |
+| nts                     |                       | constraints entering   |
+|                         |                       | nonlinearly to BONMIN  |
++-------------------------+-----------------------+------------------------+
+| pass_nonlinear_variable | OT_BOOL               | Pass list of variables |
+| s                       |                       | entering nonlinearly   |
+|                         |                       | to BONMIN              |
++-------------------------+-----------------------+------------------------+
+| sos1_groups             | OT_INTVECTORVECTOR    | Options for the        |
+|                         |                       | autogenerated gradient |
+|                         |                       | of the objective.      |
++-------------------------+-----------------------+------------------------+
+| sos1_priorities         | OT_INTVECTOR          | Options for the        |
+|                         |                       | autogenerated gradient |
+|                         |                       | of the objective.      |
++-------------------------+-----------------------+------------------------+
+| sos1_weights            | OT_DOUBLEVECTORVECTOR | Options for the        |
+|                         |                       | autogenerated gradient |
+|                         |                       | of the objective.      |
++-------------------------+-----------------------+------------------------+
+| var_integer_md          | OT_DICT               | Integer metadata (a    |
+|                         |                       | dictionary with lists  |
+|                         |                       | of integers) about     |
+|                         |                       | variables to be passed |
+|                         |                       | to BONMIN              |
++-------------------------+-----------------------+------------------------+
+| var_numeric_md          | OT_DICT               | Numeric metadata (a    |
+|                         |                       | dictionary with lists  |
+|                         |                       | of reals) about        |
+|                         |                       | variables to be passed |
+|                         |                       | to BONMIN              |
++-------------------------+-----------------------+------------------------+
+| var_string_md           | OT_DICT               | String metadata (a     |
+|                         |                       | dictionary with lists  |
+|                         |                       | of strings) about      |
+|                         |                       | variables to be passed |
+|                         |                       | to BONMIN              |
++-------------------------+-----------------------+------------------------+
 
 --------------------------------------------------------------------------------
 
@@ -73591,7 +77401,7 @@ worhp
 
 WORHP interface
 
-Designed for Worhp 1.10
+Designed for Worhp 1.12
 
 >List of available options
 
@@ -73744,26 +77554,6 @@ A textbook SQPMethod
 
 
 Joel Andersson
-
-";
-
-%feature("docstring")  casadi::nlpsol(const std::string &name, const
-std::string &solver, const MXDict &nlp, const Dict &opts=Dict()) "
-
-";
-
-%feature("docstring")  casadi::nlpsol(const std::string &name, const
-std::string &solver, const std::string &fname, const Dict &opts=Dict()) "
-
-";
-
-%feature("docstring")  casadi::nlpsol(const std::string &name, const
-std::string &solver, const Importer &compiler, const Dict &opts=Dict()) "
-
-";
-
-%feature("docstring")  casadi::nlpsol(const std::string &name, const
-std::string &solver, const NlpBuilder &nl, const Dict &opts=Dict()) "
 
 ";
 

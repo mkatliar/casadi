@@ -471,7 +471,11 @@ namespace casadi {
 
     /** \brief Evaluate memory-less, numerically */
     int operator()(const double** arg, double** res,
-        casadi_int* iw, double* w, casadi_int mem=0) const;
+        casadi_int* iw, double* w, casadi_int mem) const;
+
+    /** \brief Evaluate numerically with checkout/release */
+    int operator()(const double** arg, double** res,
+        casadi_int* iw, double* w) const;
 
     /** \brief Evaluate memory-less SXElem
         Same syntax as the double version, allowing use in templated code
@@ -720,7 +724,7 @@ namespace casadi {
     template<typename T>
     T* get() const {
       T* ret = dynamic_cast<T*>(get());
-      casadi_assert_dev(ret!=0);
+      casadi_assert_dev(ret!=nullptr);
       return ret;
     }
 

@@ -255,6 +255,9 @@ namespace casadi {
     /// Check if two sparsity patterns are difference
     bool operator!=(const Sparsity& y) const {return !is_equal(y);}
 
+    /// Check if pattern is horizontal repeat of another
+    bool is_stacked(const Sparsity& y, casadi_int n) const;
+
 #ifndef SWIG
     /** \brief Implicit or explicit type conversion to C representation
         In the C runtime, sparsity patterns are represented as a "const casadi_int*".
@@ -342,7 +345,9 @@ namespace casadi {
     * Supported formats:
     *   - .mtx   Matrix Market
     */
-    void to_file(const std::string& filename, const std::string& format="") const;
+    void to_file(const std::string& filename, const std::string& format_hint="") const;
+
+    static Sparsity from_file(const std::string& filename, const std::string& format_hint="");
 
 #ifndef SWIG
     /** \brief Serialize */
@@ -551,6 +556,9 @@ namespace casadi {
     static Sparsity kron(const Sparsity& x, const Sparsity& b);
     static Sparsity triu(const Sparsity& x, bool includeDiagonal=true);
     static Sparsity tril(const Sparsity& x, bool includeDiagonal=true);
+
+    static Sparsity sum2(const Sparsity &x);
+    static Sparsity sum1(const Sparsity &x);
 #endif //SWIG
 
     /** \brief Enlarge matrix
@@ -887,8 +895,10 @@ namespace casadi {
     template<typename T>
     void bor(T* data, const T* val_data, const Sparsity& val_sp) const;
 
-
+    static std::string file_format(const std::string& filename, const std::string& format_hint);
+    static std::set<std::string> file_formats;
   private:
+
     /// Construct a sparsity pattern from vectors, reuse cached pattern if possible
     void assign_cached(casadi_int nrow, casadi_int ncol, const std::vector<casadi_int>& colind,
                       const std::vector<casadi_int>& row, bool order_rows=false);

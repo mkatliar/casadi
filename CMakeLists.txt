@@ -3,7 +3,7 @@ project(casadi C CXX)
 
 set(CASADI_MAJOR_VERSION 3)
 set(CASADI_MINOR_VERSION 4)
-set(CASADI_PATCH_VERSION 0)
+set(CASADI_PATCH_VERSION 4)
 set(CASADI_IS_RELEASE 1)
 
 set(CASADI_VERSION ${CASADI_MAJOR_VERSION}.${CASADI_MINOR_VERSION}.${CASADI_PATCH_VERSION})
@@ -138,7 +138,9 @@ if(CXX11FLAG)
 endif()
 
 # Check if mkstemps is available
-if(NOT WIN32)
+if(WIN32)
+  add_definitions(-DHAVE_SIMPLE_MKSTEMPS)
+else()
   file(WRITE ${CMAKE_BINARY_DIR}/mkstemps_test.cxx
       "#include <cstdlib>\n"
       "#include <unistd.h>\n"
@@ -149,12 +151,27 @@ if(NOT WIN32)
       "}\n")
   try_compile(HAVE_MKSTEMPS ${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/mkstemps_test.cxx
               OUTPUT_VARIABLE HAVE_MKSTEMPS_OUTPUT)
+  file(WRITE ${CMAKE_BINARY_DIR}/simple_mkstemps_test.cxx
+      "#include <sys/stat.h>\n"
+      "#include <fcntl.h>\n"
+      "#include <errno.h>\n"
+      "int main() {\n"
+      "  int fd = open(\"test.c\", O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);\n"
+      "}\n")
+  try_compile(HAVE_SIMPLE_MKSTEMPS ${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/simple_mkstemps_test.cxx
+              OUTPUT_VARIABLE HAVE_SIMPLE_MKSTEMPS_OUTPUT)
   if(HAVE_MKSTEMPS)
     add_definitions(-DHAVE_MKSTEMPS)
   else()
-    message(WARNING "mkstemp is not available, falling back on tmpnam. "
-                    "Test compilation returned the following:\n"
-                    "${HAVE_MKSTEMPS_OUTPUT}")
+    if(HAVE_SIMPLE_MKSTEMPS)
+      add_definitions(-DHAVE_SIMPLE_MKSTEMPS)
+    else()
+      message(WARNING "mkstemp is not available, falling back on tmpnam. "
+                      "Test compilation returned the following:\n"
+                      "${HAVE_MKSTEMPS_OUTPUT}"
+                      "Test compilation returned the following:\n"
+                      "${HAVE_SIMPLE_MKSTEMPS_OUTPUT}")
+   endif()
   endif()
 endif()
 
@@ -236,10 +253,10 @@ endif()
 option(WITH_THREAD "Compile with parallelization support" OFF)
 option(WITH_THREAD_MINGW "For MINGW, use mingw-std-threads" OFF)
 if(WITH_THREAD)
-  add_definitions(-DWITH_THREAD)
+  add_definitions(-DCASADI_WITH_THREAD)
 endif()
 if(MINGW AND WITH_THREAD_MINGW)
-  add_definitions(-DWITH_THREAD_MINGW)
+  add_definitions(-DCASADI_WITH_THREAD_MINGW)
 else()
   if(WITH_THREAD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
@@ -735,6 +752,18 @@ endif()
 option(WITH_SPELL "Compile with support for spell-checking" OFF)
 if(WITH_SPELL)
   include(SpellCheck REQUIRED)
+endif()
+
+option(WITH_CLANG_TIDY "Compile with support for clang-tidy" OFF)
+if(WITH_CLANG_TIDY)
+  include(ClangTidy REQUIRED)
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+  if(WITH_EXTRA_WARNINGS)
+    # -Wall leaks into clang-tidy (through compile_commands.json)
+    # silently overruling the 'Checks' field.
+    # These warnings come from external_packages
+    set(EXTRA_CASADI_CXX_FLAGS "${EXTRA_CASADI_CXX_FLAGS} -Wno-overloaded-virtual -Wno-deprecated-register")
+  endif()
 endif()
 
 include(embed_resources)

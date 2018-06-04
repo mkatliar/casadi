@@ -40,31 +40,35 @@ extern "C" {
 #define casadi_real double
 #endif
 
-#include "core/casadi_types.hpp"
+/* Integer type */
+#ifndef casadi_int
+#define casadi_int long long int
+#endif
 
 /* Function types corresponding to entry points in CasADi's C API */
 typedef void (*casadi_signal_t)(void);
 typedef casadi_int (*casadi_getint_t)(void);
 typedef const casadi_int* (*casadi_sparsity_t)(casadi_int i);
 typedef const char* (*casadi_name_t)(casadi_int i);
-typedef int (*casadi_work_t)(casadi_int* sz_arg, casadi_int* sz_res, casadi_int* sz_iw, casadi_int* sz_w);
+typedef int (*casadi_work_t)(casadi_int* sz_arg, casadi_int* sz_res,
+                             casadi_int* sz_iw, casadi_int* sz_w);
 typedef int (*casadi_eval_t)(const casadi_real** arg, casadi_real** res,
                              casadi_int* iw, casadi_real* w, void* mem);
 
 /* Structure to hold meta information about an input or output */
 typedef struct {
   const char* name;
-  int nrow;
-  int ncol;
-  int nnz;
-  int numel;
+  casadi_int nrow;
+  casadi_int ncol;
+  casadi_int nnz;
+  casadi_int numel;
   const casadi_int* colind;
   const casadi_int* row;
 } casadi_io;
 
 /* Decompress a sparsity pattern */
-inline void casadi_decompress(const casadi_int* sp, int* nrow, int* ncol,
-                              int* nnz, int* numel,
+inline void casadi_decompress(const casadi_int* sp, casadi_int* nrow, casadi_int* ncol,
+                              casadi_int* nnz, casadi_int* numel,
                               const casadi_int** colind, const casadi_int** row) {
   if (sp==0) {
     /* Scalar sparsity pattern if sp is null */
@@ -112,7 +116,7 @@ typedef struct {
   void* mem;
 
   /* Meta information */
-  int n_in, n_out;
+  casadi_int n_in, n_out;
   casadi_io* in;
   casadi_io* out;
 } casadi_mem;
@@ -170,7 +174,7 @@ inline void casadi_deinit(casadi_mem* mem) {
 
 /* Initialize */
 inline void casadi_init_arrays(casadi_mem* mem) {
-  int i;
+  casadi_int i;
   assert(mem!=0);
   casadi_functions* f = mem->f;
 

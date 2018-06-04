@@ -808,6 +808,27 @@ namespace casadi {
   }
 
   template<typename Scalar>
+  void Matrix<Scalar>::print_scalar(std::ostream &stream, const Scalar& e) {
+    std::streamsize precision = stream.precision();
+    std::streamsize width = stream.width();
+    std::ios_base::fmtflags flags = stream.flags();
+
+    stream.precision(stream_precision_);
+    stream.width(stream_width_);
+    if (stream_scientific_) {
+      stream.setf(std::ios::scientific);
+    } else {
+      stream.unsetf(std::ios::scientific);
+    }
+    stream << e;
+    stream << std::flush;
+
+    stream.precision(precision);
+    stream.width(width);
+    stream.flags(flags);
+  }
+
+  template<typename Scalar>
   void Matrix<Scalar>::disp(std::ostream& stream, bool more) const {
     if (is_empty()) {
       stream << "[]";
@@ -1484,21 +1505,8 @@ namespace casadi {
   // To avoid overloaded function name conflicts
   template<typename Scalar>
   inline Matrix<Scalar> mmin_nonstatic(const Matrix<Scalar> &x) {
-    Matrix<Scalar> ret;
-    const Scalar* nz = x.ptr();
-    casadi_int nnz = x.nnz();
-    for (casadi_int i=0; i<nnz; ++i) {
-      if (i==0) {
-        if (x.sparsity().is_dense()) {
-          ret = *nz++;
-        } else {
-          ret = fmin(Scalar(0), *nz++);
-        }
-      } else {
-        ret = fmin(ret, *nz++);
-      }
-    }
-    return ret;
+    if (x.is_empty()) return Matrix<Scalar>();
+    return casadi_mmin(x.ptr(), x.nnz(), x.is_dense());
   }
 
   template<typename Scalar>
@@ -1509,21 +1517,8 @@ namespace casadi {
   // To avoid overloaded function name conflicts
   template<typename Scalar>
   inline Matrix<Scalar> mmax_nonstatic(const Matrix<Scalar> &x) {
-    Matrix<Scalar> ret;
-    const Scalar* nz = x.ptr();
-    casadi_int nnz = x.nnz();
-    for (casadi_int i=0; i<nnz; ++i) {
-      if (i==0) {
-        if (x.sparsity().is_dense()) {
-          ret = *nz++;
-        } else {
-          ret = fmax(Scalar(0), *nz++);
-        }
-      } else {
-        ret = fmax(ret, *nz++);
-      }
-    }
-    return ret;
+    if (x.is_empty()) return Matrix<Scalar>();
+    return casadi_mmax(x.ptr(), x.nnz(), x.is_dense());
   }
 
   template<typename Scalar>
@@ -2927,7 +2922,7 @@ namespace casadi {
     // Terms, weights and indices of the nodes that are already expanded
     vector<vector<SXNode*> > terms;
     vector<vector<double> > weights;
-    map<SXNode*, casadi_int> indices;
+    std::map<SXNode*, casadi_int> indices;
 
     // Stack of nodes that are not yet expanded
     stack<SXNode*> to_be_expanded;
@@ -3005,11 +3000,11 @@ namespace casadi {
             // Eliminate multiple elements
             vector<double> w_new; w_new.reserve(w.size());   // weights
             vector<SXNode*> f_new;  f_new.reserve(f.size());   // terms
-            map<SXNode*, casadi_int> f_ind; // index in f_new
+            std::map<SXNode*, casadi_int> f_ind; // index in f_new
 
             for (casadi_int i=0; i<w.size(); i++) {
               // Try to locate the node
-              map<SXNode*, casadi_int>::iterator it = f_ind.find(f[i]);
+              auto it = f_ind.find(f[i]);
               if (it == f_ind.end()) { // if the term wasn't found
                 w_new.push_back(w[i]);
                 f_new.push_back(f[i]);
@@ -3318,8 +3313,10 @@ namespace casadi {
         always_inline = op.second;
       } else if (op.first=="never_inline") {
         never_inline = op.second;
-      } else {
-        casadi_error("No such option: " + string(op.second));
+      } else if (op.first=="verbose") {
+        continue;
+      }  else {
+        casadi_error("No such option: " + string(op.first));
       }
     }
     // Call internal function on a temporary object
@@ -3341,8 +3338,10 @@ namespace casadi {
         always_inline = op.second;
       } else if (op.first=="never_inline") {
         never_inline = op.second;
+      } else if (op.first=="verbose") {
+        continue;
       } else {
-        casadi_error("No such option: " + string(op.second));
+        casadi_error("No such option: " + string(op.first));
       }
     }
     // Call internal function on a temporary object
@@ -3707,7 +3706,7 @@ namespace casadi {
   void SX::print_split(vector<string>& nz,
                       vector<string>& inter) const {
     // Find out which noded can be inlined
-    map<const SXNode*, casadi_int> nodeind;
+    std::map<const SXNode*, casadi_int> nodeind;
     for (auto&& i : nonzeros_) i->can_inline(nodeind);
 
     // Print expression

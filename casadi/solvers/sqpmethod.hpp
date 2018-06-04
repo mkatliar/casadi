@@ -75,7 +75,6 @@ namespace casadi {
 
     /// Last return status
     const char* return_status;
-    bool success;
 
     /// Iteration count
     int iter_count;
@@ -153,7 +152,7 @@ namespace casadi {
     ///@}
 
     // Print options
-    bool print_header_, print_iteration_;
+    bool print_header_, print_iteration_, print_status_;
 
     // Hessian sparsity
     Sparsity Hsp_;

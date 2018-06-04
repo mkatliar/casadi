@@ -46,7 +46,7 @@ namespace casadi {
   public:
     EmptySparsity() {
       const casadi_int colind[1] = {0};
-      own(new SparsityInternal(0, 0, colind, 0));
+      own(new SparsityInternal(0, 0, colind, nullptr));
     }
   };
 
@@ -104,7 +104,7 @@ namespace casadi {
       const casadi_int* colind, const casadi_int* row, bool order_rows) {
     casadi_assert_dev(nrow>=0);
     casadi_assert_dev(ncol>=0);
-    if (colind==0 || colind[ncol]==nrow*ncol) {
+    if (colind==nullptr || colind[ncol]==nrow*ncol) {
       *this = dense(nrow, ncol);
     } else {
       vector<casadi_int> colindv(colind, colind+ncol+1);
@@ -122,7 +122,7 @@ namespace casadi {
   }
 
   bool Sparsity::test_cast(const SharedObjectInternal* ptr) {
-    return dynamic_cast<const SparsityInternal*>(ptr)!=0;
+    return dynamic_cast<const SparsityInternal*>(ptr)!=nullptr;
   }
 
   casadi_int Sparsity::size1() const {
@@ -409,6 +409,10 @@ namespace casadi {
       + x.dim() + " and rhs is " + y.dim() + ".");
 
     return x->_mtimes(y);
+  }
+
+  bool Sparsity::is_stacked(const Sparsity& y, casadi_int n) const {
+    return (*this)->is_stacked(y, n);
   }
 
   bool Sparsity::is_equal(const Sparsity& y) const {
@@ -1287,7 +1291,7 @@ namespace casadi {
   }
 
   Sparsity Sparsity::compressed(const casadi_int* v, bool order_rows) {
-    casadi_assert_dev(v!=0);
+    casadi_assert_dev(v!=nullptr);
 
     // Get sparsity pattern
     casadi_int nrow = v[0];
@@ -1573,6 +1577,14 @@ namespace casadi {
     return ret;
   }
 
+  Sparsity Sparsity::sum2(const Sparsity &x) {
+    return mtimes(x, Sparsity::dense(x.size2(), 1));
+
+  }
+  Sparsity Sparsity::sum1(const Sparsity &x) {
+    return mtimes(Sparsity::dense(1, x.size1()), x);
+  }
+
   casadi_int Sparsity::sprank(const Sparsity& x) {
     std::vector<casadi_int> rowperm, colperm, rowblock, colblock, coarse_rowblock, coarse_colblock;
     x.btf(rowperm, colperm, rowblock, colblock, coarse_rowblock, coarse_colblock);
@@ -1779,16 +1791,27 @@ namespace casadi {
     return Sparsity(nrow, ncol, colind, row);
   }
 
-  void Sparsity::to_file(const std::string& filename, const std::string& format_hint) const {
-    std::string format = format_hint;
+  std::set<std::string> Sparsity::file_formats = {"mtx"};
+
+  std::string Sparsity::file_format(const std::string& filename, const std::string& format_hint) {
     if (format_hint=="") {
       std::string extension = filename.substr(filename.rfind(".")+1);
-      if (extension=="mtx") {
-        format = "mtx";
-      } else {
-        casadi_error("Could not detect format from extension '" + extension + "'");
-      }
+      auto it = file_formats.find(extension);
+      casadi_assert(it!=file_formats.end(),
+        "Extension '" + extension + "' not recognised. "
+        "Valid options: " + str(file_formats) + ".");
+      return extension;
+    } else {
+      auto it = file_formats.find(format_hint);
+      casadi_assert(it!=file_formats.end(),
+        "File format hint '" + format_hint + "' not recognised. "
+        "Valid options: " + str(file_formats) + ".");
+      return format_hint;
     }
+
+  }
+  void Sparsity::to_file(const std::string& filename, const std::string& format_hint) const {
+    std::string format = file_format(filename, format_hint);
     std::ofstream out(filename);
     if (format=="mtx") {
       out << std::scientific << std::setprecision(15);
@@ -1800,6 +1823,41 @@ namespace casadi {
       for (casadi_int k=0;k<row.size();++k) {
         out << row[k]+1 << " " << col[k]+1 << std::endl;
       }
+    } else {
+      casadi_error("Unknown format '" + format + "'");
+    }
+  }
+
+  Sparsity Sparsity::from_file(const std::string& filename, const std::string& format_hint) {
+    std::string format = file_format(filename, format_hint);
+    std::ifstream in(filename);
+    if (format=="mtx") {
+      std::string line;
+      std::vector<casadi_int> row, col;
+      casadi_int size1, size2, nnz;
+      int line_num = 0;
+      while (std::getline(in, line)) {
+        if (line_num==0) {
+          casadi_assert(line=="%%MatrixMarket matrix coordinate pattern general", "Wrong header");
+          line_num = 1;
+        } else if (line_num==1) {
+          std::stringstream stream(line);
+          stream >> size1;
+          stream >> size2;
+          stream >> nnz;
+          row.reserve(nnz);
+          col.reserve(nnz);
+          line_num = 2;
+        } else {
+          std::stringstream stream(line);
+          casadi_int r, c;
+          stream >> r;
+          stream >> c;
+          row.push_back(r-1);
+          col.push_back(c-1);
+        }
+      }
+      return triplet(size1, size2, row, col);
     } else {
       casadi_error("Unknown format '" + format + "'");
     }

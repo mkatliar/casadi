@@ -79,8 +79,8 @@ namespace casadi {
         CASADI_MATH_FUN_BUILTIN(w[e.i1], w[e.i2], w[e.i0])
 
       case OP_CONST: w[e.i0] = e.d; break;
-      case OP_INPUT: w[e.i0] = arg[e.i1]==0 ? 0 : arg[e.i1][e.i2]; break;
-      case OP_OUTPUT: if (res[e.i0]!=0) res[e.i0][e.i2] = w[e.i1]; break;
+      case OP_INPUT: w[e.i0] = arg[e.i1]==nullptr ? 0 : arg[e.i1][e.i2]; break;
+      case OP_OUTPUT: if (res[e.i0]!=nullptr) res[e.i0][e.i2] = w[e.i1]; break;
       default:
         casadi_error("Unknown operation" + str(e.op));
       }
@@ -239,7 +239,7 @@ namespace casadi {
         sort_depth_first(s, nodes);
 
         // A null pointer means an output instruction
-        nodes.push_back(static_cast<SXNode*>(0));
+        nodes.push_back(static_cast<SXNode*>(nullptr));
       }
     }
 
@@ -290,7 +290,7 @@ namespace casadi {
       AlgEl ae;
 
       // Get operation
-      ae.op = n==0 ? static_cast<casadi_int>(OP_OUTPUT) : n->op();
+      ae.op = n==nullptr ? static_cast<int>(OP_OUTPUT) : static_cast<int>(n->op());
 
       // Get instruction
       switch (ae.op) {
@@ -480,10 +480,10 @@ namespace casadi {
     for (auto&& a : algorithm_) {
       switch (a.op) {
       case OP_INPUT:
-        w[a.i0] = arg[a.i1]==0 ? 0 : arg[a.i1][a.i2];
+        w[a.i0] = arg[a.i1]==nullptr ? 0 : arg[a.i1][a.i2];
         break;
       case OP_OUTPUT:
-        if (res[a.i0]!=0) res[a.i0][a.i2] = w[a.i1];
+        if (res[a.i0]!=nullptr) res[a.i0][a.i2] = w[a.i1];
         break;
       case OP_CONST:
         w[a.i0] = *c_it++;
@@ -524,9 +524,11 @@ namespace casadi {
     if (nfwd==0) return;
 
     // Check if seeds need to have dimensions corrected
+    casadi_int npar = 1;
     for (auto&& r : fseed) {
-      if (!matching_arg(r)) {
-        return ad_forward(replace_fseed(fseed), fsens);
+      if (!matching_arg(r, npar)) {
+        casadi_assert_dev(npar==1);
+        return ad_forward(replace_fseed(fseed, npar), fsens);
       }
     }
 
@@ -617,9 +619,11 @@ namespace casadi {
     if (nadj==0) return;
 
     // Check if seeds need to have dimensions corrected
+    casadi_int npar = 1;
     for (auto&& r : aseed) {
-      if (!matching_res(r)) {
-        return ad_reverse(replace_aseed(aseed), asens);
+      if (!matching_res(r, npar)) {
+        casadi_assert_dev(npar==1);
+        return ad_reverse(replace_aseed(aseed, npar), asens);
       }
     }
 
@@ -727,10 +731,10 @@ namespace casadi {
       case OP_PARAMETER:
         w[e.i0] = 0; break;
       case OP_INPUT:
-        w[e.i0] = arg[e.i1]==0 ? 0 : arg[e.i1][e.i2];
+        w[e.i0] = arg[e.i1]==nullptr ? 0 : arg[e.i1][e.i2];
         break;
       case OP_OUTPUT:
-        if (res[e.i0]!=0) res[e.i0][e.i2] = w[e.i1];
+        if (res[e.i0]!=nullptr) res[e.i0][e.i2] = w[e.i1];
         break;
       default: // Unary or binary operation
         w[e.i0] = w[e.i1] | w[e.i2]; break;
@@ -755,11 +759,11 @@ namespace casadi {
         w[it->i0] = 0;
         break;
       case OP_INPUT:
-        if (arg[it->i1]!=0) arg[it->i1][it->i2] |= w[it->i0];
+        if (arg[it->i1]!=nullptr) arg[it->i1][it->i2] |= w[it->i0];
         w[it->i0] = 0;
         break;
       case OP_OUTPUT:
-        if (res[it->i0]!=0) {
+        if (res[it->i0]!=nullptr) {
           w[it->i1] |= res[it->i0][it->i2];
           res[it->i0][it->i2] = 0;
         }

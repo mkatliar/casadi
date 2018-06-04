@@ -25,13 +25,13 @@
 
 #include "map.hpp"
 
-#ifdef WITH_THREAD
-#ifdef WITH_THREAD_MINGW
+#ifdef CASADI_WITH_THREAD
+#ifdef CASADI_WITH_THREAD_MINGW
 #include <mingw.thread.h>
-#else // WITH_THREAD_MINGW
+#else // CASADI_WITH_THREAD_MINGW
 #include <thread>
-#endif // WITH_THREAD_MINGW
-#endif // WITH_THREAD
+#endif // CASADI_WITH_THREAD_MINGW
+#endif // CASADI_WITH_THREAD
 
 using namespace std;
 
@@ -39,13 +39,13 @@ namespace casadi {
 
   Function Map::create(const std::string& parallelization, const Function& f, casadi_int n) {
     // Create instance of the right class
-    string name = f.name() + "_" + str(n);
+    string suffix = str(n) + "_" + f.name();
     if (parallelization == "serial") {
-      return Function::create(new Map(name, f, n), Dict());
+      return Function::create(new Map("map" + suffix, f, n), Dict());
     } else if (parallelization== "openmp") {
-      return Function::create(new MapOmp(name, f, n), Dict());
+      return Function::create(new OmpMap("ompmap" + suffix, f, n), Dict());
     } else if (parallelization== "thread") {
-      return Function::create(new MapThread(name, f, n), Dict());
+      return Function::create(new ThreadMap("threadmap" + suffix, f, n), Dict());
     } else {
       casadi_error("Unknown parallelization: " + parallelization);
     }
@@ -70,13 +70,13 @@ namespace casadi {
   }
 
   template<typename T>
-  int Map::eval_gen(const T** arg, T** res, casadi_int* iw, T* w) const {
+  int Map::eval_gen(const T** arg, T** res, casadi_int* iw, T* w, casadi_int mem) const {
     const T** arg1 = arg+n_in_;
     copy_n(arg, n_in_, arg1);
     T** res1 = res+n_out_;
     copy_n(res, n_out_, res1);
     for (casadi_int i=0; i<n_; ++i) {
-      if (f_(arg1, res1, iw, w)) return 1;
+      if (f_(arg1, res1, iw, w, mem)) return 1;
       for (casadi_int j=0; j<n_in_; ++j) {
         if (arg1[j]) arg1[j] += f_.nnz_in(j);
       }
@@ -244,13 +244,17 @@ namespace casadi {
   }
 
   int Map::eval(const double** arg, double** res, casadi_int* iw, double* w, void* mem) const {
-    return eval_gen(arg, res, iw, w);
+    // This checkout/release dance is an optimization.
+    // Could also use the thread-safe variant f_(arg1, res1, iw, w)
+    // in Map::eval_gen
+    scoped_checkout<Function> m(f_);
+    return eval_gen(arg, res, iw, w, m);
   }
 
-  MapOmp::~MapOmp() {
+  OmpMap::~OmpMap() {
   }
 
-  int MapOmp::eval(const double** arg, double** res, casadi_int* iw, double* w, void* mem) const {
+  int OmpMap::eval(const double** arg, double** res, casadi_int* iw, double* w, void* mem) const {
 #ifndef WITH_OPENMP
     return Map::eval(arg, res, iw, w, mem);
 #else // WITH_OPENMP
@@ -261,8 +265,8 @@ namespace casadi {
     casadi_int flag = 0;
 
     // Checkout memory objects
-    casadi_int* ind = iw; iw += n_;
-    for (casadi_int i=0; i<n_; ++i) ind[i] = f_.checkout();
+    std::vector< scoped_checkout<Function> > ind; ind.reserve(n_);
+    for (casadi_int i=0; i<n_; ++i) ind.emplace_back(f_);
 
     // Evaluate in parallel
 #pragma omp parallel for reduction(||:flag)
@@ -282,14 +286,13 @@ namespace casadi {
       // Evaluation
       flag = f_(arg1, res1, iw + i*sz_iw, w + i*sz_w, ind[i]) || flag;
     }
-    // Release memory objects
-    for (casadi_int i=0; i<n_; ++i) f_.release(ind[i]);
+
     // Return error flag
     return flag;
 #endif  // WITH_OPENMP
   }
 
-  void MapOmp::codegen_body(CodeGenerator& g) const {
+  void OmpMap::codegen_body(CodeGenerator& g) const {
     size_t sz_arg, sz_res, sz_iw, sz_w;
     f_.sz_work(sz_arg, sz_res, sz_iw, sz_w);
     g << "casadi_int i;\n"
@@ -314,7 +317,7 @@ namespace casadi {
       << "if (flag) return 1;\n";
   }
 
-  void MapOmp::init(const Dict& opts) {
+  void OmpMap::init(const Dict& opts) {
     // Call the initialization method of the base class
     Map::init(opts);
 
@@ -329,7 +332,7 @@ namespace casadi {
   }
 
 
-  MapThread::~MapThread() {
+  ThreadMap::~ThreadMap() {
   }
 
   void ThreadsWork(const Function& f, casadi_int i,
@@ -348,27 +351,27 @@ namespace casadi {
     // Input buffers
     const double** arg1 = arg + n_in + i*sz_arg;
     for (casadi_int j=0; j<n_in; ++j) {
-      arg1[j] = arg[j] ? arg[j] + i*f.nnz_in(j) : 0;
+      arg1[j] = arg[j] ? arg[j] + i*f.nnz_in(j) : nullptr;
     }
 
     // Output buffers
     double** res1 = res + n_out + i*sz_res;
     for (casadi_int j=0; j<n_out; ++j) {
-      res1[j] = res[j] ? res[j] + i*f.nnz_out(j) : 0;
+      res1[j] = res[j] ? res[j] + i*f.nnz_out(j) : nullptr;
     }
 
     ret = f(arg1, res1, iw + i*sz_iw, w + i*sz_w, ind);
   }
 
-  int MapThread::eval(const double** arg, double** res, casadi_int* iw, double* w,
+  int ThreadMap::eval(const double** arg, double** res, casadi_int* iw, double* w,
       void* mem) const {
 
-#ifndef WITH_THREAD
+#ifndef CASADI_WITH_THREAD
     return Map::eval(arg, res, iw, w, mem);
-#else // WITH_THREAD
+#else // CASADI_WITH_THREAD
     // Checkout memory objects
-    casadi_int* ind = iw; iw += n_;
-    for (casadi_int i=0; i<n_; ++i) ind[i] = f_.checkout();
+    std::vector< scoped_checkout<Function> > ind; ind.reserve(n_);
+    for (casadi_int i=0; i<n_; ++i) ind.emplace_back(f_);
 
     // Allocate space for return values
     std::vector<int> ret_values(n_);
@@ -384,14 +387,11 @@ namespace casadi {
             casadi_int* iw, double* w, casadi_int ind, int& ret) {
               ThreadsWork(f, i, arg, res, iw, w, ind, ret);
             },
-        std::ref(f_), arg, res, iw, w, ind[i], std::ref(ret_values[i]));
+        std::ref(f_), arg, res, iw, w, casadi_int(ind[i]), std::ref(ret_values[i]));
     }
 
     // Join threads
     for (auto && th : threads) th.join();
-
-    // Release memory objects
-    for (casadi_int i=0; i<n_; ++i) f_.release(ind[i]);
 
     // Anticipate success
     int ret = 0;
@@ -400,14 +400,14 @@ namespace casadi {
     for (int e : ret_values) ret = ret || e;
 
     return ret;
-#endif // WITH_THREAD
+#endif // CASADI_WITH_THREAD
   }
 
-  void MapThread::codegen_body(CodeGenerator& g) const {
+  void ThreadMap::codegen_body(CodeGenerator& g) const {
     Map::codegen_body(g);
   }
 
-  void MapThread::init(const Dict& opts) {
+  void ThreadMap::init(const Dict& opts) {
     // Call the initialization method of the base class
     Map::init(opts);
 

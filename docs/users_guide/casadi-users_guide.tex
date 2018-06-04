@@ -1745,9 +1745,9 @@ We offer some special constructs that improve on this complexity.
 
 \subsection{Map}
 
-Suppose you are interested in computing a function $f : \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ repeatedly on all columns of a matrix $X \in \mathbb{R}^{n \times N}$, and aggregating all results in a result matrix $Y \in \mathbb{R}^{m \times N}$: 
+Suppose you are interested in computing a function $f : \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ repeatedly on all columns of a matrix $X \in \mathbb{R}^{n \times N}$, and aggregating all results in a result matrix $Y \in \mathbb{R}^{m \times N}$:
 
-\begin{minipage}[t]{0.5\textwidth} 
+\begin{minipage}[t]{0.5\textwidth}
 \begin{lstlisting}[language=Python]
 # Python
 ys = []
@@ -1772,7 +1772,7 @@ F = Function('f',{X},{Y});
 
 The aggregate function $F : \mathbb{R}^{n \times N} \rightarrow \mathbb{R}^{m \times N}$ can be obtained with the \texttt{map} construct:
 
-\begin{minipage}[t]{0.5\textwidth} 
+\begin{minipage}[t]{0.5\textwidth}
 \begin{lstlisting}[language=Python]
 # Python
 F = f.map(N)
@@ -1787,7 +1787,7 @@ F = f.map(N);
 
 \CasADi can be instructed to parallelize when $F$ gets evaluated. In the following example, we dedicate 4 threads for the \texttt{map} task.
 
-\begin{minipage}[t]{0.5\textwidth} 
+\begin{minipage}[t]{0.5\textwidth}
 \begin{lstlisting}[language=Python]
 # Python
 F = f.map(N,"thread",4)
@@ -1807,7 +1807,7 @@ The \texttt{map} operation exhibits constant graph size and initialization time.
 \subsection{Fold}
 
 In case each for-loop iteration depends on the result from the previous iteration, the \texttt{fold} construct applies. In the following, the \texttt{x} variable acts as an accumulater that is initialized by $x_0 \in \mathbb{R}^{n}$:
-\begin{minipage}[t]{0.5\textwidth} 
+\begin{minipage}[t]{0.5\textwidth}
 \begin{lstlisting}[language=Python]
 # Python
 x = x0
@@ -1831,7 +1831,7 @@ F = Function('f',{x0},{x});
 For a given function $f : \mathbb{R}^{n} \rightarrow \mathbb{R}^{n}$, the result function $F : \mathbb{R}^{n} \rightarrow \mathbb{R}^{n}$ can be obtained with the \texttt{fold} construct:
 
 
-\begin{minipage}[t]{0.5\textwidth} 
+\begin{minipage}[t]{0.5\textwidth}
 \begin{lstlisting}[language=Python]
 # Python
 F = f.fold(N)
@@ -1983,6 +1983,26 @@ If you plan to link directly against the generated code in some C/C++ applicatio
 a useful option is \verb|with_header|, which controls the creation of a header file
 containing declarations of the functions with external linkage, i.e. the API of
 the generated code, described in Section~\ref{sec:c_api} below.
+
+Here is a list of available options for the \texttt{CodeGenerator} class:
+\begin{center}
+  \scriptsize
+  \begin{tabular}{| p{2.0cm} | p{2.0cm} | p{10.0cm} | }
+    \hline
+    Option & Default value & Description \\
+    \hline
+    \texttt{verbose} & true & Include comments in generated code \\
+    \texttt{mex} & false & Generate an MATLAB/Octave MEX entry point \\
+    \texttt{cpp} & false & Generated code is C++ instead of C \\
+    \texttt{main} & false & Generate a command line interface \\
+    \texttt{casadi\_real} & \texttt{double} & Floating point type \\
+    \texttt{casadi\_int} & \texttt{long long int} & Integer type \\
+    \texttt{with\_header} & false & Generate a header file \\
+    \texttt{with\_mem} & false & Generate a simplified C API \\
+    \texttt{indent} & 2 & Number of spaces per indentation level \\
+    \hline
+  \end{tabular}
+\end{center}
 
 \section{Using the generated code} \label{sec:using_codegen}
 The generated C code can be used in a number of different ways:
@@ -2168,18 +2188,18 @@ when the counter hits zero, a deallocation -- if any -- takes place.
 
 \subsection*{Number of inputs and outputs}
 \begin{lstlisting}[language=C]
-int fname_n_in(void);
-int fname_n_out(void);
+casadi_int fname_n_in(void);
+casadi_int fname_n_out(void);
 \end{lstlisting}
 
 The number of function inputs and outputs can be obtained by calling the
 \verb|fname_n_in| and \verb|fname_n_out| functions, respectively. These functions
-take no inputs and return the number of input or outputs.
+take no inputs and return the number of input or outputs (\verb|casadi_int| is an alias for \verb|long long int|).
 
 \subsection*{Names of inputs and outputs}
 \begin{lstlisting}[language=C]
-const char* fname_name_in(int ind);
-const char* fname_name_out(int ind);
+const char* fname_name_in(casadi_int ind);
+const char* fname_name_out(casadi_int ind);
 \end{lstlisting}
 
 The functions \verb|fname_name_in| and \verb|fname_name_out| return the name
@@ -2190,14 +2210,14 @@ pointer.
 
 \subsection*{Sparsity patterns of inputs and outputs}
 \begin{lstlisting}[language=C]
-const int* fname_sparsity_in(int ind);
-const int* fname_sparsity_out(int ind);
+const casadi_int* fname_sparsity_in(casadi_int ind);
+const casadi_int* fname_sparsity_out(casadi_int ind);
 \end{lstlisting}
 
 The sparsity pattern for a given input or output is obtained by calling
 \verb|fname_sparsity_in| and \verb|fname_sparsity_out|, respectively.
 These functions take the input or output index and return a pointer to a field
-of constant integers (\verb|const int*|). This is a compact representation
+of constant integers (\verb|const casadi_int*|). This is a compact representation
 of the \emph{compressed column storage} (CCS) format that \CasADi uses,
 cf. Section~\ref{sec:sparsity_class}.
 The integer field pointed to is structured as follows:
@@ -2246,13 +2266,13 @@ Frees a memory object. Returns 0 upon successful return;
 
 \subsection*{Work vectors}
 \begin{lstlisting}[language=C]
-int fname_work(int* sz_arg, int* sz_res, int* sz_iw, int* sz_w);
+int fname_work(casadi_int* sz_arg, casadi_int* sz_res, casadi_int* sz_iw, casadi_int* sz_w);
 \end{lstlisting}
 
 To allow the evaluation to be performed efficiently with a small memory
 footprint, the user is expected to pass four work arrays. The function
 \verb|fname_work| returns the length of these arrays, which have entries
-of type \verb|const double*|, \verb|double*|, \verb|int| and \verb|double|,
+of type \verb|const double*|, \verb|double*|, \verb|casadi_int| and \verb|double|,
 respectively.
 
 The return value of the function is nonzero upon failure.
@@ -2260,7 +2280,7 @@ The return value of the function is nonzero upon failure.
 \subsection*{Numerical evaluation}
 \begin{lstlisting}[language=C]
 int fname(const double** arg, double** res,
-          int* iw, double* w, void* mem);
+          casadi_int* iw, double* w, void* mem);
 \end{lstlisting}
 
 Finally, the function \verb|fname|, performs the actual evaluation. It takes
@@ -2452,8 +2472,8 @@ public:
   ~MyCallback() override {}
 
   // Number of inputs and outputs
-  int get_n_in() override { return 1;}
-  int get_n_out() override { return 1;}
+  casadi_int get_n_in() override { return 1;}
+  casadi_int get_n_out() override { return 1;}
 
   // Initialize the object
   void init override() {

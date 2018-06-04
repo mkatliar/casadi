@@ -28,10 +28,44 @@
 #include "casadi_misc.hpp"
 #ifdef HAVE_MKSTEMPS
 #include <unistd.h>
+#else // HAVE_MKSTEMPS
+#ifdef HAVE_SIMPLE_MKSTEMPS
+#ifdef _WIN32
+#include <io.h>
+#include <share.h>
 #endif
+#include <random>
+#include <chrono>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#endif // HAVE_SIMPLE_MKSTEMPS
+#endif // HAVE_MKSTEMPS
 using namespace std;
 
 namespace casadi {
+
+  int to_int(casadi_int rhs) {
+    casadi_assert(rhs<=std::numeric_limits<int>::max(), "Integer overflow detected.");
+    casadi_assert(rhs>=std::numeric_limits<int>::min(), "Integer overflow detected.");
+    return rhs;
+  }
+
+  std::vector<int> to_int(const std::vector<casadi_int>& rhs) {
+    std::vector<int> ret;
+    ret.reserve(rhs.size());
+    for (casadi_int e : rhs) ret.push_back(to_int(e));
+    return ret;
+  }
+
+  std::vector< std::vector<int> > to_int(
+      const std::vector< std::vector<casadi_int> >& rhs) {
+    std::vector< std::vector<int> > ret;
+    ret.reserve(rhs.size());
+    for (const std::vector<casadi_int>& e : rhs) ret.push_back(to_int(e));
+    return ret;
+  }
+
   bool all(const std::vector<bool>& v) {
     for (auto && e : v) {
       if (!e) return false;
@@ -181,7 +215,7 @@ namespace casadi {
 
   bvec_t* get_bvec_t(std::vector<double>& v) {
     if (v.empty()) {
-      return 0;
+      return nullptr;
     } else {
       return reinterpret_cast<bvec_t*>(&v.front());
     }
@@ -190,7 +224,7 @@ namespace casadi {
   /// Get an pointer of sets of booleans from a double vector
   const bvec_t* get_bvec_t(const std::vector<double>& v) {
     if (v.empty()) {
-      return 0;
+      return nullptr;
     } else {
       return reinterpret_cast<const bvec_t*>(&v.front());
     }
@@ -205,6 +239,52 @@ namespace casadi {
     return ss.str();
   }
 
+  bool startswith(const std::string& s, const std::string& p) {
+    if (p.size()>s.size()) return false;
+    for (casadi_int i=0;i<p.size();++i) {
+      if (s[i]!=p[i]) return false;
+    }
+    return true;
+  }
+
+#ifdef HAVE_SIMPLE_MKSTEMPS
+int simple_mkstemps(const std::string& prefix, const std::string& suffix, std::string &result) {
+    // Characters available for inventing filenames
+    std::string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    int char_size = static_cast<int>(chars.size());
+
+    // How many tries do we allow?
+    casadi_int max_tries = std::numeric_limits<int>::max();
+
+    // How long should the ID be to cover all tries?
+    double max_tries_d = static_cast<double>(max_tries);
+    double char_size_d = static_cast<double>(char_size);
+    int id_size = lround(ceil(log(max_tries_d)/log(char_size_d)));
+
+    // Random number generator
+    std::default_random_engine rng(std::chrono::system_clock::now().time_since_epoch().count());
+    std::uniform_int_distribution<> r(0, char_size-1);
+
+    for (casadi_int i=0;i<max_tries;++i) {
+      result = prefix;
+      for (casadi_int j=0;j<id_size;++j) {
+        result += chars.at(r(rng));
+      }
+      result += suffix;
+
+#ifdef _WIN32
+      int fd = _sopen(result.c_str(),
+        _O_BINARY | _O_CREAT | _O_EXCL | _O_RDWR, _SH_DENYNO, _S_IREAD | _S_IWRITE);
+      // Could add _O_TEMPORARY, but then no possiblity of !cleanup_
+#else
+      int fd = open(result.c_str(), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+#endif
+      if (fd != -1) return fd;
+      if (fd == -1 && errno != EEXIST) return -1;
+    }
+  }
+#endif // HAVE_SIMPLE_MKSTEMPS
+
   std::string temporary_file(const std::string& prefix, const std::string& suffix) {
     #ifdef HAVE_MKSTEMPS
     // Preferred solution
@@ -214,8 +294,16 @@ namespace casadi {
     }
     return ret;
     #else // HAVE_MKSTEMPS
+    #ifdef HAVE_SIMPLE_MKSTEMPS
+    std::string ret;
+    if (simple_mkstemps(prefix, suffix, ret)==-1) {
+      casadi_error("Failed to create temporary file: '" + ret + "'");
+    }
+    return ret;
+    #else // HAVE_SIMPLE_MKSTEMPS
     // Fallback, may result in deprecation warnings
     return prefix + string(tmpnam(nullptr)) + suffix;
+    #endif // HAVE_SIMPLE_MKSTEMPS
     #endif // HAVE_MKSTEMPS
   }
 

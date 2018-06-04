@@ -1,5 +1,7 @@
 import casadi.*
 
+MX(2,1)
+
 % SX stuff
 x = SX.sym('x');
 y = SX.sym('y');
@@ -296,7 +298,9 @@ for i=1:numel(data)
 
     assert(all(diff(A)==full(evalf(diff(B)))))
     assert(all(diff(A,1)==full(evalf(diff(B,1)))))
-    assert(all(diff(A,2)==full(evalf(diff(B,2)))))
+    if ~is_octave
+      assert(all(diff(A,2)==full(evalf(diff(B,2)))))
+    end
     assert(all(all(diff(A,1,1)==full(evalf(diff(B,1,1))))))
     assert(all(all(diff(A,1,2)==full(evalf(diff(B,1,2))))))
     assert(all(all(diff(A,2,1)==full(evalf(diff(B,2,1))))))
@@ -478,3 +482,10 @@ c = casadi.blockcat({1 2 3})
 assert(norm(size(c)-[1 3])==0)
 c = casadi.blockcat({1;2;3})
 assert(norm(size(c)-[3 1])==0)
+
+
+if ~is_octave
+  msg = help('MX/repsum');
+  assert(~isempty(strfind(msg,'Given a repeated matrix, computes the sum of repeated parts.')))
+end
+

@@ -203,6 +203,7 @@ namespace casadi {
     calc_lam_x_ = calc_f_ = calc_g_ = false;
     calc_lam_p_ = true;
     no_nlp_grad_ = false;
+    error_on_fail_ = false;
   }
 
   Nlpsol::~Nlpsol() {
@@ -299,7 +300,10 @@ namespace casadi {
         "Ensure that primal-dual solution is consistent with the bounds"}},
       {"oracle_options",
        {OT_DICT,
-        "Options to be passed to the oracle function"}}
+        "Options to be passed to the oracle function"}},
+      {"error_on_fail",
+       {OT_BOOL,
+        "When the numerical process returns unsuccessfully, raise an error (default false)."}}
      }
   };
 
@@ -340,6 +344,8 @@ namespace casadi {
         no_nlp_grad_ = op.second;
       } else if (op.first=="bound_consistency") {
         bound_consistency_ = op.second;
+      } else if (op.first=="error_on_fail") {
+        error_on_fail_ = op.second;
       }
     }
 
@@ -436,6 +442,7 @@ namespace casadi {
     auto m = static_cast<NlpsolMemory*>(mem);
     m->add_stat(name_);
     m->add_stat("callback_fun");
+    m->success = false;
     return 0;
   }
 
@@ -502,7 +509,7 @@ namespace casadi {
   void Nlpsol::bound_consistency(casadi_int n, double* x, double* lam,
                                  const double* lbx, const double* ubx) {
     // NOTE: Move to C runtime?
-    casadi_assert(x!=0 && lam!=0, "Need x, lam");
+    casadi_assert(x!=nullptr && lam!=nullptr, "Need x, lam");
     // Local variables
     casadi_int i;
     double lb, ub;
@@ -584,10 +591,10 @@ namespace casadi {
       m->arg[1] = m->p;
       m->arg[2] = &lam_f;
       m->arg[3] = m->lam_g;
-      m->res[0] = calc_f_ ? &m->f : 0;
-      m->res[1] = calc_g_ ? m->g : 0;
-      m->res[2] = calc_lam_x_ ? m->lam_x : 0;
-      m->res[3] = calc_lam_p_ ? m->lam_p : 0;
+      m->res[0] = calc_f_ ? &m->f : nullptr;
+      m->res[1] = calc_g_ ? m->g : nullptr;
+      m->res[2] = calc_lam_x_ ? m->lam_x : nullptr;
+      m->res[3] = calc_lam_p_ ? m->lam_p : nullptr;
       if (calc_function(m, "nlp_grad")) {
         casadi_warning("Failed to calculate multipliers");
       }
@@ -612,12 +619,19 @@ namespace casadi {
     // Finalize/print statistics
     m->fstats.at(name_).toc();
     if (print_time_)  print_fstats(m);
+
+    if (error_on_fail_ && !m->success)
+      casadi_error("nlpsol process failed. "
+                   "Set 'error_on_fail' option to false to ignore this error.");
     return flag;
   }
 
   void Nlpsol::set_work(void* mem, const double**& arg, double**& res,
                         casadi_int*& iw, double*& w) const {
     auto m = static_cast<NlpsolMemory*>(mem);
+
+    // Problem has not been solved at this point
+    m->success = false;
 
     // Allocate memory
     m->x = w; w += nx_;
@@ -938,5 +952,12 @@ namespace casadi {
     m->fstats.at("callback_fun").toc();
 
     return 0;
+  }
+
+  Dict Nlpsol::get_stats(void* mem) const {
+    Dict stats = OracleFunction::get_stats(mem);
+    auto m = static_cast<NlpsolMemory*>(mem);
+    stats["success"] = m->success;
+    return stats;
   }
 } // namespace casadi

@@ -25,6 +25,7 @@
 
 #include "implicit_to_nlp.hpp"
 #include "casadi/core/nlpsol.hpp"
+#include "casadi/core/nlpsol_impl.hpp"
 
 using namespace std;
 namespace casadi {
@@ -145,8 +146,8 @@ namespace casadi {
     m->arg[NLPSOL_X] = m->iarg[iin_];
 
     // Nonlinear bounds
-    m->arg[NLPSOL_LBG] = 0;
-    m->arg[NLPSOL_UBG] = 0;
+    m->arg[NLPSOL_LBG] = nullptr;
+    m->arg[NLPSOL_UBG] = nullptr;
 
     // Variable bounds
     fill_n(m->lbx, n_, -std::numeric_limits<double>::infinity());
@@ -192,15 +193,22 @@ namespace casadi {
       copy_n(m->iarg, n_in_, m->arg);
       m->arg[iin_] = m->x;
       copy_n(m->ires, n_out_, m->res);
-      m->res[iout_] = 0;
+      m->res[iout_] = nullptr;
       oracle_(m->arg, m->res, m->iw, m->w, 0);
     }
+
+    // Shared-object free access to nlpsol return status
+    void* nlpsol_mem = solver_.memory(0);
+    auto nlpsol_m = static_cast<NlpsolMemory*>(nlpsol_mem);
+    m->success = nlpsol_m->success;
 
     return 0;
   }
 
   Dict ImplicitToNlp::get_stats(void* mem) const {
-    return solver_.stats();
+    Dict stats = Rootfinder::get_stats(mem);
+    stats["nlpsol"] = solver_.stats();
+    return stats;
   }
 
 } // namespace casadi

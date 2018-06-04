@@ -339,7 +339,7 @@ namespace casadi {
   }
 
   template<typename MatType>
-  map<string, MatType> Integrator::aug_fwd(casadi_int nfwd) const {
+  std::map<string, MatType> Integrator::aug_fwd(casadi_int nfwd) const {
     if (verbose_) casadi_message(name_ + "::aug_fwd");
 
     // Get input expressions
@@ -396,7 +396,7 @@ namespace casadi {
     }
 
     // Construct return object
-    map<string, MatType> ret;
+    std::map<string, MatType> ret;
     ret["t"] = aug_t;
     ret["x"] = horzcat(aug_x);
     ret["z"] = horzcat(aug_z);
@@ -414,7 +414,7 @@ namespace casadi {
   }
 
   template<typename MatType>
-  map<string, MatType> Integrator::aug_adj(casadi_int nadj) const {
+  std::map<string, MatType> Integrator::aug_adj(casadi_int nadj) const {
     if (verbose_) casadi_message(name_ + "::aug_adj");
 
     // Get input expressions
@@ -470,7 +470,7 @@ namespace casadi {
     }
 
     // Construct return object
-    map<string, MatType> ret;
+    std::map<string, MatType> ret;
     ret["t"] = aug_t;
     ret["x"] = vertcat(aug_x);
     ret["z"] = vertcat(aug_z);
@@ -541,7 +541,7 @@ namespace casadi {
     if (nq_>0 && res[INTEGRATOR_QF]) {
       arg1[DE_X] = tmp_x;
       arg1[DE_Z] = tmp_z;
-      res1[DE_ODE] = res1[DE_ALG] = 0;
+      res1[DE_ODE] = res1[DE_ALG] = nullptr;
       res1[DE_QUAD] = res[INTEGRATOR_QF];
       if (oracle_(arg1, res1, iw, w, 0)) return 1;
     }
@@ -577,7 +577,7 @@ namespace casadi {
       if (nrq_>0 && res[INTEGRATOR_RQF]) {
         arg1[DE_RX] = tmp_rx;
         arg1[DE_RZ] = tmp_rz;
-        res1[DE_RODE] = res1[DE_RALG] = 0;
+        res1[DE_RODE] = res1[DE_RALG] = nullptr;
         res1[DE_RQUAD] = res[INTEGRATOR_RQF];
         if (oracle_(arg1, res1, iw, w, 0)) return 1;
       }
@@ -665,9 +665,9 @@ namespace casadi {
       // Indirect dependency via g
       res1[DE_RODE] = tmp_rx;
       res1[DE_RALG] = tmp_rz;
-      res1[DE_RQUAD] = 0;
+      res1[DE_RQUAD] = nullptr;
       arg1[DE_RX] = rx0;
-      arg1[DE_RZ] = 0; // arg[INTEGRATOR_RZ0] is a guess, no dependency
+      arg1[DE_RZ] = nullptr; // arg[INTEGRATOR_RZ0] is a guess, no dependency
       if (oracle_.rev(arg1, res1, iw, w, 0)) return 1;
     }
 
@@ -693,9 +693,9 @@ namespace casadi {
     // Indirect dependency through f
     res1[DE_ODE] = tmp_x;
     res1[DE_ALG] = tmp_z;
-    res1[DE_QUAD] = 0;
+    res1[DE_QUAD] = nullptr;
     arg1[DE_X] = x0;
-    arg1[DE_Z] = 0; // arg[INTEGRATOR_Z0] is a guess, no dependency
+    arg1[DE_Z] = nullptr; // arg[INTEGRATOR_Z0] is a guess, no dependency
     if (oracle_.rev(arg1, res1, iw, w, 0)) return 1;
     return 0;
   }
@@ -1067,8 +1067,8 @@ namespace casadi {
     auto m = static_cast<FixedStepMemory*>(mem);
 
     // Discrete time algebraic variable
-    m->Z = DM::zeros(F_.sparsity_in(DAE_Z));
-    m->RZ = G_.is_null() ? DM() : DM::zeros(G_.sparsity_in(RDAE_RZ));
+    m->Z.resize(F_.nnz_in(DAE_Z));
+    if (!G_.is_null()) m->RZ.resize(G_.nnz_in(RDAE_RZ));
 
     // Allocate tape if backward states are present
     if (nrx_>0) {
@@ -1127,13 +1127,13 @@ namespace casadi {
       casadi_copy(get_ptr(m->q), nq_, get_ptr(m->q_prev));
 
       // Take step
-      F(m->arg, m->res, m->iw, m->w, 0);
+      F(m->arg, m->res, m->iw, m->w);
       casadi_axpy(nq_, 1., get_ptr(m->q_prev), get_ptr(m->q));
 
       // Tape
       if (nrx_>0) {
         casadi_copy(get_ptr(m->x), nx_, get_ptr(m->x_tape.at(m->k+1)));
-        casadi_copy(get_ptr(m->Z), m->Z.nnz(), get_ptr(m->Z_tape.at(m->k)));
+        casadi_copy(get_ptr(m->Z), m->Z.size(), get_ptr(m->Z_tape.at(m->k)));
       }
 
       // Advance time
@@ -1143,7 +1143,7 @@ namespace casadi {
 
     // Return to user TODO(@jaeandersson): interpolate
     casadi_copy(get_ptr(m->x), nx_, x);
-    casadi_copy(get_ptr(m->Z)+m->Z.nnz()-nz_, nz_, z);
+    casadi_copy(get_ptr(m->Z)+m->Z.size()-nz_, nz_, z);
     casadi_copy(get_ptr(m->q), nq_, q);
   }
 
@@ -1188,13 +1188,13 @@ namespace casadi {
       // Take step
       m->arg[RDAE_X] = get_ptr(m->x_tape.at(m->k));
       m->arg[RDAE_Z] = get_ptr(m->Z_tape.at(m->k));
-      G(m->arg, m->res, m->iw, m->w, 0);
+      G(m->arg, m->res, m->iw, m->w);
       casadi_axpy(nrq_, 1., get_ptr(m->rq_prev), get_ptr(m->rq));
     }
 
     // Return to user TODO(@jaeandersson): interpolate
     casadi_copy(get_ptr(m->rx), nrx_, rx);
-    casadi_copy(get_ptr(m->RZ)+m->RZ.nnz()-nrz_, nrz_, rz);
+    casadi_copy(get_ptr(m->RZ)+m->RZ.size()-nrz_, nrz_, rz);
     casadi_copy(get_ptr(m->rq), nrq_, rq);
   }
 
@@ -1220,7 +1220,7 @@ namespace casadi {
     m->k = 0;
 
     // Get consistent initial conditions
-    casadi_fill(m->Z.ptr(), m->Z.nnz(), numeric_limits<double>::quiet_NaN());
+    casadi_fill(get_ptr(m->Z), m->Z.size(), numeric_limits<double>::quiet_NaN());
 
     // Add the first element in the tape
     if (nrx_>0) {
@@ -1249,7 +1249,7 @@ namespace casadi {
     m->k = nk_;
 
     // Get consistent initial conditions
-    casadi_fill(m->RZ.ptr(), m->RZ.nnz(), numeric_limits<double>::quiet_NaN());
+    casadi_fill(get_ptr(m->RZ), m->RZ.size(), numeric_limits<double>::quiet_NaN());
   }
 
   ImplicitFixedStepIntegrator::

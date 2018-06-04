@@ -70,6 +70,11 @@ namespace casadi {
     // Call the init method of the base class
     Nlpsol::init(opts);
 
+    if (CheckWorhpVersion(WORHP_MAJOR, WORHP_MINOR, WORHP_PATCH)) {
+      casadi_warning("Worhp incompatibility. Interface was compiled for Worhp " +
+        str(WORHP_MAJOR) + "." + str(WORHP_MINOR) + "." + std::string(WORHP_PATCH));
+    }
+
     // Default options
     Dict worhp_opts;
 
@@ -150,24 +155,36 @@ namespace casadi {
     SetWorhpPrint(&worhp_disp);
 
     WorhpPreInit(&m->worhp_o, &m->worhp_w, &m->worhp_p, &m->worhp_c);
+    m->worhp_o.initialised = false;
+    m->worhp_w.initialised = false;
+    m->worhp_p.initialised = false;
+    m->worhp_c.initialised = false;
 
     // Initialize parameters to default values
     int status;
     InitParams(&status, &m->worhp_p);
+    casadi_assert(status==0, "Problem in Worhp InitParams. Status: " + str(status));
+
 
     // Pass boolean parameters
     for (auto&& op : bool_opts_) {
-      WorhpSetBoolParam(&m->worhp_p, op.first.c_str(), op.second);
+      casadi_assert(
+        WorhpSetBoolParam(&m->worhp_p, op.first.c_str(), op.second),
+        "Problem setting boolean Worhp parameter " + op.first);
     }
 
     // Pass double parameters
     for (auto&& op : double_opts_) {
-      WorhpSetDoubleParam(&m->worhp_p, op.first.c_str(), op.second);
+      casadi_assert(
+        WorhpSetDoubleParam(&m->worhp_p, op.first.c_str(), op.second),
+        "Problem setting double Worhp parameter " + op.first);
     }
 
     // Pass integer parameters
     for (auto&& op : int_opts_) {
-      WorhpSetIntParam(&m->worhp_p, op.first.c_str(), op.second);
+      casadi_assert(
+        WorhpSetIntParam(&m->worhp_p, op.first.c_str(), op.second),
+        "Problem setting integer Worhp parameter " + op.first);
     }
 
     // Pass qp parameters
@@ -339,8 +356,6 @@ namespace casadi {
   int WorhpInterface::solve(void* mem) const {
     auto m = static_cast<WorhpMemory*>(mem);
 
-    // Problem has not been solved at this point
-    m->success = false;
     if (m->lbg && m->ubg) {
       for (casadi_int i=0; i<ng_; ++i) {
         casadi_assert(!(m->lbg[i]==-inf && m->ubg[i] == inf),
@@ -401,7 +416,7 @@ namespace casadi {
             m->arg[NLPSOL_X] = m->worhp_o.X;
             m->arg[NLPSOL_F] = &m->worhp_o.F;
             m->arg[NLPSOL_G] = m->worhp_o.G;
-            m->arg[NLPSOL_LAM_P] = 0;
+            m->arg[NLPSOL_LAM_P] = nullptr;
             m->arg[NLPSOL_LAM_X] = m->worhp_o.Lambda;
             m->arg[NLPSOL_LAM_G] = m->worhp_o.Mu;
 
@@ -446,7 +461,7 @@ namespace casadi {
       if (GetUserAction(&m->worhp_c, evalDF)) {
         m->arg[0] = m->worhp_o.X;
         m->arg[1] = m->p;
-        m->res[0] = 0;
+        m->res[0] = nullptr;
         m->res[1] = m->worhp_w.DF.val;
         calc_function(m, "nlp_grad_f");
         casadi_scal(nx_, m->worhp_w.ScaleObj, m->worhp_w.DF.val);
@@ -456,7 +471,7 @@ namespace casadi {
       if (GetUserAction(&m->worhp_c, evalDG)) {
         m->arg[0] = m->worhp_o.X;
         m->arg[1] = m->p;
-        m->res[0] = 0;
+        m->res[0] = nullptr;
         m->res[1] = m->worhp_w.DG.val;
         calc_function(m, "nlp_jac_g");
         DoneUserAction(&m->worhp_c, evalDG);
@@ -572,7 +587,6 @@ namespace casadi {
     Dict stats = Nlpsol::get_stats(mem);
     auto m = static_cast<WorhpMemory*>(mem);
     stats["return_status"] = m->return_status;
-    stats["success"] = m->success;
     return stats;
   }
 

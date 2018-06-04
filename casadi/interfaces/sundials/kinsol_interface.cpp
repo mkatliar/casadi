@@ -66,8 +66,8 @@ namespace casadi {
   KinsolInterface::KinsolInterface(const std::string& name, const Function& f)
     : Rootfinder(name, f) {
 
-    u_scale_ = 0;
-    f_scale_ = 0;
+    u_scale_ = nullptr;
+    f_scale_ = nullptr;
 
     // Default options
     exact_jac_ = true;
@@ -270,7 +270,8 @@ namespace casadi {
 
     // Solve the nonlinear system of equations
     int flag = KINSol(m->mem, m->u, strategy_, u_scale_, f_scale_);
-    if (flag<KIN_SUCCESS) kinsol_error("KINSol", flag);
+    m->success = flag>= KIN_SUCCESS;
+    if (flag<KIN_SUCCESS) kinsol_error("KINSol", flag, error_on_fail_);
 
     // Warn if not successful return
     if (verbose_) {
@@ -286,7 +287,7 @@ namespace casadi {
       copy_n(m->iarg, n_in_, m->arg);
       m->arg[iin_] = NV_DATA_S(m->u);
       copy_n(m->ires, n_out_, m->res);
-      m->res[iout_] = 0;
+      m->res[iout_] = nullptr;
       oracle_(m->arg, m->res, m->iw, m->w, 0);
     }
     return 0;
@@ -656,12 +657,12 @@ namespace casadi {
       break;
     default:
       id = "N/A";
-      msg = 0;
+      msg = nullptr;
     }
 
     // Construct message
     stringstream ss;
-    if (msg==0) {
+    if (msg==nullptr) {
       ss << "Unknown " << (fatal? "error" : "warning") <<" (" << flag << ")"
         " from module \"" << module << "\".";
     } else {
@@ -671,15 +672,17 @@ namespace casadi {
     }
     ss << "Consult KINSOL documentation for more information.";
     if (fatal) {
-      casadi_error(ss.str());
-        } else {
+      casadi_error("nlpsol process failed. "
+                   "Set 'error_on_fail' option to false to ignore this error. "
+                   + ss.str());
+    } else {
       casadi_warning(ss.str());
     }
   }
 
   KinsolMemory::KinsolMemory(const KinsolInterface& s) : self(s) {
-    this->u = 0;
-    this->mem = 0;
+    this->u = nullptr;
+    this->mem = nullptr;
   }
 
   KinsolMemory::~KinsolMemory() {
